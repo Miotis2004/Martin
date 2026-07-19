@@ -1,6 +1,6 @@
 # Martin Programming Language
 
-[![Build and Test](https://github.com/Miotis2004/Martin_Programming_Language/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/Miotis2004/Martin_Programming_Language/actions/workflows/build-and-test.yml)
+See the Martin Language Guide in Docs/
 
 Martin is an experimental, statically typed programming language for the .NET ecosystem with a compiler, CLI tools, runtime support, language services, project system, and the WinUI-based **Martin Studio** IDE.
 
