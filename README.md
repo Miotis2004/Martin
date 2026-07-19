@@ -1,6 +1,6 @@
 # Martin Programming Language
 
-
+See the Martin Language Guide in Docs/
 
 Martin is an experimental, statically typed programming language for the .NET ecosystem with a compiler, CLI tools, runtime support, language services, project system, and the WinUI-based **Martin Studio** IDE.
 
