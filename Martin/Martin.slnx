@@ -1,0 +1,40 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="src/Martin.Compiler/Martin.Compiler.csproj" />
+  <Project Path="src/Martin.CodeGeneration/Martin.CodeGeneration.csproj" />
+  <Project Path="src/Martin.Runtime/Martin.Runtime.csproj" />
+  <Project Path="src/Martin.Build/Martin.Build.csproj" />
+  <Project Path="src/Martin.Execution/Martin.Execution.csproj" />
+  <Project Path="src/Martin.ProjectSystem/Martin.ProjectSystem.csproj" />
+  <Project Path="src/Martin.CommandLine/Martin.CommandLine.csproj" />
+  <Project Path="src/Martin.LanguageServices/Martin.LanguageServices.csproj" />
+  <Project Path="src/Martin.Studio.Core/Martin.Studio.Core.csproj" />
+  <Project Path="src/Martin.Studio.WinUI/Martin.Studio.WinUI.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
+    <Deploy />
+  </Project>
+  <Project Path="src/Martin.Compiler.Cli/Martin.Compiler.Cli.csproj" />
+  <Project Path="src/Martin.Cli/Martin.Cli.csproj" />
+  <Project Path="tests/Martin.Lexer.Tests/Martin.Lexer.Tests.csproj" />
+  <Project Path="tests/Martin.Parser.Tests/Martin.Parser.Tests.csproj" />
+  <Project Path="tests/Martin.Semantic.Tests/Martin.Semantic.Tests.csproj" />
+  <Project Path="tests/Martin.CodeGeneration.Tests/Martin.CodeGeneration.Tests.csproj" />
+  <Project Path="tests/Martin.ProjectSystem.Tests/Martin.ProjectSystem.Tests.csproj" />
+  <Project Path="tests/Martin.LanguageServices.Tests/Martin.LanguageServices.Tests.csproj" />
+  <Project Path="tests/Martin.Studio.Core.Tests/Martin.Studio.Core.Tests.csproj" />
+  <Project Path="tests/Martin.Studio.WinUI.Tests/Martin.Studio.WinUI.Tests.csproj" />
+  <Project Path="tests/Martin.Integration.Tests/Martin.Integration.Tests.csproj" />
+  <Project Path="tests/Martin.Runtime.Tests/Martin.Runtime.Tests.csproj" />
+  <Project Path="tests/Martin.Build.Tests/Martin.Build.Tests.csproj" />
+  <Project Path="tests/Martin.Execution.Tests/Martin.Execution.Tests.csproj" />
+  <Project Path="tests/Martin.Cli.Tests/Martin.Cli.Tests.csproj" />
+  <Project Path="tests/Martin.Compiler.Cli.Tests/Martin.Compiler.Cli.Tests.csproj" />
+  <Project Path="tests/Martin.Formatting.Tests/Martin.Formatting.Tests.csproj" />
+  <Project Path="tests/Martin.Performance.Tests/Martin.Performance.Tests.csproj" />
+</Solution>

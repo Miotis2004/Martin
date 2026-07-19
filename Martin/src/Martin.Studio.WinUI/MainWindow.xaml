@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="Martin.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:core="using:Martin.Studio.Core"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Martin Studio">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="LayoutRoot" RowSpacing="0" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <MenuBar Grid.Row="0" AutomationProperties.Name="Martin Studio menu bar">
+            <MenuBarItem Title="File">
+                <MenuFlyoutItem Text="New Project..." KeyboardAcceleratorTextOverride="Ctrl+Shift+N" Icon="Add" AutomationProperties.Name="New Project" Click="NewProject_Click" />
+                <MenuFlyoutItem Text="Open Project..." KeyboardAcceleratorTextOverride="Ctrl+O" Icon="OpenFile" AutomationProperties.Name="Open Project" Click="OpenProjectManifest_Click" />
+                <MenuFlyoutItem Text="Open Project Folder..." Icon="OpenFile" Click="OpenProjectFolder_Click" />
+                <MenuFlyoutItem Text="Close Project" AutomationProperties.Name="Close Project" Click="CloseProject_Click" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Save" KeyboardAcceleratorTextOverride="Ctrl+S" Icon="Save" Command="{Binding SaveCommand}" AutomationProperties.Name="Save active document" />
+                <MenuFlyoutItem Text="Save As..." Command="{Binding SaveAsCommand}" AutomationProperties.Name="Save active document as" />
+                <MenuFlyoutItem Text="Save All" KeyboardAcceleratorTextOverride="Ctrl+Shift+S" Command="{Binding SaveAllCommand}" AutomationProperties.Name="Save all documents" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Close" KeyboardAcceleratorTextOverride="Ctrl+W" Command="{Binding CloseActiveDocumentCommand}" />
+                <MenuFlyoutItem Text="Close All" Command="{Binding CloseAllDocumentsCommand}" />
+                <MenuFlyoutItem Text="Close Others" Command="{Binding CloseOtherDocumentsCommand}" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Exit" Click="Exit_Click" />
+            </MenuBarItem>
+            <MenuBarItem Title="Edit">
+                <MenuFlyoutItem Text="Undo" AutomationProperties.Name="Undo editor change" ToolTipService.ToolTip="Undo in the editor" Click="Undo_Click" />
+                <MenuFlyoutItem Text="Redo" AutomationProperties.Name="Redo editor change" ToolTipService.ToolTip="Redo in the editor" Click="Redo_Click" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Cut" AutomationProperties.Name="Cut editor selection" ToolTipService.ToolTip="Cut selected editor text" Click="Cut_Click" />
+                <MenuFlyoutItem Text="Copy" AutomationProperties.Name="Copy editor selection" ToolTipService.ToolTip="Copy selected editor text" Click="Copy_Click" />
+                <MenuFlyoutItem Text="Paste" AutomationProperties.Name="Paste into editor" ToolTipService.ToolTip="Paste into the editor" Click="Paste_Click" />
+                <MenuFlyoutItem Text="Select All" AutomationProperties.Name="Select all editor text" ToolTipService.ToolTip="Select all text in the editor" Click="SelectAll_Click" />
+            </MenuBarItem>
+            <MenuBarItem Title="View">
+                <MenuFlyoutItem Text="Project Explorer" ToolTipService.ToolTip="Toggle and focus the Project Explorer" Click="ProjectExplorerMenu_Click" />
+                <MenuFlyoutItem Text="Output" KeyboardAcceleratorTextOverride="Ctrl+`" ToolTipService.ToolTip="Show and focus the Output pane" Click="OutputMenu_Click" />
+                <MenuFlyoutItem Text="Error List" ToolTipService.ToolTip="Show diagnostics with severity text and source locations" Click="ErrorListMenu_Click" />
+                <MenuFlyoutItem Text="Focus Editor" ToolTipService.ToolTip="Move keyboard focus into the Monaco editor" Click="FocusEditor_Click" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutSubItem Text="Theme">
+                    <MenuFlyoutItem Text="System" AutomationProperties.Name="Use system theme" ToolTipService.ToolTip="Follow Windows light, dark, and high-contrast settings" Click="ThemeSystem_Click" />
+                    <MenuFlyoutItem Text="Light" AutomationProperties.Name="Use light theme" ToolTipService.ToolTip="Use the light Studio and editor theme" Click="ThemeLight_Click" />
+                    <MenuFlyoutItem Text="Dark" AutomationProperties.Name="Use dark theme" ToolTipService.ToolTip="Use the dark Studio and editor theme" Click="ThemeDark_Click" />
+                </MenuFlyoutSubItem>
+            </MenuBarItem>
+            <MenuBarItem Title="Build">
+                <MenuFlyoutSubItem Text="Configuration">
+                    <MenuFlyoutItem Text="Debug" Click="DebugConfiguration_Click" />
+                    <MenuFlyoutItem Text="Release" Click="ReleaseConfiguration_Click" />
+                </MenuFlyoutSubItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Build Project" KeyboardAcceleratorTextOverride="Ctrl+B" Icon="Play" AutomationProperties.Name="Build project" Command="{Binding BuildCommand}" />
+                <MenuFlyoutItem Text="Cancel Build" KeyboardAcceleratorTextOverride="Ctrl+Shift+B" Command="{Binding CancelBuildCommand}" />
+                <MenuFlyoutItem Text="Clean" Command="{Binding CleanCommand}" />
+            </MenuBarItem>
+            <MenuBarItem Title="Run">
+                <MenuFlyoutItem Text="Run" KeyboardAcceleratorTextOverride="F5" Icon="Play" AutomationProperties.Name="Run project" Command="{Binding RunCommand}" />
+                <MenuFlyoutItem Text="Run Without Build" KeyboardAcceleratorTextOverride="Ctrl+F5" Command="{Binding RunWithoutBuildCommand}" />
+                <MenuFlyoutItem Text="Run in External Terminal" Command="{Binding RunInExternalTerminalCommand}" />
+                <MenuFlyoutItem Text="Stop" KeyboardAcceleratorTextOverride="Shift+F5" Command="{Binding StopCommand}" />
+            </MenuBarItem>
+            <MenuBarItem Title="Help">
+                <MenuFlyoutItem Text="Open Logs Folder" Click="OpenLogsFolder_Click" />
+                <MenuFlyoutItem Text="About Martin Studio" />
+            </MenuBarItem>
+        </MenuBar>
+
+        <CommandBar Grid.Row="1" DefaultLabelPosition="Right" AutomationProperties.Name="Martin Studio command bar">
+            <AppBarButton Icon="Add" Label="New Project" Click="NewProject_Click" ToolTipService.ToolTip="New project (Ctrl+Shift+N)" />
+            <AppBarButton Icon="OpenFile" Label="Open Project" AutomationProperties.Name="Open Project" ToolTipService.ToolTip="Open project (Ctrl+O)" Click="OpenProjectManifest_Click" />
+            <AppBarButton Icon="Save" Label="Save" Command="{Binding SaveCommand}" AutomationProperties.Name="Save active document" ToolTipService.ToolTip="Save active document (Ctrl+S)" />
+            <AppBarButton Icon="Refresh" Label="Refresh" Command="{Binding ProjectExplorer.RefreshCommand}" ToolTipService.ToolTip="Refresh Project Explorer" />
+            <AppBarSeparator />
+            <AppBarElementContainer>
+                <ComboBox Header="Configuration"
+                          MinWidth="120"
+                          ItemsSource="{Binding BuildConfigurations, Mode=OneWay}"
+                          SelectedItem="{Binding ActiveBuildConfiguration, Mode=TwoWay}"
+                          AutomationProperties.Name="Active build configuration"
+                          ToolTipService.ToolTip="Select the configuration used by Build, Run, and Clean" />
+            </AppBarElementContainer>
+            <AppBarButton Icon="Play" Label="Build" AutomationProperties.Name="Build project" ToolTipService.ToolTip="Build project (Ctrl+B)" Command="{Binding BuildCommand}" />
+            <AppBarButton Icon="Play" Label="Run" AutomationProperties.Name="Run project" ToolTipService.ToolTip="Run project (F5)" Command="{Binding RunCommand}" />
+            <AppBarButton Icon="Cancel" Label="Stop" AutomationProperties.Name="Stop running program" ToolTipService.ToolTip="Stop running program (Shift+F5)" Command="{Binding StopCommand}" />
+        </CommandBar>
+
+        <Grid Grid.Row="2" MinHeight="360">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ProjectExplorerColumn" Width="280" MinWidth="180" />
+                <ColumnDefinition Width="6" />
+                <ColumnDefinition Width="*" MinWidth="320" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition x:Name="WorkspaceRow" Height="*" MinHeight="220" />
+                <RowDefinition Height="6" />
+                <RowDefinition x:Name="BottomPanelRow" Height="220" MinHeight="120" />
+            </Grid.RowDefinitions>
+
+            <Border x:Name="ProjectExplorerPane" Grid.Row="0" Grid.Column="0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,1,1" Padding="12" AutomationProperties.Name="Project Explorer">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Project Explorer" FontWeight="SemiBold" />
+                    <TreeView x:Name="ProjectExplorerTree" Grid.Row="1" TabIndex="10" AutomationProperties.HelpText="Use arrow keys to browse project files and Enter to open a file." ItemsSource="{Binding ProjectExplorer.Roots, Mode=OneWay}" SelectionMode="Single" Expanding="ProjectExplorerTree_Expanding" ItemInvoked="ProjectExplorerTree_ItemInvoked">
+                        <TreeView.ItemTemplate>
+                            <DataTemplate x:DataType="core:ProjectTreeNodeViewModel">
+                                <TreeViewItem ItemsSource="{Binding Children}" Content="{Binding Name}" HasUnrealizedChildren="{Binding ChildrenLoaded, Converter={StaticResource InverseBoolConverter}, Mode=OneWay}">
+                                    <TreeViewItem.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem Text="Open" Command="{Binding OpenCommand}" />
+                                            <MenuFlyoutItem Text="Refresh" Command="{Binding RefreshCommand}" />
+                                            <MenuFlyoutItem Text="Reveal in File Explorer" Command="{Binding RevealCommand}" />
+                                            <MenuFlyoutItem Text="Copy Path" Command="{Binding CopyPathCommand}" />
+                                        </MenuFlyout>
+                                    </TreeViewItem.ContextFlyout>
+                                </TreeViewItem>
+                            </DataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </Grid>
+            </Border>
+
+            <Thumb x:Name="VerticalSplitter" Grid.Row="0" Grid.Column="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" DragDelta="VerticalSplitter_DragDelta" AutomationProperties.Name="Vertical resize splitter" />
+
+            <Grid Grid.Row="0" Grid.Column="2" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <!--
+                    Phase 11 bridge contract: document tabs are backed by
+                    ItemsSource="{Binding DocumentTabs.Documents, Mode=OneWay}" and
+                    SelectedItem="{Binding DocumentTabs.ActiveDocument, Mode=TwoWay}".
+                    The current Windows App SDK TabView is synchronized in code-behind
+                    because TabView exposes TabItems rather than an ItemsSource API.
+                -->
+                <TabView x:Name="DocumentTabView" TabIndex="20" Grid.Row="0" IsAddTabButtonVisible="False" CanDragTabs="True" SelectionChanged="DocumentTabs_SelectionChanged" TabCloseRequested="DocumentTabs_TabCloseRequested" AutomationProperties.Name="Open document tabs" />
+                <Border Grid.Row="1" Margin="12" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" AutomationProperties.Name="Monaco editor region">
+                    <Grid>
+                        <WebView2 x:Name="EditorWebView" TabIndex="30" AutomationProperties.HelpText="Martin code editor. Use Ctrl+F for find and Ctrl+H for replace." DefaultBackgroundColor="Transparent" AutomationProperties.Name="Martin Monaco editor" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Thumb x:Name="HorizontalSplitter" Grid.Row="1" Grid.ColumnSpan="3" Background="{ThemeResource DividerStrokeColorDefaultBrush}" DragDelta="HorizontalSplitter_DragDelta" AutomationProperties.Name="Horizontal resize splitter" />
+
+            <Grid x:Name="BottomPanel" Grid.Row="2" Grid.ColumnSpan="3" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" AutomationProperties.Name="Bottom tool panel">
+                <TabView x:Name="BottomPanelTabs" TabIndex="40" IsAddTabButtonVisible="False" CanDragTabs="False" SelectionChanged="BottomPanelTabs_SelectionChanged" AutomationProperties.Name="Output and Error List tabs">
+                    <TabViewItem Header="Output" IsClosable="False">
+                        <ListView x:Name="OutputListView" ItemsSource="{Binding OutputPane.Entries, Mode=OneWay}" AutomationProperties.Name="Output entries" />
+                    </TabViewItem>
+                    <TabViewItem Header="Error List" IsClosable="False">
+                        <Grid RowSpacing="6" Padding="6">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="8" AutomationProperties.Name="Diagnostic filters">
+                                <ComboBox x:Name="DiagnosticSeverityFilter" Header="Severity" MinWidth="120" SelectionChanged="DiagnosticFilter_Changed">
+                                    <ComboBoxItem Content="All" IsSelected="True" />
+                                    <ComboBoxItem Content="Error" />
+                                    <ComboBoxItem Content="Warning" />
+                                    <ComboBoxItem Content="Info" />
+                                </ComboBox>
+                                <TextBox x:Name="DiagnosticSourceFilter" Header="Source" Width="160" PlaceholderText="All sources" TextChanged="DiagnosticFilter_Changed" />
+                                <TextBox x:Name="DiagnosticSearchBox" Header="Search" Width="240" PlaceholderText="Search diagnostics" TextChanged="DiagnosticFilter_Changed" />
+                                <Button Content="Copy All" Click="CopyAllDiagnostics_Click" VerticalAlignment="Bottom" />
+                            </StackPanel>
+                            <Grid Grid.Row="1" ColumnSpacing="8" Padding="4,0" AutomationProperties.Name="Diagnostic columns">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="90" /><ColumnDefinition Width="90" /><ColumnDefinition Width="*" /><ColumnDefinition Width="180" /><ColumnDefinition Width="60" /><ColumnDefinition Width="70" /><ColumnDefinition Width="140" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Severity" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="Code" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="2" Text="Message" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="3" Text="File" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="4" Text="Line" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="5" Text="Column" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="6" Text="Source" FontWeight="SemiBold" />
+                            </Grid>
+                            <ListView x:Name="ErrorListView" Grid.Row="2" ItemsSource="{Binding ErrorList.Diagnostics, Mode=OneWay}" AutomationProperties.Name="Diagnostics" AutomationProperties.HelpText="Each diagnostic includes severity text, code, message, file, line, column, and source." DoubleTapped="ErrorList_DoubleTapped" KeyDown="ErrorList_KeyDown">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="core:StudioDiagnosticViewModel">
+                                        <Grid ColumnSpacing="8" Padding="4,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="90" /><ColumnDefinition Width="90" /><ColumnDefinition Width="*" /><ColumnDefinition Width="180" /><ColumnDefinition Width="60" /><ColumnDefinition Width="70" /><ColumnDefinition Width="140" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Severity}" AutomationProperties.Name="Diagnostic severity" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Code}" />
+                                            <TextBlock Grid.Column="2" Text="{Binding Message}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="3" Text="{Binding FileName}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="4" Text="{Binding Line}" />
+                                            <TextBlock Grid.Column="5" Text="{Binding Column}" />
+                                            <TextBlock Grid.Column="6" Text="{Binding Source}" TextTrimming="CharacterEllipsis" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                    </TabViewItem>
+                </TabView>
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="3" Padding="8,4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" AutomationProperties.Name="Status bar">
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding StatusBar.Text, Mode=OneWay}" />
+                <TextBlock Grid.Column="1" Text="{Binding ActiveProjectSummary, Mode=OneWay}" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

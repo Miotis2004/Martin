@@ -1,0 +1,6 @@
+Martin Studio bundles Monaco Editor assets locally for WebView2 editor hosting.
+
+Monaco Editor
+- Version: 0.52.2
+- License: MIT
+- Source: https://www.npmjs.com/package/monaco-editor

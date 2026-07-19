@@ -1,0 +1,30 @@
+protocol Describable {
+    func describe() -> String
+}
+
+protocol Resettable {
+    mutating func reset()
+}
+
+struct Reporter: Describable, Resettable {
+    var count: Int
+
+    func describe() -> String {
+        return "reporter"
+    }
+
+    mutating func reset() {
+        count = 0
+    }
+}
+
+func printDescription(_ value: Reporter) {
+    print(value.describe())
+}
+
+func main() {
+    var reporter = Reporter(count: 3)
+    printDescription(reporter)
+    reporter.reset()
+    print(reporter.count)
+}

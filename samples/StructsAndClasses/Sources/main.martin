@@ -1,0 +1,30 @@
+struct Point {
+    let x: Int
+    let y: Int
+
+    func label() -> String {
+        return "point"
+    }
+}
+
+class Counter {
+    var value: Int
+
+    init(value: Int) {
+        self.value = value
+    }
+
+    mutating func increment() {
+        value = value + 1
+    }
+}
+
+func main() {
+    let point = Point(x: 2, y: 4)
+    print(point.label())
+    print(point.x + point.y)
+
+    var counter = Counter(value: 10)
+    counter.increment()
+    print(counter.value)
+}

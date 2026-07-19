@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; img-src 'self' data:; connect-src 'none';" />
+  <title>Martin Studio Editor</title>
+  <link rel="stylesheet" href="editor.css" />
+</head>
+<body>
+  <main id="editor" aria-label="Martin source editor"></main>
+  <script src="monaco/min/vs/loader.js"></script>
+  <script src="martin-language.js"></script>
+  <script src="martin-providers.js"></script>
+  <script src="editor.js"></script>
+</body>
+</html>

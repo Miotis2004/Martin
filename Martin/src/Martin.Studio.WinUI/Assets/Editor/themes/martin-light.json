@@ -1,0 +1,7 @@
+{
+  "name": "Martin Light",
+  "base": "vs",
+  "colors": {
+    "editor.background": "#ffffff"
+  }
+}

@@ -1,0 +1,14 @@
+func describe(_ value: Int?) {
+    if let unwrapped = value {
+        print(unwrapped)
+    } else {
+        print("nil")
+    }
+}
+
+func main() {
+    let present: Int? = 42
+    let missing: Int? = nil
+    describe(present)
+    describe(missing)
+}

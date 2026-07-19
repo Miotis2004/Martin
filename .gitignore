@@ -7,11 +7,21 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
+# Visual Studio
+.vs/
+**/.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
+!Docs/releases/
+!Docs/releases/**
 x64/
 x86/
 [Ww][Ii][Nn]32/
@@ -22,6 +32,8 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+
+node_modules/
 
 # .NET Core
 project.lock.json
@@ -35,6 +47,10 @@ ScaffoldingReadMe.txt
 *.nupkg
 # NuGet Symbol Packages
 *.snupkg
+
+# Test output
+TestResults/
+**/TestResults/
 
 # dotenv environment variables file
 .env
@@ -55,3 +71,14 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Repository hygiene / release packaging exclusions
+patch*.diff
+*.orig
+*.rej
+*.tmp
+*.temp
+*.bak
+*.cache
+.DS_Store
+Thumbs.db

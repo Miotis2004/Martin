@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/.vs/**;**/*.user;**/*.suo;**/*.orig;**/*.rej;**/*.tmp;**/*.temp;**/*.bak;**/*.cache;patch*.diff</DefaultItemExcludes>
+    <NuspecFileExcludes>$(NuspecFileExcludes);**/.vs/**;**/*.user;**/*.suo;**/*.orig;**/*.rej;**/*.tmp;**/*.temp;**/*.bak;**/*.cache;patch*.diff</NuspecFileExcludes>
+  </PropertyGroup>
+</Project>

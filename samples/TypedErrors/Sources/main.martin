@@ -1,0 +1,21 @@
+enum DecodeError<T>: Error {
+    case invalid(value: T)
+    case empty
+}
+
+struct Decoder {
+    func decode(_ text: String) throws DecodeError<String> -> String {
+        throw DecodeError<String>.invalid(value: text)
+    }
+}
+
+func main() {
+    let decoder = Decoder()
+    do {
+        print(try decoder.decode("payload"))
+    } catch .invalid(let value) {
+        print(value)
+    } catch .empty {
+        print("empty")
+    }
+}

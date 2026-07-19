@@ -1,0 +1,29 @@
+protocol Describable {
+    func describe() -> String
+}
+
+struct Word: Describable {
+    let value: String
+
+    func describe() -> String {
+        return value
+    }
+}
+
+struct Box<T> {
+    let value: T
+}
+
+func identity<T>(_ value: T) -> T {
+    return value
+}
+
+func describe<T: Describable>(_ value: T) -> String {
+    return value.describe()
+}
+
+func main() {
+    let box = Box<Int>(value: identity(21))
+    print(box.value)
+    print(describe(Word(value: "generic")))
+}

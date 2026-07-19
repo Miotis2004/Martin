@@ -1,0 +1,24 @@
+{
+  "name": "martin_programming_language",
+  "version": "1.0.0",
+  "description": "[![Build and Test](https://github.com/Miotis2004/Martin_Programming_Language/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/Miotis2004/Martin_Programming_Language/actions/workflows/build-and-test.yml)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Miotis2004/Martin_Programming_Language.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Miotis2004/Martin_Programming_Language/issues"
+  },
+  "homepage": "https://github.com/Miotis2004/Martin_Programming_Language#readme",
+  "devDependencies": {
+    "monaco-editor": "^0.52.2"
+  }
+}

@@ -1,0 +1,21 @@
+func add(_ left: Int, _ right: Int) -> Int {
+    return left + right
+}
+
+func label(message value: String) {
+    print(value)
+}
+
+func countdown(from start: Int) {
+    var value = start
+    while value > 0 {
+        print(value)
+        value = value - 1
+    }
+}
+
+func main() {
+    label(message: "functions")
+    print(add(2, 3))
+    countdown(from: 3)
+}

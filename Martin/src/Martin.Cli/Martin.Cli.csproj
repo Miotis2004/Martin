@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>martin</ToolCommandName>
+    <PackageId>Martin.Tool</PackageId>
+    <Authors>Martin Programming Language</Authors>
+    <Description>Project-oriented command-line tool for the Martin programming language.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/Miotis2004/Martin_Programming_Language</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Miotis2004/Martin_Programming_Language</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>martin;programming-language;compiler;cli;tool</PackageTags>
+    <PackageReleaseNotes>0.1.0-alpha local alpha tool package. Install from an explicit local source; update by reinstalling or using dotnet tool update against the replacement local source.</PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Martin.CommandLine/Martin.CommandLine.csproj" />
+    <ProjectReference Include="../Martin.Compiler/Martin.Compiler.csproj" />
+    <ProjectReference Include="../Martin.Build/Martin.Build.csproj" />
+    <ProjectReference Include="../Martin.ProjectSystem/Martin.ProjectSystem.csproj" />
+      <ProjectReference Include="..\Martin.LanguageServices\Martin.LanguageServices.csproj" />
+      <ProjectReference Include="..\Martin.Execution\Martin.Execution.csproj" />
+  </ItemGroup>
+</Project>

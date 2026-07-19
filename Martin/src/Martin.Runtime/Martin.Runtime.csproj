@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>Martin.Runtime</PackageId>
+    <Authors>Martin Programming Language</Authors>
+    <Description>Runtime support library for generated Martin alpha applications.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/Miotis2004/Martin_Programming_Language</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Miotis2004/Martin_Programming_Language</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>martin;programming-language;runtime;alpha</PackageTags>
+    <PackageReleaseNotes>0.1.0-alpha runtime package for generated Martin applications. Use the runtime selected and validated by the matching Martin toolchain.</PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,20 @@
+html, body, #editor {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: #1e1e1e;
+}
+
+html[data-theme="martin-light"] body {
+  background: #ffffff;
+}
+
+html[data-theme="high-contrast"] body {
+  forced-color-adjust: none;
+  background: Canvas;
+  color: CanvasText;
+}

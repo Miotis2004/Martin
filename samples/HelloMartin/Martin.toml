@@ -1,0 +1,21 @@
+manifest-version = 1
+
+[package]
+name = "HelloMartin"
+version = "0.1.0-alpha"
+
+[target]
+kind = "executable"
+framework = "net8.0"
+entry = "main"
+
+[sources]
+include = ["Sources/**/*.martin"]
+exclude = ["bin/**", "obj/**", ".martin/**"]
+
+[build]
+output = "bin"
+intermediate = "obj"
+
+[tests]
+include = ["Tests/**/*.martin"]

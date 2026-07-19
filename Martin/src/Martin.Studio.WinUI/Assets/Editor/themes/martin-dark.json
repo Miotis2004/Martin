@@ -1,0 +1,7 @@
+{
+  "name": "Martin Dark",
+  "base": "vs-dark",
+  "colors": {
+    "editor.background": "#1e1e1e"
+  }
+}
