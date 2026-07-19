@@ -62,10 +62,14 @@ public sealed class Phase12SemanticClassificationTests
 
     private static ClassificationRequest Request(LanguageWorkspaceSnapshot workspace, LanguageProjectSnapshot project,
         LanguageDocumentSnapshot document) => new()
-    {
-        WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version, ProjectId = project.Id,
-        ProjectVersion = project.Version, DocumentId = document.Id, DocumentVersion = document.Version
-    };
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = document.Version
+        };
 
     private static (MartinLanguageService Service, LanguageWorkspaceSnapshot Workspace, LanguageProjectSnapshot Project,
         LanguageDocumentSnapshot Document) Workspace(string source)

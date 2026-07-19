@@ -363,4 +363,4 @@ public sealed class EditorBridge
     }
 }
 
-internal static class PathComparer{public static readonly StringComparer Comparer=OperatingSystem.IsWindows()?StringComparer.OrdinalIgnoreCase:StringComparer.Ordinal; public static bool Equals(string a,string b)=>Comparer.Equals(Path.GetFullPath(a),Path.GetFullPath(b));}
+internal static class PathComparer { public static readonly StringComparer Comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal; public static bool Equals(string a, string b) => Comparer.Equals(Path.GetFullPath(a), Path.GetFullPath(b)); }

@@ -41,7 +41,7 @@ let pair: Pair<Int, String> = Pair(1, "two")
     {
         yield return node;
         foreach (var child in node.GetChildren())
-        foreach (var nested in Flatten(child))
-            yield return nested;
+            foreach (var nested in Flatten(child))
+                yield return nested;
     }
 }

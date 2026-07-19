@@ -40,8 +40,15 @@ public sealed class Phase13ProtocolLanguageServicesTests
         var witness = source.LastIndexOf("name()", StringComparison.Ordinal);
 
         var hover = service.Hover(workspace, document.Id, witness);
-        var request = new ClassificationRequest { WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version,
-            ProjectId = project.Id, ProjectVersion = project.Version, DocumentId = document.Id, DocumentVersion = document.Version };
+        var request = new ClassificationRequest
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = document.Version
+        };
         var spans = (await service.GetClassificationsAsync(workspace, request)).Value;
 
         Assert.Contains("Witness for", hover!.Markdown, StringComparison.Ordinal);

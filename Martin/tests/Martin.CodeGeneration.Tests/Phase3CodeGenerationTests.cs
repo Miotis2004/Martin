@@ -18,7 +18,8 @@ public sealed class Phase3CodeGenerationTests
         return result.GeneratedSource;
     }
 
-    [Fact] public void EmitsWrapperAndRuntimePrints()
+    [Fact]
+    public void EmitsWrapperAndRuntimePrints()
     {
         var cs = Emit("func main() { print(42) print(3.5) print(true) print(\"Martin\") }");
         Assert.Contains("public static int Main(string[] args)", cs);
@@ -28,7 +29,8 @@ public sealed class Phase3CodeGenerationTests
         AssertContainsAny(cs, "Martin.Runtime.MartinConsole.Print(true);", "MartinConsole.Print(true);");
     }
 
-    [Fact] public void EmitsOperatorsConversionsControlFlowAndFunctions()
+    [Fact]
+    public void EmitsOperatorsConversionsControlFlowAndFunctions()
     {
         var cs = Emit("func add(_ left: Int, _ right: Int) -> Int { return left + right } func main() { var x: Double = 5 let y = add(20, 22) if y == 42 { print(\"ok\") } else { print(\"bad\") } while false { x = x + 1.0 } }");
         Assert.Contains("long __local_y", cs);
@@ -40,7 +42,8 @@ public sealed class Phase3CodeGenerationTests
         Assert.Contains("while (false)", cs);
     }
 
-    [Fact] public void EscapesStringLiteralsAndIsDeterministic()
+    [Fact]
+    public void EscapesStringLiteralsAndIsDeterministic()
     {
         var source = "func main() { print(\"quote \\\" slash \\\\ tab \\t newline \\n nul \\0\") }";
         var a = Emit(source); var b = Emit(source);
@@ -53,14 +56,16 @@ public sealed class Phase3CodeGenerationTests
     }
 
 
-    [Fact] public void GeneratedFunctionsAreOrderedDeterministically()
+    [Fact]
+    public void GeneratedFunctionsAreOrderedDeterministically()
     {
         var cs = Emit("func zed() { } func main() { } func alpha() { }");
         Assert.True(cs.IndexOf("__fn_alpha", StringComparison.Ordinal) < cs.IndexOf("__martin_main", StringComparison.Ordinal));
         Assert.True(cs.IndexOf("__martin_main", StringComparison.Ordinal) < cs.IndexOf("__fn_zed", StringComparison.Ordinal));
     }
 
-    [Fact] public void TemporaryAllocatorResetsAndNormalizesNames()
+    [Fact]
+    public void TemporaryAllocatorResetsAndNormalizesNames()
     {
         var a = new TemporaryAllocator();
         var b = new TemporaryAllocator();
@@ -69,7 +74,8 @@ public sealed class Phase3CodeGenerationTests
         Assert.Equal("__tmp_optional_value_0", b.Allocate("Optional Value"));
     }
 
-    [Fact] public void LowererReturnsStableFunctionOrder()
+    [Fact]
+    public void LowererReturnsStableFunctionOrder()
     {
         var program = Compilation.Create(SyntaxTree.Parse("func zed() { } func main() { } func alpha() { }", "test.martin")).BindProgram();
         var a = new CSharpLowerer().Lower(program);
@@ -78,7 +84,8 @@ public sealed class Phase3CodeGenerationTests
         Assert.Equal(["alpha", "main", "zed"], a.Functions.Select(f => f.Name).OrderBy(x => x));
     }
 
-    [Fact] public void ReportsEntryPointDiagnostics()
+    [Fact]
+    public void ReportsEntryPointDiagnostics()
     {
         var program = Compilation.Create(SyntaxTree.Parse("func nope() { }")).BindProgram();
         var result = new CSharpEmitter().Emit(new() { Program = new CSharpLowerer().Lower(program), AssemblyName = "TestApp", OutputKind = OutputKind.ConsoleApplication });

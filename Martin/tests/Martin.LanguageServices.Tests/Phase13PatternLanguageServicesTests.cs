@@ -57,8 +57,15 @@ public sealed class Phase13PatternLanguageServicesTests
     public async Task Pattern_bindings_and_enum_cases_are_classified_semantically()
     {
         var (service, workspace, project, document) = Create(Source);
-        var request = new ClassificationRequest { WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version,
-            ProjectId = project.Id, ProjectVersion = project.Version, DocumentId = document.Id, DocumentVersion = document.Version };
+        var request = new ClassificationRequest
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = document.Version
+        };
 
         var spans = (await service.GetClassificationsAsync(workspace, request)).Value;
 

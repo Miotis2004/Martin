@@ -98,7 +98,7 @@ public sealed class Phase4CliIntegrationTests
         throw new FileNotFoundException("Could not locate src/Martin.Cli/Martin.Cli.csproj from the test output directory.");
     }
 
-    static async Task<(int ExitCode,string Stdout,string Stderr)> Dotnet(string project, string cwd, params string[] args)
+    static async Task<(int ExitCode, string Stdout, string Stderr)> Dotnet(string project, string cwd, params string[] args)
     {
         var psi = new ProcessStartInfo("dotnet") { WorkingDirectory = cwd, RedirectStandardOutput = true, RedirectStandardError = true };
         psi.ArgumentList.Add("run"); psi.ArgumentList.Add("--project"); psi.ArgumentList.Add(project); psi.ArgumentList.Add("--"); foreach (var a in args) psi.ArgumentList.Add(a);
@@ -109,5 +109,5 @@ public sealed class Phase4CliIntegrationTests
         return (p.ExitCode, stdout, stderr);
     }
 
-    sealed class TempDir : IDisposable { public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MartinCliTests", Guid.NewGuid().ToString("N")); public TempDir() => Directory.CreateDirectory(Path); public void Dispose(){ if(Directory.Exists(Path)) Directory.Delete(Path,true); } }
+    sealed class TempDir : IDisposable { public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MartinCliTests", Guid.NewGuid().ToString("N")); public TempDir() => Directory.CreateDirectory(Path); public void Dispose() { if (Directory.Exists(Path)) Directory.Delete(Path, true); } }
 }

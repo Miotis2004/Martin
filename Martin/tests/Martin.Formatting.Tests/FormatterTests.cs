@@ -7,15 +7,15 @@ public sealed class FormatterTests
 {
     static readonly MartinLanguageService Service = new();
     static string Format(string source) => new MartinLanguageService().FormatDocument(source);
-    [Fact] public void FormattingIsIdempotent(){var once=Format("func main(){let value=1 print(value)}");var twice=Format(once);Assert.Equal(once,twice);}    
-    [Fact] public void IndentsNestedBlocks(){var formatted=Format("func main(){if true{print(1)}}");Assert.Contains("    if",formatted);Assert.Contains("        print",formatted);}    
-    [Fact] public void KeepsBracePlacementStable(){var formatted=Format("func main(){print(1)}");Assert.Contains("{",formatted);Assert.Contains("}",formatted);}    
-    [Fact] public void AddsSpacesAroundStatements(){var formatted=Format("func main(){let value=1}");Assert.Contains("let value",formatted);}    
-    [Fact] public void FormatsParameterSeparators(){var formatted=Format("func add(_ left:Int,_ right:Int)->Int{return left+right}");Assert.Contains(", ",formatted);}    
-    [Fact] public void FormatsEmptyBlockWithFinalNewline(){var formatted=Format("func main(){}");Assert.EndsWith(Environment.NewLine,formatted);Assert.Contains("}",formatted);}    
-    [Fact] public void PreservesStringContent(){var formatted=Format("func main(){print(\"a b c\")}");Assert.Contains("\"a b c\"",formatted);}    
-    [Fact] public void PreservesComments(){var formatted=Format("// hello\nfunc main(){}");Assert.Contains("// hello",formatted);}    
-    [Fact] public void MalformedSourceDoesNotCrash(){var ex=Record.Exception(()=>Format("func main( {"));Assert.Null(ex);}    
+    [Fact] public void FormattingIsIdempotent() { var once = Format("func main(){let value=1 print(value)}"); var twice = Format(once); Assert.Equal(once, twice); }
+    [Fact] public void IndentsNestedBlocks() { var formatted = Format("func main(){if true{print(1)}}"); Assert.Contains("    if", formatted); Assert.Contains("        print", formatted); }
+    [Fact] public void KeepsBracePlacementStable() { var formatted = Format("func main(){print(1)}"); Assert.Contains("{", formatted); Assert.Contains("}", formatted); }
+    [Fact] public void AddsSpacesAroundStatements() { var formatted = Format("func main(){let value=1}"); Assert.Contains("let value", formatted); }
+    [Fact] public void FormatsParameterSeparators() { var formatted = Format("func add(_ left:Int,_ right:Int)->Int{return left+right}"); Assert.Contains(", ", formatted); }
+    [Fact] public void FormatsEmptyBlockWithFinalNewline() { var formatted = Format("func main(){}"); Assert.EndsWith(Environment.NewLine, formatted); Assert.Contains("}", formatted); }
+    [Fact] public void PreservesStringContent() { var formatted = Format("func main(){print(\"a b c\")}"); Assert.Contains("\"a b c\"", formatted); }
+    [Fact] public void PreservesComments() { var formatted = Format("// hello\nfunc main(){}"); Assert.Contains("// hello", formatted); }
+    [Fact] public void MalformedSourceDoesNotCrash() { var ex = Record.Exception(() => Format("func main( {")); Assert.Null(ex); }
 
     [Fact]
     public void ReturnsBoundedApplicableSortedEdits()

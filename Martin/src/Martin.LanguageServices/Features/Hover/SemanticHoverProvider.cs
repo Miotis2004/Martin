@@ -11,12 +11,18 @@ internal static class SemanticHoverProvider
 {
     static readonly ImmutableDictionary<string, string> BuiltInDocumentation = new Dictionary<string, string>(StringComparer.Ordinal)
     {
-        ["print"] = "Writes a value to standard output.", ["readLine"] = "Reads one line from standard input.",
-        ["argumentCount"] = "The number of command-line arguments.", ["argument"] = "Returns a command-line argument by index.",
-        ["writeError"] = "Writes text to standard error.", ["exit"] = "Terminates the process with an exit code.",
-        ["Int"] = "A signed integer value.", ["Double"] = "A double-precision floating-point value.",
-        ["String"] = "A sequence of text characters.", ["Bool"] = "A Boolean truth value.",
-        ["Void"] = "The absence of a return value.", ["Nil"] = "The nil value."
+        ["print"] = "Writes a value to standard output.",
+        ["readLine"] = "Reads one line from standard input.",
+        ["argumentCount"] = "The number of command-line arguments.",
+        ["argument"] = "Returns a command-line argument by index.",
+        ["writeError"] = "Writes text to standard error.",
+        ["exit"] = "Terminates the process with an exit code.",
+        ["Int"] = "A signed integer value.",
+        ["Double"] = "A double-precision floating-point value.",
+        ["String"] = "A sequence of text characters.",
+        ["Bool"] = "A Boolean truth value.",
+        ["Void"] = "The absence of a return value.",
+        ["Nil"] = "The nil value."
     }.ToImmutableDictionary(StringComparer.Ordinal);
 
     public static HoverInfo? Get(LanguageProjectSnapshot project, ProjectAnalysis analysis, LanguageDocumentSnapshot document, int position, CancellationToken cancellationToken)

@@ -81,8 +81,8 @@ public sealed class Phase13PatternSyntaxTests
     {
         yield return node;
         foreach (var child in node.GetChildren())
-        foreach (var descendant in DescendantsAndSelf(child))
-            yield return descendant;
+            foreach (var descendant in DescendantsAndSelf(child))
+                yield return descendant;
     }
 
     private sealed class PatternCountingVisitor : SyntaxVisitor

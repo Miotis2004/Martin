@@ -34,8 +34,8 @@ internal static class SemanticNavigationProvider
             leftSet.Add(rightId.Value); rightSet.Add(leftId.Value);
         }
         foreach (var conformance in analysis.Phase13.Conformances)
-        foreach (var (requirement, witness) in conformance.Witnesses)
-            Relate(requirement, witness);
+            foreach (var (requirement, witness) in conformance.Witnesses)
+                Relate(requirement, witness);
         return new(analysis.Declarations, analysis.References,
             related.ToImmutableDictionary(pair => pair.Key, pair => pair.Value.OrderBy(id => id.Value, StringComparer.Ordinal).ToImmutableArray()),
             analysis.SemanticModels);

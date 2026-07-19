@@ -56,12 +56,12 @@ public sealed class BuildStateStore
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 return new BuildArtifactState
-            {
-                Kind = artifact.Kind,
-                RelativePath = Relative(outputRoot, artifact.Path),
-                Sha256 = Sha256(artifact.Path, cancellationToken),
-                Length = new FileInfo(artifact.Path).Length
-            };
+                {
+                    Kind = artifact.Kind,
+                    RelativePath = Relative(outputRoot, artifact.Path),
+                    Sha256 = Sha256(artifact.Path, cancellationToken),
+                    Length = new FileInfo(artifact.Path).Length
+                };
             })
             .ToImmutableArray();
 

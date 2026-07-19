@@ -126,7 +126,9 @@ public sealed class PatternBinder
         }
         var child = BindCore(syntax.ValuePattern, context with
         {
-            InputType = optional.ElementType, ExpectedOptional = null, NestingDepth = context.NestingDepth + 1
+            InputType = optional.ElementType,
+            ExpectedOptional = null,
+            NestingDepth = context.NestingDepth + 1
         }, diagnostics, cancellationToken);
         return new BoundOptionalSomePattern(optional, child, location);
     }
@@ -183,7 +185,9 @@ public sealed class PatternBinder
         for (var i = 0; i < Math.Min(arguments.Count, enumCase.AssociatedValues.Length); i++)
             children.Add(BindCore(arguments[i], context with
             {
-                InputType = enumCase.AssociatedValues[i].Type, ExpectedEnum = null, NestingDepth = context.NestingDepth + 1
+                InputType = enumCase.AssociatedValues[i].Type,
+                ExpectedEnum = null,
+                NestingDepth = context.NestingDepth + 1
             }, diagnostics, cancellationToken));
         return new BoundEnumCasePattern(context.InputType, enumCase, children.ToImmutable(), location, !countValid);
     }

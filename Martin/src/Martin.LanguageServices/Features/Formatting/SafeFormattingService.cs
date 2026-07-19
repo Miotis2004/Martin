@@ -145,6 +145,7 @@ public static class TextEditApplicator
     }
     public static string Apply(string source, ImmutableArray<TextEdit> edits)
     {
-        Validate(source, edits); var b = new StringBuilder(source); for (var i = edits.Length - 1; i >= 0; i--) { var e = edits[i]; b.Remove(e.Span.Start, e.Span.Length).Insert(e.Span.Start, e.NewText); } return b.ToString();
+        Validate(source, edits); var b = new StringBuilder(source); for (var i = edits.Length - 1; i >= 0; i--) { var e = edits[i]; b.Remove(e.Span.Start, e.Span.Length).Insert(e.Span.Start, e.NewText); }
+        return b.ToString();
     }
 }

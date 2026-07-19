@@ -162,27 +162,27 @@ public sealed class DotNetBuildRunnerTests
     }
 
     static string CreateChildProcessExecutable(string directory)
-{
-    if (OperatingSystem.IsWindows())
-        throw new PlatformNotSupportedException(
-            "The child-process script test requires a Unix-like platform.");
+    {
+        if (OperatingSystem.IsWindows())
+            throw new PlatformNotSupportedException(
+                "The child-process script test requires a Unix-like platform.");
 
-    var script = Path.Combine(directory, "child-dotnet.sh");
+        var script = Path.Combine(directory, "child-dotnet.sh");
 
-    File.WriteAllText(
-        script,
-        "#!/usr/bin/env sh\n" +
-        "sleep 30 &\n" +
-        "printf '%s\\n' \"$!\" > child.pid\n" +
-        "wait\n");
+        File.WriteAllText(
+            script,
+            "#!/usr/bin/env sh\n" +
+            "sleep 30 &\n" +
+            "printf '%s\\n' \"$!\" > child.pid\n" +
+            "wait\n");
 
-    File.SetUnixFileMode(
-        script,
-        UnixFileMode.UserRead |
-        UnixFileMode.UserWrite |
-        UnixFileMode.UserExecute);
+        File.SetUnixFileMode(
+            script,
+            UnixFileMode.UserRead |
+            UnixFileMode.UserWrite |
+            UnixFileMode.UserExecute);
 
-    return script;
-}
+        return script;
+    }
 
 }

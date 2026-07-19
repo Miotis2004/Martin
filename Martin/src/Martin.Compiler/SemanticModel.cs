@@ -177,18 +177,18 @@ public sealed class SemanticModel
             argumentsWereInferred = genericUse.TypeArgumentsWereInferred;
         }
         else switch (symbol)
-        {
-            case ConstructedTypeSymbol type:
-                original = type.GenericDefinition; arguments = type.TypeArguments; typeIdentity = type.Identity;
-                argumentsWereInferred = false; break;
-            case InitializerSymbol { ContainingType: ConstructedTypeSymbol type }:
-                original = type.GenericDefinition; symbol = type; arguments = type.TypeArguments; typeIdentity = type.Identity;
-                argumentsWereInferred = false; break;
-            case EnumCaseSymbol { ContainingType: ConstructedTypeSymbol type }:
-                original = type.GenericDefinition; symbol = type; arguments = type.TypeArguments; typeIdentity = type.Identity;
-                argumentsWereInferred = false; break;
-            default: return null;
-        }
+            {
+                case ConstructedTypeSymbol type:
+                    original = type.GenericDefinition; arguments = type.TypeArguments; typeIdentity = type.Identity;
+                    argumentsWereInferred = false; break;
+                case InitializerSymbol { ContainingType: ConstructedTypeSymbol type }:
+                    original = type.GenericDefinition; symbol = type; arguments = type.TypeArguments; typeIdentity = type.Identity;
+                    argumentsWereInferred = false; break;
+                case EnumCaseSymbol { ContainingType: ConstructedTypeSymbol type }:
+                    original = type.GenericDefinition; symbol = type; arguments = type.TypeArguments; typeIdentity = type.Identity;
+                    argumentsWereInferred = false; break;
+                default: return null;
+            }
 
         var parameters = original switch
         {

@@ -54,9 +54,16 @@ public sealed class Phase14GenericLanguageServicesTests
         const string source = "struct Box<T> { let value: T } func main() { let box = Box<Int>(value: 1) let answer = box.value }";
         var (service, workspace, document, project) = Workspace(source);
         var use = source.LastIndexOf("value", StringComparison.Ordinal);
-        var request = new DefinitionRequest { WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version,
-            ProjectId = project.Id, ProjectVersion = project.Version, DocumentId = document.Id,
-            DocumentVersion = document.Version, Position = use };
+        var request = new DefinitionRequest
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = document.Version,
+            Position = use
+        };
 
         var current = await service.GetDefinitionsAsync(workspace, request);
         Assert.False(current.IsStale);
@@ -72,8 +79,15 @@ public sealed class Phase14GenericLanguageServicesTests
     {
         const string source = "struct Box<T> { let value: T }";
         var (service, workspace, document, project) = Workspace(source);
-        var request = new ClassificationRequest { WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version,
-            ProjectId = project.Id, ProjectVersion = project.Version, DocumentId = document.Id, DocumentVersion = document.Version };
+        var request = new ClassificationRequest
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = document.Version
+        };
 
         var classifications = await service.GetClassificationsAsync(workspace, request);
 

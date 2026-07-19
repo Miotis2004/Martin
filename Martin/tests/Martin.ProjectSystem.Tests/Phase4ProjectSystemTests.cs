@@ -502,5 +502,5 @@ exclude = ["bin/**", "obj/**", ".martin/**"]
     }
 
     static TempDir TempProject() => new();
-    sealed class TempDir : IDisposable { public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MartinTests", Guid.NewGuid().ToString("N")); public TempDir() => Directory.CreateDirectory(Path); public void Dispose(){ if(Directory.Exists(Path)) Directory.Delete(Path,true); } }
+    sealed class TempDir : IDisposable { public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MartinTests", Guid.NewGuid().ToString("N")); public TempDir() => Directory.CreateDirectory(Path); public void Dispose() { if (Directory.Exists(Path)) Directory.Delete(Path, true); } }
 }

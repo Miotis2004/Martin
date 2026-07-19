@@ -77,11 +77,15 @@ public sealed class Phase12SemanticHoverTests
 
     static HoverRequest Request(LanguageWorkspaceSnapshot workspace, LanguageProjectSnapshot project,
         LanguageDocumentSnapshot document, int position) => new()
-    {
-        WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version, ProjectId = project.Id,
-        ProjectVersion = project.Version, DocumentId = document.Id, DocumentVersion = document.Version,
-        Position = position
-    };
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = document.Version,
+            Position = position
+        };
 
     static (MartinLanguageService Service, LanguageWorkspaceSnapshot Workspace, LanguageProjectSnapshot Project,
         LanguageDocumentSnapshot Document) Workspace(string source)

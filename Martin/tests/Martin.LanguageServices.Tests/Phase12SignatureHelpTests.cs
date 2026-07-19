@@ -46,9 +46,17 @@ public sealed class Phase12SignatureHelpTests
     {
         var (service, workspace, document) = Create("func f(_ x: Int) {}\nfunc main() { f(");
         var project = workspace.Projects[0];
-        var request = new SignatureHelpRequest { WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version,
-            ProjectId = project.Id, ProjectVersion = project.Version, DocumentId = document.Id,
-            DocumentVersion = new(document.Version.Value + 1), Position = document.Text.Length, TriggerCharacter = '(' };
+        var request = new SignatureHelpRequest
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = new(document.Version.Value + 1),
+            Position = document.Text.Length,
+            TriggerCharacter = '('
+        };
 
         var result = await service.GetSignatureHelpAsync(workspace, request);
         Assert.True(result.IsStale);

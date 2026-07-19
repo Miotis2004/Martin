@@ -336,7 +336,7 @@ public sealed class Phase11ProjectOpeningTests
         using var project = new Phase11TempProject();
         var workspace = new WorkspaceService();
         Assert.True(workspace.OpenProject(project.Root).Success);
-        await File.WriteAllBytesAsync(project.Main, [0xEF, 0xBB, 0xBF, ..System.Text.Encoding.UTF8.GetBytes("func main() {\r\n return 1\r\n}")]);
+        await File.WriteAllBytesAsync(project.Main, [0xEF, 0xBB, 0xBF, .. System.Text.Encoding.UTF8.GetBytes("func main() {\r\n return 1\r\n}")]);
 
         var document = workspace.OpenDocument(project.Main);
         workspace.ApplyEditorChange(document.Id, "func main() {\n return 2\n}");

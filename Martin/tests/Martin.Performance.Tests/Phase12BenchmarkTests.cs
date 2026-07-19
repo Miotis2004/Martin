@@ -158,15 +158,15 @@ internal static class BenchmarkData
 
     public static CompletionRequest Request(LanguageWorkspaceSnapshot workspace,
         LanguageProjectSnapshot project, LanguageDocumentSnapshot document, int position) => new()
-    {
-        WorkspaceId = workspace.Id,
-        WorkspaceVersion = workspace.Version,
-        ProjectId = project.Id,
-        ProjectVersion = project.Version,
-        DocumentId = document.Id,
-        DocumentVersion = document.Version,
-        Position = Math.Min(position, document.Text.Length)
-    };
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = document.Version,
+            Position = Math.Min(position, document.Text.Length)
+        };
 }
 
 internal sealed class BenchmarkWorkspace(LanguageWorkspaceSnapshot snapshot) : ILanguageWorkspace

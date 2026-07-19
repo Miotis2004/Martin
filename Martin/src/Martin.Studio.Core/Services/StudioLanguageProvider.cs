@@ -94,7 +94,7 @@ public sealed class StudioLanguageProvider : IAsyncDisposable
         if (!_documentIds.TryGetValue(studioId, out var id))
             return Task.FromResult(new DocumentChangeResult(DocumentChangeStatus.RequiresFullTextResynchronization, "MRTLS1010", "The editor document is not open."));
         return _languageWorkspace.ApplyDocumentChangesAsync(new Martin.LanguageServices.DocumentChange
-        { DocumentId=id, PreviousVersion=new(previousVersion.Value), NewVersion=new(newVersion.Value), Changes=changes }, cancellationToken);
+        { DocumentId = id, PreviousVersion = new(previousVersion.Value), NewVersion = new(newVersion.Value), Changes = changes }, cancellationToken);
     }
 
     public async Task ReplaceDocumentTextAsync(DocumentModel document, CancellationToken cancellationToken = default)
@@ -149,7 +149,7 @@ public sealed class StudioLanguageProvider : IAsyncDisposable
             await _languageWorkspace.CloseProjectAsync(id, cancellationToken);
             languageService.CloseProject(id);
         }
-        _projectId=null; _manifestPath=null; _documentIds.Clear(); _studioIds.Clear();
+        _projectId = null; _manifestPath = null; _documentIds.Clear(); _studioIds.Clear();
     }
 
     void OnDiagnosticSnapshot(object? sender, DiagnosticSnapshotEventArgs e)
@@ -159,14 +159,14 @@ public sealed class StudioLanguageProvider : IAsyncDisposable
             if (!_studioIds.TryGetValue(set.DocumentId, out var id)) continue;
             var version = new DocumentVersion(set.DocumentVersion.Value);
             var diagnostics = set.Diagnostics.Select(d => new StudioDiagnostic(d.Code, ToStudioSeverity(d.Severity), d.Message, d.FilePath,
-                new(d.LineSpan.Start.Line+1,d.LineSpan.Start.Character+1,d.LineSpan.End.Line+1,d.LineSpan.End.Character+1), d.Source, id, version)).ToImmutableArray();
+                new(d.LineSpan.Start.Line + 1, d.LineSpan.Start.Character + 1, d.LineSpan.End.Line + 1, d.LineSpan.End.Character + 1), d.Source, id, version)).ToImmutableArray();
             DiagnosticsPublished?.Invoke(new(id, version, diagnostics));
             SemanticTokensInvalidated?.Invoke(this, new(id, version));
         }
     }
 
-    void Log(string operation,string message,string? detail=null) => _log?.Log(StudioLogCategory.Diagnostics,OutputSeverity.Info,operation,message,detail);
-    void ThrowIfDisposed(){if(_disposed)throw new ObjectDisposedException(nameof(StudioLanguageProvider));}
+    void Log(string operation, string message, string? detail = null) => _log?.Log(StudioLogCategory.Diagnostics, OutputSeverity.Info, operation, message, detail);
+    void ThrowIfDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(StudioLanguageProvider)); }
 
     public async ValueTask DisposeAsync()
     {
@@ -180,7 +180,7 @@ public sealed class StudioLanguageProvider : IAsyncDisposable
             await _liveDiagnostics.DisposeAsync();
             await _analysisScheduler.DisposeAsync();
             await _languageWorkspace.DisposeAsync();
-            _disposed=true;
+            _disposed = true;
         }
         finally { _lifecycle.Release(); _lifecycle.Dispose(); }
     }
@@ -274,8 +274,15 @@ public sealed class StudioLanguageProvider : IAsyncDisposable
 
     static object Completion(LanguageResult<ImmutableArray<CompletionItem>> result, LanguageDocumentSnapshot document, MonacoResponseIdentity identity, bool invalidated) => new
     {
-        identity.WorkspaceId, identity.WorkspaceVersion, identity.ProjectId, identity.ProjectVersion, identity.DocumentId, identity.DocumentVersion,
-        modelVersion = identity.ModelVersion, isStale = result.IsStale || invalidated, isCancelled = result.IsCancelled,
+        identity.WorkspaceId,
+        identity.WorkspaceVersion,
+        identity.ProjectId,
+        identity.ProjectVersion,
+        identity.DocumentId,
+        identity.DocumentVersion,
+        modelVersion = identity.ModelVersion,
+        isStale = result.IsStale || invalidated,
+        isCancelled = result.IsCancelled,
         items = (result.Value.IsDefault ? ImmutableArray<CompletionItem>.Empty : result.Value).Select(x => new { x.Label, kind = x.Kind.ToString(), x.Detail, documentation = EscapeMarkdown(x.DocumentationMarkdown), insertText = x.InsertText ?? x.TextEdit.NewText, isSnippet = x.InsertTextFormat == InsertTextFormat.Snippet, range = Range(document, x.TextEdit.Span), commitCharacters = x.CommitCharacters.Select(c => c.ToString()) })
     };
     static object Hover(LanguageResult<HoverInfo?> result, LanguageDocumentSnapshot document, MonacoResponseIdentity identity, bool invalidated) => new { identity.WorkspaceId, identity.WorkspaceVersion, identity.ProjectId, identity.ProjectVersion, identity.DocumentId, identity.DocumentVersion, modelVersion = identity.ModelVersion, isStale = result.IsStale || invalidated, isCancelled = result.IsCancelled, hover = result.Value is null ? null : new { markdown = EscapeMarkdown(result.Value.Markdown), range = Range(document, result.Value.Span) } };
@@ -311,13 +318,13 @@ public sealed class StudioLanguageProvider : IAsyncDisposable
 
     readonly record struct RequestIdentity(LanguageWorkspaceSnapshot Workspace, LanguageProjectSnapshot Project, LanguageDocumentSnapshot Document, int Position)
     {
-        public CompletionRequest Completion(JsonElement p) => new() { WorkspaceId=Workspace.Id,WorkspaceVersion=Workspace.Version,ProjectId=Project.Id,ProjectVersion=Project.Version,DocumentId=Document.Id,DocumentVersion=Document.Version, Position = Position, MaximumResults = p.TryGetProperty("maximumResults", out var m) ? Math.Clamp(m.GetInt32(), 1, 1000) : 200, TriggerCharacter = Character(p, "triggerCharacter") };
-        public HoverRequest Hover() => new() { WorkspaceId=Workspace.Id,WorkspaceVersion=Workspace.Version,ProjectId=Project.Id,ProjectVersion=Project.Version,DocumentId=Document.Id,DocumentVersion=Document.Version, Position = Position };
-        public DefinitionRequest Definition() => new() { WorkspaceId=Workspace.Id,WorkspaceVersion=Workspace.Version,ProjectId=Project.Id,ProjectVersion=Project.Version,DocumentId=Document.Id,DocumentVersion=Document.Version, Position = Position };
-        public ReferencesRequest References(JsonElement p) => new() { WorkspaceId=Workspace.Id,WorkspaceVersion=Workspace.Version,ProjectId=Project.Id,ProjectVersion=Project.Version,DocumentId=Document.Id,DocumentVersion=Document.Version, Position = Position, IncludeDeclaration = p.TryGetProperty("includeDeclaration", out var i) && i.GetBoolean() };
-        public SignatureHelpRequest Signature(JsonElement p) => new() { WorkspaceId=Workspace.Id,WorkspaceVersion=Workspace.Version,ProjectId=Project.Id,ProjectVersion=Project.Version,DocumentId=Document.Id,DocumentVersion=Document.Version, Position = Position, TriggerCharacter = Character(p, "triggerCharacter"), IsRetrigger = p.TryGetProperty("isRetrigger", out var r) && r.GetBoolean() };
-        public FormattingRequest Formatting(JsonElement p) => new() { WorkspaceId=Workspace.Id,WorkspaceVersion=Workspace.Version,ProjectId=Project.Id,ProjectVersion=Project.Version,DocumentId=Document.Id,DocumentVersion=Document.Version, Options = new FormattingOptions { IndentSize = p.TryGetProperty("tabSize", out var t) ? Math.Clamp(t.GetInt32(), 1, 8) : 4, UseTabs = p.TryGetProperty("insertSpaces", out var s) && !s.GetBoolean() } };
-        public ClassificationRequest Classification() => new() { WorkspaceId=Workspace.Id,WorkspaceVersion=Workspace.Version,ProjectId=Project.Id,ProjectVersion=Project.Version,DocumentId=Document.Id,DocumentVersion=Document.Version };
+        public CompletionRequest Completion(JsonElement p) => new() { WorkspaceId = Workspace.Id, WorkspaceVersion = Workspace.Version, ProjectId = Project.Id, ProjectVersion = Project.Version, DocumentId = Document.Id, DocumentVersion = Document.Version, Position = Position, MaximumResults = p.TryGetProperty("maximumResults", out var m) ? Math.Clamp(m.GetInt32(), 1, 1000) : 200, TriggerCharacter = Character(p, "triggerCharacter") };
+        public HoverRequest Hover() => new() { WorkspaceId = Workspace.Id, WorkspaceVersion = Workspace.Version, ProjectId = Project.Id, ProjectVersion = Project.Version, DocumentId = Document.Id, DocumentVersion = Document.Version, Position = Position };
+        public DefinitionRequest Definition() => new() { WorkspaceId = Workspace.Id, WorkspaceVersion = Workspace.Version, ProjectId = Project.Id, ProjectVersion = Project.Version, DocumentId = Document.Id, DocumentVersion = Document.Version, Position = Position };
+        public ReferencesRequest References(JsonElement p) => new() { WorkspaceId = Workspace.Id, WorkspaceVersion = Workspace.Version, ProjectId = Project.Id, ProjectVersion = Project.Version, DocumentId = Document.Id, DocumentVersion = Document.Version, Position = Position, IncludeDeclaration = p.TryGetProperty("includeDeclaration", out var i) && i.GetBoolean() };
+        public SignatureHelpRequest Signature(JsonElement p) => new() { WorkspaceId = Workspace.Id, WorkspaceVersion = Workspace.Version, ProjectId = Project.Id, ProjectVersion = Project.Version, DocumentId = Document.Id, DocumentVersion = Document.Version, Position = Position, TriggerCharacter = Character(p, "triggerCharacter"), IsRetrigger = p.TryGetProperty("isRetrigger", out var r) && r.GetBoolean() };
+        public FormattingRequest Formatting(JsonElement p) => new() { WorkspaceId = Workspace.Id, WorkspaceVersion = Workspace.Version, ProjectId = Project.Id, ProjectVersion = Project.Version, DocumentId = Document.Id, DocumentVersion = Document.Version, Options = new FormattingOptions { IndentSize = p.TryGetProperty("tabSize", out var t) ? Math.Clamp(t.GetInt32(), 1, 8) : 4, UseTabs = p.TryGetProperty("insertSpaces", out var s) && !s.GetBoolean() } };
+        public ClassificationRequest Classification() => new() { WorkspaceId = Workspace.Id, WorkspaceVersion = Workspace.Version, ProjectId = Project.Id, ProjectVersion = Project.Version, DocumentId = Document.Id, DocumentVersion = Document.Version };
         static char? Character(JsonElement p, string name) => p.TryGetProperty(name, out var c) && c.ValueKind == JsonValueKind.String && c.GetString() is { Length: 1 } text ? text[0] : null;
     }
 }

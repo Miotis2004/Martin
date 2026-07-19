@@ -158,8 +158,17 @@ public sealed class AnalysisScheduler : IAnalysisScheduler
     }
 
     static LanguageResult<T> Result<T>(LanguageRequest r, T value, bool cancelled = false, bool stale = false) => new()
-    { WorkspaceId=r.WorkspaceId, WorkspaceVersion=r.WorkspaceVersion, ProjectId=r.ProjectId, ProjectVersion=r.ProjectVersion,
-      DocumentId=r.DocumentId, DocumentVersion=r.DocumentVersion, Value=value, IsCancelled=cancelled, IsStale=stale };
+    {
+        WorkspaceId = r.WorkspaceId,
+        WorkspaceVersion = r.WorkspaceVersion,
+        ProjectId = r.ProjectId,
+        ProjectVersion = r.ProjectVersion,
+        DocumentId = r.DocumentId,
+        DocumentVersion = r.DocumentVersion,
+        Value = value,
+        IsCancelled = cancelled,
+        IsStale = stale
+    };
 
     void Debounce<TKey>(ConcurrentDictionary<TKey, CancellationTokenSource> map, TKey key, TimeSpan delay, Func<CancellationToken, Task> action) where TKey : notnull
     {
@@ -187,14 +196,14 @@ public sealed class AnalysisScheduler : IAnalysisScheduler
         { ct.ThrowIfCancellationRequested(); await handler(id, version, ct).ConfigureAwait(false); }
     }
 
-    static async Task ObserveDebounceAsync<TKey>(ConcurrentDictionary<TKey, CancellationTokenSource> map, TKey key, CancellationTokenSource cts, TimeSpan delay, Func<CancellationToken, Task> action) where TKey:notnull
+    static async Task ObserveDebounceAsync<TKey>(ConcurrentDictionary<TKey, CancellationTokenSource> map, TKey key, CancellationTokenSource cts, TimeSpan delay, Func<CancellationToken, Task> action) where TKey : notnull
     {
         try { await Task.Delay(delay, cts.Token).ConfigureAwait(false); await action(cts.Token).ConfigureAwait(false); }
         catch (OperationCanceledException) when (cts.IsCancellationRequested) { }
         finally { if (((ICollection<KeyValuePair<TKey, CancellationTokenSource>>)map).Remove(new(key, cts))) cts.Dispose(); }
     }
 
-    static void ReplaceToken<TKey>(ConcurrentDictionary<TKey, CancellationTokenSource> map, TKey key) where TKey:notnull
+    static void ReplaceToken<TKey>(ConcurrentDictionary<TKey, CancellationTokenSource> map, TKey key) where TKey : notnull
     {
         var next = new CancellationTokenSource();
         if (map.TryGetValue(key, out var old)) { map[key] = next; old.Cancel(); old.Dispose(); }
@@ -217,7 +226,7 @@ public sealed class AnalysisScheduler : IAnalysisScheduler
 
     readonly record struct WorkKey(string Feature, ProjectId Project, DocumentId Document, DocumentVersion Version);
     interface IWorkItem { WorkKey Key { get; } long EnqueuedTimestamp { get; } Task ExecuteAsync(AnalysisScheduler owner, CancellationToken shutdown); void Cancel(); }
-    sealed class WorkItem<T>(LanguageRequest request, Func<LanguageAnalysisContext,CancellationToken,Task<T>> operation,
+    sealed class WorkItem<T>(LanguageRequest request, Func<LanguageAnalysisContext, CancellationToken, Task<T>> operation,
         WorkKey key, CancellationToken caller, CancellationToken document, CancellationToken project) : IWorkItem
     {
         readonly TaskCompletionSource<LanguageResult<T>> _completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -228,14 +237,14 @@ public sealed class AnalysisScheduler : IAnalysisScheduler
             try
             {
                 var context = owner.Resolve(request);
-                if (context is null) { owner.Metrics.MarkStale(); _completion.TrySetResult(Result<T>(request, default!, stale:true)); return; }
+                if (context is null) { owner.Metrics.MarkStale(); _completion.TrySetResult(Result<T>(request, default!, stale: true)); return; }
                 var value = await operation(context, linked.Token).ConfigureAwait(false);
-                if (owner.Resolve(request) is null) { owner.Metrics.MarkStale(); _completion.TrySetResult(Result<T>(request, default!, stale:true)); }
+                if (owner.Resolve(request) is null) { owner.Metrics.MarkStale(); _completion.TrySetResult(Result<T>(request, default!, stale: true)); }
                 else { owner.Metrics.Complete(); _completion.TrySetResult(Result(request, value)); }
             }
-            catch (OperationCanceledException) when (linked.IsCancellationRequested) { owner.Metrics.Cancel(); _completion.TrySetResult(Result<T>(request, default!, cancelled:true)); }
+            catch (OperationCanceledException) when (linked.IsCancellationRequested) { owner.Metrics.Cancel(); _completion.TrySetResult(Result<T>(request, default!, cancelled: true)); }
             catch (Exception ex) { _completion.TrySetException(ex); }
         }
-        public void Cancel() { _completion.TrySetResult(Result<T>(request, default!, cancelled:true)); }
+        public void Cancel() { _completion.TrySetResult(Result<T>(request, default!, cancelled: true)); }
     }
 }

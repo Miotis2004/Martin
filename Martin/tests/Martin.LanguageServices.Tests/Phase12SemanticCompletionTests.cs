@@ -44,9 +44,17 @@ public sealed class Phase12SemanticCompletionTests
     public async Task Versioned_completion_rejects_stale_requests_and_honors_limits()
     {
         var (service, workspace, document, project) = Workspace("func first() {} func second() {}");
-        var request = new CompletionRequest { WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version,
-            ProjectId = project.Id, ProjectVersion = project.Version, DocumentId = document.Id,
-            DocumentVersion = new DocumentVersion(99), Position = 0, MaximumResults = 1 };
+        var request = new CompletionRequest
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = new DocumentVersion(99),
+            Position = 0,
+            MaximumResults = 1
+        };
         Assert.True((await service.CompleteAsync(workspace, request)).IsStale);
 
         request = request with { DocumentVersion = document.Version };

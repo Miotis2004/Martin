@@ -153,7 +153,7 @@ public sealed class CSharpLowerer
                 var tryBlock = tryStmts.Count == 1 ? tryStmts[0] : new BoundBlockStatement(tryStmts.ToImmutable());
 
                 var clauses = ImmutableArray.CreateBuilder<BoundCatchClause>();
-                foreach(var c in doCatch.CatchClauses)
+                foreach (var c in doCatch.CatchClauses)
                 {
                     var catchStmts = ImmutableArray.CreateBuilder<BoundStatement>();
                     LowerStatement(c.Body, catchStmts, returnType);

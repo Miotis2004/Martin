@@ -8,7 +8,7 @@ namespace Martin.Semantic.Tests;
 
 public sealed class Phase2SemanticTests
 {
-    static Compilation Compile(params string[] sources) => Compilation.Create(sources.Select((s,i)=>SyntaxTree.Parse(s,$"file{i}.martin")));
+    static Compilation Compile(params string[] sources) => Compilation.Create(sources.Select((s, i) => SyntaxTree.Parse(s, $"file{i}.martin")));
 
     [Fact]
     public void RepresentativeProgramBindsWithoutDiagnostics()

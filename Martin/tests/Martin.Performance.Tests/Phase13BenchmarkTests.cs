@@ -41,9 +41,12 @@ public sealed class Phase13BenchmarkTests(ITestOutputHelper output)
         await MeasureAsync(results, "witness-navigation", 1, () => service.GetDefinitionsAsync(data.Workspace,
             new DefinitionRequest
             {
-                WorkspaceId = data.Workspace.Id, WorkspaceVersion = data.Workspace.Version,
-                ProjectId = data.Project.Id, ProjectVersion = data.Project.Version,
-                DocumentId = data.Document.Id, DocumentVersion = data.Document.Version,
+                WorkspaceId = data.Workspace.Id,
+                WorkspaceVersion = data.Workspace.Version,
+                ProjectId = data.Project.Id,
+                ProjectVersion = data.Project.Version,
+                DocumentId = data.Document.Id,
+                DocumentVersion = data.Document.Version,
                 Position = data.NavigationPosition
             }));
 
@@ -140,9 +143,13 @@ internal static class Phase13Data
 
     public static CompletionRequest Request(LanguageWorkspaceSnapshot workspace, LanguageProjectSnapshot project,
         LanguageDocumentSnapshot document, int position) => new()
-    {
-        WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version,
-        ProjectId = project.Id, ProjectVersion = project.Version,
-        DocumentId = document.Id, DocumentVersion = document.Version, Position = position
-    };
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = document.Version,
+            Position = position
+        };
 }

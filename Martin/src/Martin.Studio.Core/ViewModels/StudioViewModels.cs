@@ -794,11 +794,11 @@ public sealed partial class OutputPaneViewModel(IOutputService outputService) : 
     public OutputFilter Filter { get; private set; } = new();
     public bool AutoScroll { get; private set; } = true;
 
-    public void SetFilter(OutputFilter filter){Filter=filter;Refresh();}
-    public void SetAutoScroll(bool autoScroll)=>AutoScroll=autoScroll;
-    public void Clear(){outputService.Clear();Refresh();}
-    public string CopyAll()=>outputService.CopyAll(Filter);
-    public Task SaveLogAsync(string path,CancellationToken cancellationToken=default)=>outputService.SaveLogAsync(path,Filter,cancellationToken);
+    public void SetFilter(OutputFilter filter) { Filter = filter; Refresh(); }
+    public void SetAutoScroll(bool autoScroll) => AutoScroll = autoScroll;
+    public void Clear() { outputService.Clear(); Refresh(); }
+    public string CopyAll() => outputService.CopyAll(Filter);
+    public Task SaveLogAsync(string path, CancellationToken cancellationToken = default) => outputService.SaveLogAsync(path, Filter, cancellationToken);
 
     public void Refresh()
     {
@@ -815,10 +815,10 @@ public sealed partial class ErrorListViewModel : ObservableObject
     public ObservableCollection<StudioDiagnosticViewModel> Diagnostics { get; } = [];
     public DiagnosticFilter Filter { get; private set; } = new();
 
-    public void SetFilter(DiagnosticFilter filter){Filter=filter;ApplyFilter();}
-    public string CopyAll()=>string.Join(Environment.NewLine,Diagnostics.Select(d=>d.AccessibleText));
-    public StudioDiagnostic? Next()=>Navigate(1)?.Diagnostic;
-    public StudioDiagnostic? Previous()=>Navigate(-1)?.Diagnostic;
+    public void SetFilter(DiagnosticFilter filter) { Filter = filter; ApplyFilter(); }
+    public string CopyAll() => string.Join(Environment.NewLine, Diagnostics.Select(d => d.AccessibleText));
+    public StudioDiagnostic? Next() => Navigate(1)?.Diagnostic;
+    public StudioDiagnostic? Previous() => Navigate(-1)?.Diagnostic;
 
     public void Refresh(IEnumerable<StudioDiagnostic> diagnostics)
     {
@@ -829,13 +829,13 @@ public sealed partial class ErrorListViewModel : ObservableObject
     private void ApplyFilter()
     {
         Diagnostics.Clear();
-        foreach (var diagnostic in _allDiagnostics.Where(Matches).OrderByDescending(d=>d.Severity).ThenBy(d=>d.FilePath??string.Empty,StringComparer.OrdinalIgnoreCase).ThenBy(d=>d.Range?.StartLine??0).ThenBy(d=>d.Range?.StartColumn??0).ThenBy(d=>d.Code,StringComparer.OrdinalIgnoreCase))
+        foreach (var diagnostic in _allDiagnostics.Where(Matches).OrderByDescending(d => d.Severity).ThenBy(d => d.FilePath ?? string.Empty, StringComparer.OrdinalIgnoreCase).ThenBy(d => d.Range?.StartLine ?? 0).ThenBy(d => d.Range?.StartColumn ?? 0).ThenBy(d => d.Code, StringComparer.OrdinalIgnoreCase))
             Diagnostics.Add(new StudioDiagnosticViewModel(diagnostic));
         if (_navigationIndex >= Diagnostics.Count) _navigationIndex = Diagnostics.Count - 1;
     }
 
-    private StudioDiagnosticViewModel? Navigate(int delta){if(Diagnostics.Count==0)return null; _navigationIndex=(_navigationIndex+delta)%Diagnostics.Count; if(_navigationIndex<0)_navigationIndex+=Diagnostics.Count; return Diagnostics[_navigationIndex];}
-    private bool Matches(StudioDiagnostic d)=> (Filter.Severities is null||Filter.Severities.Contains(d.Severity))&&(Filter.Sources is null||Filter.Sources.Contains(d.Source))&&(string.IsNullOrWhiteSpace(Filter.Text)||d.Message.Contains(Filter.Text,StringComparison.OrdinalIgnoreCase)||d.Code.Contains(Filter.Text,StringComparison.OrdinalIgnoreCase)||(d.FilePath?.Contains(Filter.Text,StringComparison.OrdinalIgnoreCase)??false)||d.Source.Contains(Filter.Text,StringComparison.OrdinalIgnoreCase));
+    private StudioDiagnosticViewModel? Navigate(int delta) { if (Diagnostics.Count == 0) return null; _navigationIndex = (_navigationIndex + delta) % Diagnostics.Count; if (_navigationIndex < 0) _navigationIndex += Diagnostics.Count; return Diagnostics[_navigationIndex]; }
+    private bool Matches(StudioDiagnostic d) => (Filter.Severities is null || Filter.Severities.Contains(d.Severity)) && (Filter.Sources is null || Filter.Sources.Contains(d.Source)) && (string.IsNullOrWhiteSpace(Filter.Text) || d.Message.Contains(Filter.Text, StringComparison.OrdinalIgnoreCase) || d.Code.Contains(Filter.Text, StringComparison.OrdinalIgnoreCase) || (d.FilePath?.Contains(Filter.Text, StringComparison.OrdinalIgnoreCase) ?? false) || d.Source.Contains(Filter.Text, StringComparison.OrdinalIgnoreCase));
 }
 
 public sealed class StudioDiagnosticViewModel(StudioDiagnostic diagnostic)

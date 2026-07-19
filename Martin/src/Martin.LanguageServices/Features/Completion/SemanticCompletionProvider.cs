@@ -126,13 +126,13 @@ internal static class SemanticCompletionProvider
         var type = model.GetDeclaredSymbol(declaration) as NamedTypeSymbol;
         if (type is null) return;
         foreach (var conformance in analysis.Phase13.ConformanceAttempts.Where(c => ReferenceEquals(c.Type, type)))
-        foreach (var requirement in conformance.Protocol.Requirements.Where(r => !conformance.Witnesses.ContainsKey(r)))
-        {
-            var insertion = RequirementStub(requirement);
-            var kind = requirement is ProtocolMethodRequirementSymbol ? CompletionItemKind.Method : CompletionItemKind.Property;
-            candidates.Add(Create(requirement.Name, insertion, kind, replacement, prefix, 1,
-                $"missing requirement of {conformance.Protocol.Name}: {RequirementSignature(requirement)}", InsertTextFormat.Snippet));
-        }
+            foreach (var requirement in conformance.Protocol.Requirements.Where(r => !conformance.Witnesses.ContainsKey(r)))
+            {
+                var insertion = RequirementStub(requirement);
+                var kind = requirement is ProtocolMethodRequirementSymbol ? CompletionItemKind.Method : CompletionItemKind.Property;
+                candidates.Add(Create(requirement.Name, insertion, kind, replacement, prefix, 1,
+                    $"missing requirement of {conformance.Protocol.Name}: {RequirementSignature(requirement)}", InsertTextFormat.Snippet));
+            }
     }
 
     private static string RequirementStub(ProtocolRequirementSymbol requirement) => requirement switch
@@ -324,8 +324,14 @@ internal static class SemanticCompletionProvider
         var argumentIndex = text[invocation.FullSpan.Start..Math.Min(position, invocation.FullSpan.End)].Count(c => c == ',');
         foreach (var callable in model.GetInvocationCandidates(invocation))
         {
-            var parameters = callable switch { FunctionSymbol f => f.Parameters, MethodSymbol m => m.Parameters,
-                InitializerSymbol i => i.Parameters, EnumCaseSymbol e => e.AssociatedValues, _ => [] };
+            var parameters = callable switch
+            {
+                FunctionSymbol f => f.Parameters,
+                MethodSymbol m => m.Parameters,
+                InitializerSymbol i => i.Parameters,
+                EnumCaseSymbol e => e.AssociatedValues,
+                _ => []
+            };
             foreach (var parameter in parameters.Where(p => p.Ordinal >= argumentIndex && p.Label is not null && p.Label != "_" && !used.Contains(p.Label)))
                 result.Add(Create(parameter.Label!, parameter.Label + ": ", CompletionItemKind.Parameter, replacement, prefix,
                     parameter.Ordinal == argumentIndex ? 2 : 8, $"parameter: {parameter.Type.Name}"));
@@ -403,12 +409,27 @@ internal static class SemanticCompletionProvider
     private static bool IsIdentifier(char c) => char.IsLetterOrDigit(c) || c == '_';
     private static bool ValidInContext(Symbol symbol, Context context) => context.IsType ? symbol is TypeSymbol :
         context.MemberReceiver is not null ? symbol is MemberSymbol : symbol is not InitializerSymbol;
-    private static TypeSymbol? ResultType(Symbol s) => s switch { VariableSymbol v => v.Type, PropertySymbol p => p.Type,
-        FunctionSymbol f => f.ReturnType, MethodSymbol m => m.ReturnType, EnumCaseSymbol e => e.ContainingType, _ => s as TypeSymbol };
-    private static CompletionItemKind Kind(Symbol s) => s switch { TypeParameterSymbol => CompletionItemKind.TypeParameter, TypeSymbol => CompletionItemKind.Type,
-        FunctionSymbol => CompletionItemKind.Function, MethodSymbol => CompletionItemKind.Method, PropertySymbol => CompletionItemKind.Property,
-        ParameterSymbol => CompletionItemKind.Parameter, EnumCaseSymbol => CompletionItemKind.EnumCase, InitializerSymbol => CompletionItemKind.Initializer,
-        _ => CompletionItemKind.Variable };
+    private static TypeSymbol? ResultType(Symbol s) => s switch
+    {
+        VariableSymbol v => v.Type,
+        PropertySymbol p => p.Type,
+        FunctionSymbol f => f.ReturnType,
+        MethodSymbol m => m.ReturnType,
+        EnumCaseSymbol e => e.ContainingType,
+        _ => s as TypeSymbol
+    };
+    private static CompletionItemKind Kind(Symbol s) => s switch
+    {
+        TypeParameterSymbol => CompletionItemKind.TypeParameter,
+        TypeSymbol => CompletionItemKind.Type,
+        FunctionSymbol => CompletionItemKind.Function,
+        MethodSymbol => CompletionItemKind.Method,
+        PropertySymbol => CompletionItemKind.Property,
+        ParameterSymbol => CompletionItemKind.Parameter,
+        EnumCaseSymbol => CompletionItemKind.EnumCase,
+        InitializerSymbol => CompletionItemKind.Initializer,
+        _ => CompletionItemKind.Variable
+    };
     private static Candidate Create(string label, string insertion, CompletionItemKind kind, TextSpan span, string prefix, int rank,
         string? detail, InsertTextFormat format = InsertTextFormat.PlainText) => new(new CompletionItem(label, insertion, kind.ToString(), detail) with
         { TextEdit = new(span, insertion), FilterText = label, SortText = $"{rank:D3}:{label}", InsertTextFormat = format }, rank);
@@ -418,8 +439,11 @@ internal static class SemanticCompletionProvider
         if (target is null) yield break;
         var path = new List<SyntaxNode>(); if (!Find(root, target, path)) yield break;
         for (var i = path.Count - 1; i >= 0; i--) yield return path[i];
-        static bool Find(SyntaxNode n, SyntaxNode target, List<SyntaxNode> path) { path.Add(n); if (ReferenceEquals(n, target)) return true;
-            foreach (var c in n.GetChildren()) if (Find(c, target, path)) return true; path.RemoveAt(path.Count - 1); return false; }
+        static bool Find(SyntaxNode n, SyntaxNode target, List<SyntaxNode> path)
+        {
+            path.Add(n); if (ReferenceEquals(n, target)) return true;
+            foreach (var c in n.GetChildren()) if (Find(c, target, path)) return true; path.RemoveAt(path.Count - 1); return false;
+        }
     }
     private sealed record Candidate(CompletionItem Item, int Rank);
     private sealed record Context(bool IsType, bool IsTopLevel, bool IsExpression, ExpressionSyntax? MemberReceiver, SyntaxNode? ArgumentList);

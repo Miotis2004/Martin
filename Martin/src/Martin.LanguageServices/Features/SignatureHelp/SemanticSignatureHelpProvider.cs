@@ -76,8 +76,14 @@ internal static class SemanticSignatureHelpProvider
         var genericText = generic.IsDefaultOrEmpty ? "" : "<" + string.Join(", ", generic.Select(t => t.Name)) + ">";
         var parameterText = string.Join(", ", parameters.Select(p => $"{p.Label}: {p.Type}"));
         var label = $"{name}{genericText}({parameterText}){(errorType is null ? "" : " throws " + TypeName(errorType))} -> {result}";
-        return new SignatureInformation { Name = name, Label = label, ReturnType = result, Parameters = parameters,
-            SymbolId = identity.Create(symbol, declarationDiscriminator: symbol.DeclarationLocation?.Span.Start.ToString()) };
+        return new SignatureInformation
+        {
+            Name = name,
+            Label = label,
+            ReturnType = result,
+            Parameters = parameters,
+            SymbolId = identity.Create(symbol, declarationDiscriminator: symbol.DeclarationLocation?.Span.Start.ToString())
+        };
     }
 
     private static string TypeName(TypeSymbol type) => type switch
@@ -98,14 +104,20 @@ internal static class SemanticSignatureHelpProvider
     }
 
     private static ImmutableArray<ParameterSymbol> Parameters(Symbol symbol) => symbol switch
-    { FunctionSymbol f => f.Parameters, MethodSymbol m => m.Parameters, InitializerSymbol i => i.Parameters,
-      EnumCaseSymbol e => e.AssociatedValues, ProtocolMethodRequirementSymbol r => r.Parameters, _ => [] };
+    {
+        FunctionSymbol f => f.Parameters,
+        MethodSymbol m => m.Parameters,
+        InitializerSymbol i => i.Parameters,
+        EnumCaseSymbol e => e.AssociatedValues,
+        ProtocolMethodRequirementSymbol r => r.Parameters,
+        _ => []
+    };
     private static bool IsCallable(Symbol s) => s is FunctionSymbol or MethodSymbol or InitializerSymbol or EnumCaseSymbol or ProtocolMethodRequirementSymbol;
     private static bool MatchesGlobalOverload(Symbol s, string name) => s is FunctionSymbol { IsBuiltIn: false } && s.Name == name;
     private static string CalleeName(SyntaxNode call) => call.GetChildren().FirstOrDefault() is { } callee
         ? DescendantsAndSelf(callee).OfType<SyntaxToken>().LastOrDefault(t => t.Kind == SyntaxKind.IdentifierToken)?.Text ?? "" : "";
     private static int OpenParenthesisPosition(SyntaxNode n) => n.GetChildren().OfType<SyntaxToken>().First(t => t.Kind == SyntaxKind.OpenParenthesisToken).Span.Start;
     private static bool EnclosesCaret(SyntaxNode n, int p) { var open = OpenParenthesisPosition(n); var close = n.GetChildren().OfType<SyntaxToken>().LastOrDefault(t => t.Kind == SyntaxKind.CloseParenthesisToken); return open < p && (close is null || close.IsMissing || p <= close.Span.Start); }
-    private static bool InTriviaOrString(SemanticModel model, int p) { var token=model.FindToken(p==model.SyntaxTree.Text.Length&&p>0?p-1:p,true); return token is not null && (token.Kind==SyntaxKind.StringLiteralToken&&token.Span.Start<p&&p<token.Span.End || token.LeadingTrivia.Concat(token.TrailingTrivia).Any(t=>t.Span.Start<=p&&p<=t.Span.End&&t.Kind is SyntaxKind.SingleLineCommentTrivia or SyntaxKind.MultiLineCommentTrivia or SyntaxKind.DocumentationCommentTrivia)); }
+    private static bool InTriviaOrString(SemanticModel model, int p) { var token = model.FindToken(p == model.SyntaxTree.Text.Length && p > 0 ? p - 1 : p, true); return token is not null && (token.Kind == SyntaxKind.StringLiteralToken && token.Span.Start < p && p < token.Span.End || token.LeadingTrivia.Concat(token.TrailingTrivia).Any(t => t.Span.Start <= p && p <= t.Span.End && t.Kind is SyntaxKind.SingleLineCommentTrivia or SyntaxKind.MultiLineCommentTrivia or SyntaxKind.DocumentationCommentTrivia)); }
     private static IEnumerable<SyntaxNode> DescendantsAndSelf(SyntaxNode n) { yield return n; foreach (var c in n.GetChildren()) foreach (var d in DescendantsAndSelf(c)) yield return d; }
 }

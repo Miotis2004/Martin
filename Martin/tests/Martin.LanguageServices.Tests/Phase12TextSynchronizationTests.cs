@@ -42,7 +42,10 @@ public sealed class Phase12TextSynchronizationTests
 
         var stale = await workspace.ApplyDocumentChangesAsync(new()
         {
-            DocumentId = id, PreviousVersion = new(4), NewVersion = new(6), Changes = []
+            DocumentId = id,
+            PreviousVersion = new(4),
+            NewVersion = new(6),
+            Changes = []
         });
         Assert.True(stale.RequiresFullTextResynchronization);
         Assert.Equal(new DocumentVersion(5), workspace.CurrentSnapshot.FindDocument(id)!.Version);
@@ -61,7 +64,9 @@ public sealed class Phase12TextSynchronizationTests
 
         var overlap = await workspace.ApplyDocumentChangesAsync(new()
         {
-            DocumentId = id, PreviousVersion = new(0), NewVersion = new(1),
+            DocumentId = id,
+            PreviousVersion = new(0),
+            NewVersion = new(1),
             Changes = [new(new(1, 3), "x"), new(new(3, 1), "y")]
         });
         Assert.Equal(DocumentChangeStatus.Rejected, overlap.Status);
@@ -69,7 +74,9 @@ public sealed class Phase12TextSynchronizationTests
 
         var oversized = await workspace.ApplyDocumentChangesAsync(new()
         {
-            DocumentId = id, PreviousVersion = new(0), NewVersion = new(1),
+            DocumentId = id,
+            PreviousVersion = new(0),
+            NewVersion = new(1),
             Changes = [new(new(0, 0), "four")]
         });
         Assert.Equal("MRTLS1007", oversized.DiagnosticCode);

@@ -17,9 +17,12 @@ public sealed class Phase12NavigationTests
         var definitions = await service.GetDefinitionsAsync(workspace,
             new DefinitionRequest
             {
-                WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version,
-                ProjectId = project.Id, ProjectVersion = project.Version,
-                DocumentId = usageDocument.Id, DocumentVersion = usageDocument.Version,
+                WorkspaceId = workspace.Id,
+                WorkspaceVersion = workspace.Version,
+                ProjectId = project.Id,
+                ProjectVersion = project.Version,
+                DocumentId = usageDocument.Id,
+                DocumentVersion = usageDocument.Version,
                 Position = position
             });
         var references = await service.FindReferencesAsync(workspace,
@@ -59,24 +62,24 @@ public sealed class Phase12NavigationTests
 
     private static ReferencesRequest ReferenceRequest(LanguageWorkspaceSnapshot workspace,
         LanguageProjectSnapshot project, LanguageDocumentSnapshot document, int position) => new()
-    {
-        WorkspaceId = workspace.Id,
-        WorkspaceVersion = workspace.Version,
-        ProjectId = project.Id,
-        ProjectVersion = project.Version,
-        DocumentId = document.Id,
-        DocumentVersion = document.Version,
-        Position = position
-    };
+        {
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = document.Version,
+            Position = position
+        };
 
     private static (LanguageWorkspaceSnapshot, LanguageProjectSnapshot, LanguageDocumentSnapshot, LanguageDocumentSnapshot)
         Workspace(string declaration, string usage)
     {
         var projectId = ProjectId.CreateNew();
         var first = new LanguageDocumentSnapshot(DocumentId.CreateNew(), Path.GetFullPath("closed.martin"), declaration, new(0))
-            { ProjectId = projectId, IsOpen = false };
+        { ProjectId = projectId, IsOpen = false };
         var second = new LanguageDocumentSnapshot(DocumentId.CreateNew(), Path.GetFullPath("open.martin"), usage, new(0))
-            { ProjectId = projectId, IsOpen = true };
+        { ProjectId = projectId, IsOpen = true };
         var project = new LanguageProjectSnapshot(projectId, "Navigation", Environment.CurrentDirectory, new(3), [first, second]);
         return (new(WorkspaceId.CreateNew(), new(4), [project]), project, first, second);
     }

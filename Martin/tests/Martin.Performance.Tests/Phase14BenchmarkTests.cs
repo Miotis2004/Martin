@@ -36,7 +36,8 @@ public sealed class Phase14BenchmarkTests(ITestOutputHelper output)
         var workspace = Phase14Data.Workspace(50);
         using var cache = new LanguageAnalysisCache(new()
         {
-            MaximumDocumentVersions = 4, MaximumProjectVersions = 2,
+            MaximumDocumentVersions = 4,
+            MaximumProjectVersions = 2,
             ApproximateMemoryLimitBytes = 16 * 1024 * 1024
         });
         var service = new MartinLanguageService(cache);
@@ -132,7 +133,8 @@ internal static class Phase14Data
     {
         var projectId = ProjectId.CreateNew();
         var definitions = new LanguageDocumentSnapshot(DocumentId.CreateNew(), "definitions.martin",
-            "struct Box<T> { let value: T } func identity<T>(_ value: T) -> T { return value }", new(0)) { ProjectId = projectId };
+            "struct Box<T> { let value: T } func identity<T>(_ value: T) -> T { return value }", new(0))
+        { ProjectId = projectId };
         var source = string.Join('\n', Enumerable.Range(0, declarations).Select(i => $"func f{i}(_ value: Int) -> Int {{ return identity(value) }}")) +
             "\nfunc completion(_ value: Box<Int>) -> Int { return value. }";
         var document = new LanguageDocumentSnapshot(DocumentId.CreateNew(), "usage.martin", source, new(0)) { ProjectId = projectId };
@@ -140,8 +142,12 @@ internal static class Phase14Data
         var workspace = new LanguageWorkspaceSnapshot(WorkspaceId.CreateNew(), new(0), [project]);
         var request = new CompletionRequest
         {
-            WorkspaceId = workspace.Id, WorkspaceVersion = workspace.Version, ProjectId = project.Id,
-            ProjectVersion = project.Version, DocumentId = document.Id, DocumentVersion = document.Version,
+            WorkspaceId = workspace.Id,
+            WorkspaceVersion = workspace.Version,
+            ProjectId = project.Id,
+            ProjectVersion = project.Version,
+            DocumentId = document.Id,
+            DocumentVersion = document.Version,
             Position = source.LastIndexOf(".", StringComparison.Ordinal) + 1
         };
         return (workspace, project, document, request);
