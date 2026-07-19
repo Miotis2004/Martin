@@ -38,10 +38,10 @@ public static class ProtocolRequirementMatcher
 
         var evaluated = named.Select(member => (member, mismatch: Compare(requirement, member, containingTypeIsStruct))).ToImmutableArray();
         var exact = evaluated.Where(result => result.mismatch is null).Select(result => result.member).ToImmutableArray();
-        return exact.Length switch
-        {
+        return exact.Length switch {
             1 => new(exact[0], [], null),
-            > 1 => new(null, exact, null),
+            >
+                1 => new(null, exact, null),
             _ => new(null, [], evaluated.OrderBy(result => Rank(result.mismatch!.Kind)).First().mismatch)
         };
     }
@@ -90,12 +90,10 @@ public static class ProtocolRequirementMatcher
     {
         if (witness.TypeParameters.Length != requirement.TypeParameters.Length || witness.GenericRequirements.Length != requirement.GenericRequirements.Length)
             return false;
-        return witness.TypeParameters.Zip(requirement.TypeParameters).All(pair => pair.First.Ordinal == pair.Second.Ordinal)
-            && witness.GenericRequirements.Zip(requirement.GenericRequirements).All(pair => ConstraintId(pair.First) == ConstraintId(pair.Second));
+        return witness.TypeParameters.Zip(requirement.TypeParameters).All(pair => pair.First.Ordinal == pair.Second.Ordinal) && witness.GenericRequirements.Zip(requirement.GenericRequirements).All(pair => ConstraintId(pair.First) == ConstraintId(pair.Second));
     }
 
-    static string ConstraintId(GenericConstraint constraint) => constraint switch
-    {
+    static string ConstraintId(GenericConstraint constraint) => constraint switch {
         ProtocolConstraint protocol => "protocol:" + protocol.Protocol.Name,
         _ => constraint.GetType().FullName ?? constraint.GetType().Name
     };
@@ -104,13 +102,12 @@ public static class ProtocolRequirementMatcher
         ReferenceEquals(left, right) ||
         left is OptionalTypeSymbol leftOptional && right is OptionalTypeSymbol rightOptional && SameType(leftOptional.ElementType, rightOptional.ElementType) ||
         left is ConstructedTypeSymbol leftConstructed && right is ConstructedTypeSymbol rightConstructed &&
-        ReferenceEquals(leftConstructed.GenericDefinition, rightConstructed.GenericDefinition) &&
-        leftConstructed.TypeArguments.Length == rightConstructed.TypeArguments.Length &&
-        leftConstructed.TypeArguments.Zip(rightConstructed.TypeArguments).All(pair => SameType(pair.First, pair.Second)) ||
+            ReferenceEquals(leftConstructed.GenericDefinition, rightConstructed.GenericDefinition) &&
+            leftConstructed.TypeArguments.Length == rightConstructed.TypeArguments.Length &&
+            leftConstructed.TypeArguments.Zip(rightConstructed.TypeArguments).All(pair => SameType(pair.First, pair.Second)) ||
         left is TypeParameterSymbol leftParameter && right is TypeParameterSymbol rightParameter && leftParameter.Ordinal == rightParameter.Ordinal;
 
-    static int Rank(ConformanceMismatchKind kind) => kind switch
-    {
+    static int Rank(ConformanceMismatchKind kind) => kind switch {
         ConformanceMismatchKind.MemberKind => 100,
         ConformanceMismatchKind.ParameterCount => 90,
         _ => 0

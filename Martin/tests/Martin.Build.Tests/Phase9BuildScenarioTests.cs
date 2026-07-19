@@ -238,8 +238,7 @@ public sealed class Phase9BuildScenarioTests
             bool keepGeneratedFiles = false,
             OutputKind outputKind = OutputKind.ConsoleApplication,
             BuildConfiguration configuration = BuildConfiguration.Debug) =>
-            new MartinBuildService(Runner).BuildAsync(compilation, new BuildOptions
-            {
+            new MartinBuildService(Runner).BuildAsync(compilation, new BuildOptions {
                 AssemblyName = AssemblyName,
                 OutputDirectory = OutputDirectory,
                 UseAppHost = useAppHost,
@@ -251,7 +250,14 @@ public sealed class Phase9BuildScenarioTests
 
         public void Dispose()
         {
-            try { if (Directory.Exists(root)) Directory.Delete(root, recursive: true); } catch { }
+            try
+            {
+                if (Directory.Exists(root))
+                    Directory.Delete(root, recursive: true);
+            }
+            catch
+            {
+            }
         }
     }
 

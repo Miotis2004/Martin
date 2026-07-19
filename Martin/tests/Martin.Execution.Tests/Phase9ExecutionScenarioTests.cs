@@ -236,9 +236,16 @@ public sealed class Phase9ExecutionScenarioTests : IDisposable
 
     public void Dispose()
     {
-        try { Directory.Delete(_temp, recursive: true); }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
+        try
+        {
+            Directory.Delete(_temp, recursive: true);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     static Task<ExecutionResult> RunAsync(BuildResult build, ExecutionOptions? options = null, CancellationToken cancellationToken = default)
@@ -266,8 +273,8 @@ public sealed class Phase9ExecutionScenarioTests : IDisposable
     static int CountLines(string path)
     {
         return File.Exists(path)
-            ? File.ReadAllLines(path).Length
-            : 0;
+                   ? File.ReadAllLines(path).Length
+                   : 0;
     }
 
     sealed class CapturingTerminalLauncher : IExternalTerminalLauncher

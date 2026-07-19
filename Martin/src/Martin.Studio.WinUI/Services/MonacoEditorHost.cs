@@ -39,7 +39,8 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
-        if (_initialized) return;
+        if (_initialized)
+            return;
         _initialized = true;
 
         if (!_bridgeEventsAttached)
@@ -51,7 +52,8 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
             };
             _bridge.TextChanged += (_, payload) =>
             {
-                if (!ValidateDocument(payload.DocumentId, "textChanged")) return;
+                if (!ValidateDocument(payload.DocumentId, "textChanged"))
+                    return;
                 lock (_gate)
                 {
                     if (_documents.TryGetValue(payload.DocumentId, out var snapshot))
@@ -60,8 +62,8 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
                         foreach (var change in payload.Changes.OrderByDescending(change => change.RangeOffset))
                         {
                             text = text
-                                .Remove(change.RangeOffset, change.RangeLength)
-                                .Insert(change.RangeOffset, change.Text);
+                                       .Remove(change.RangeOffset, change.RangeLength)
+                                       .Insert(change.RangeOffset, change.Text);
                         }
 
                         snapshot.Text = text;
@@ -72,9 +74,9 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
             };
             _bridge.ViewStateChanged += (_, payload) =>
             {
-                if (!ValidateDocument(payload.DocumentId, "viewStateChanged")) return;
-                lock (_gate)
-                    if (_documents.TryGetValue(payload.DocumentId, out var snapshot)) snapshot.ViewState = payload;
+                if (!ValidateDocument(payload.DocumentId, "viewStateChanged"))
+                    return;
+                lock (_gate) if (_documents.TryGetValue(payload.DocumentId, out var snapshot)) snapshot.ViewState = payload;
                 ViewStateChanged?.Invoke(this, payload);
             };
             _bridge.Error += (_, payload) => Error?.Invoke(this, payload);
@@ -92,7 +94,8 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
         }
         if (!ReferenceEquals(_processFailedCore, webView.CoreWebView2))
         {
-            if (_processFailedCore is not null) _processFailedCore.ProcessFailed -= CoreWebView2_ProcessFailed;
+            if (_processFailedCore is not null)
+                _processFailedCore.ProcessFailed -= CoreWebView2_ProcessFailed;
             webView.CoreWebView2.ProcessFailed += CoreWebView2_ProcessFailed;
             _processFailedCore = webView.CoreWebView2;
         }
@@ -120,7 +123,8 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
         lock (_gate)
         {
             _documents.Remove(documentId);
-            if (_activeDocumentId == documentId) _activeDocumentId = null;
+            if (_activeDocumentId == documentId)
+                _activeDocumentId = null;
         }
         return SendAsync("closeDocument", new CloseEditorDocumentPayload(documentId), cancellationToken, QueueKind.Document, documentId);
     }
@@ -137,8 +141,7 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
     {
         EnsureKnownDocument(documentId, "setMarkers");
         var markers = diagnostics.Count == 0 ? Array.Empty<EditorMarkerPayload>() : diagnostics.Select(d => new EditorMarkerPayload(d.Range.StartLine, d.Range.StartColumn, d.Range.EndLine, d.Range.EndColumn, d.Severity.ToString(), d.Message, d.Code)).ToArray();
-        lock (_gate)
-            if (_documents.TryGetValue(documentId, out var snapshot)) snapshot.Markers = markers;
+        lock (_gate) if (_documents.TryGetValue(documentId, out var snapshot)) snapshot.Markers = markers;
         return SendAsync("setMarkers", new EditorSetMarkersPayload(documentId, markers), cancellationToken, QueueKind.Diagnostics, documentId);
     }
 
@@ -147,14 +150,16 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
 
     public Task ExecuteCommandAsync(string command, CancellationToken cancellationToken = default)
     {
-        if (!AllowedCommands.Contains(command)) throw new ArgumentOutOfRangeException(nameof(command), command, "Unsupported editor command.");
+        if (!AllowedCommands.Contains(command))
+            throw new ArgumentOutOfRangeException(nameof(command), command, "Unsupported editor command.");
         return SendAsync("executeCommand", new { command }, cancellationToken);
     }
 
     public Task SetThemeAsync(StudioTheme theme, CancellationToken cancellationToken = default)
     {
         var highContrast = IsHighContrastEnabled();
-        var effectiveTheme = theme == StudioTheme.Light ? "Light" : theme == StudioTheme.Dark ? "Dark" : (IsSystemLightTheme() ? "Light" : "Dark");
+        var effectiveTheme = theme == StudioTheme.Light ? "Light" : theme == StudioTheme.Dark ? "Dark"
+                                                                                              : (IsSystemLightTheme() ? "Light" : "Dark");
         var payload = new SetEditorThemePayload(theme, highContrast, effectiveTheme);
         lock (_gate) _theme = payload;
         return SendAsync("setTheme", payload, cancellationToken, QueueKind.Theme);
@@ -179,27 +184,24 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
     }
     public Task ReplaceTextAsync(DocumentModel document, CancellationToken cancellationToken = default)
     {
-        lock (_gate)
-            if (_documents.TryGetValue(document.Id, out var snapshot))
-            {
-                snapshot.Text = document.Text;
-                snapshot.Version = (int)document.Version.Value;
-            }
+        lock (_gate) if (_documents.TryGetValue(document.Id, out var snapshot))
+        {
+            snapshot.Text = document.Text;
+            snapshot.Version = (int)document.Version.Value;
+        }
         return SendKnownDocumentAsync(document.Id, "replaceText", new { documentId = document.Id, text = document.Text }, cancellationToken);
     }
     public Task SetReadOnlyAsync(Guid documentId, bool isReadOnly, CancellationToken cancellationToken = default)
     {
-        lock (_gate)
-            if (_documents.TryGetValue(documentId, out var snapshot)) snapshot.IsReadOnly = isReadOnly;
+        lock (_gate) if (_documents.TryGetValue(documentId, out var snapshot)) snapshot.IsReadOnly = isReadOnly;
         return SendKnownDocumentAsync(documentId, "setReadOnly", new { documentId, isReadOnly }, cancellationToken);
     }
     public Task ClearMarkersAsync(Guid documentId, CancellationToken cancellationToken = default)
     {
-        lock (_gate)
-            if (_documents.TryGetValue(documentId, out var snapshot)) snapshot.Markers = [];
+        lock (_gate) if (_documents.TryGetValue(documentId, out var snapshot)) snapshot.Markers = [];
         return SendKnownDocumentAsync(documentId, "clearMarkers", new { documentId }, cancellationToken);
     }
-    public Task FocusEditorAsync(CancellationToken cancellationToken = default) => SendAsync("focusEditor", new { }, cancellationToken);
+    public Task FocusEditorAsync(CancellationToken cancellationToken = default) => SendAsync("focusEditor", new {}, cancellationToken);
 
     private async Task<JsonElement> RequestAsync(string type, object payload, CancellationToken cancellationToken)
     {
@@ -210,18 +212,29 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
         return await response;
     }
 
-    private Task SendKnownDocumentAsync(Guid id, string type, object payload, CancellationToken token) { EnsureKnownDocument(id, type); return SendAsync(type, payload, token, QueueKind.Document, id); }
+    private Task SendKnownDocumentAsync(Guid id, string type, object payload, CancellationToken token)
+    {
+        EnsureKnownDocument(id, type);
+        return SendAsync(type, payload, token, QueueKind.Document, id);
+    }
 
     private Task SendAsync(string type, object payload, CancellationToken token, QueueKind kind = QueueKind.Normal, Guid? documentId = null)
     {
         token.ThrowIfCancellationRequested();
         var json = _bridge.CreateCommand(type, payload);
-        if (_bridge.State == EditorBridgeState.Ready && webView.CoreWebView2 is not null) { webView.CoreWebView2.PostWebMessageAsJson(json); return Task.CompletedTask; }
+        if (_bridge.State == EditorBridgeState.Ready && webView.CoreWebView2 is not null)
+        {
+            webView.CoreWebView2.PostWebMessageAsJson(json);
+            return Task.CompletedTask;
+        }
         lock (_gate)
         {
-            if (kind == QueueKind.Theme) RemoveQueued(q => q.Kind == QueueKind.Theme);
-            if (kind == QueueKind.Diagnostics && documentId is Guid id) RemoveQueued(q => q.Kind == QueueKind.Diagnostics && q.DocumentId == id);
-            if (_queue.Count >= MaxQueuedCommands) throw new InvalidOperationException("Editor command queue is full.");
+            if (kind == QueueKind.Theme)
+                RemoveQueued(q => q.Kind == QueueKind.Theme);
+            if (kind == QueueKind.Diagnostics && documentId is Guid id)
+                RemoveQueued(q => q.Kind == QueueKind.Diagnostics && q.DocumentId == id);
+            if (_queue.Count >= MaxQueuedCommands)
+                throw new InvalidOperationException("Editor command queue is full.");
             _queue.Enqueue(new QueuedCommand(json, kind, documentId));
         }
         return Task.CompletedTask;
@@ -232,16 +245,18 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
         await Task.Yield();
         while (true)
         {
-            QueuedCommand? command;
+            QueuedCommand ? command;
             lock (_gate) command = _queue.Count == 0 ? null : _queue.Dequeue();
-            if (command is null || webView.CoreWebView2 is null || _bridge.State != EditorBridgeState.Ready) return;
+            if (command is null || webView.CoreWebView2 is null || _bridge.State != EditorBridgeState.Ready)
+                return;
             webView.CoreWebView2.PostWebMessageAsJson(command.Json);
         }
     }
 
     private Task WaitUntilReadyAsync(CancellationToken cancellationToken)
     {
-        if (_bridge.State == EditorBridgeState.Ready) return Task.CompletedTask;
+        if (_bridge.State == EditorBridgeState.Ready)
+            return Task.CompletedTask;
         Task readyTask;
         lock (_gate) readyTask = _ready.Task;
         return WaitForReadinessAsync(readyTask, cancellationToken);
@@ -270,7 +285,8 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
     {
         lock (_gate)
         {
-            if (_ready.Task.IsCompleted) _ready = CreateReadyCompletionSource();
+            if (_ready.Task.IsCompleted)
+                _ready = CreateReadyCompletionSource();
         }
     }
 
@@ -282,7 +298,11 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
         if (envelope?.Type == "language/cancelRequest")
         {
             var requestId = envelope.Payload.TryGetProperty("requestId", out var request) ? request.GetString() : envelope.Id;
-            lock (_gate) if (requestId is not null && _languageRequests.Remove(requestId, out var cancellation)) { cancellation.Cancel(); cancellation.Dispose(); }
+            lock (_gate) if (requestId is not null && _languageRequests.Remove(requestId, out var cancellation))
+            {
+                cancellation.Cancel();
+                cancellation.Dispose();
+            }
             return;
         }
         if (envelope?.Type.StartsWith("language/request", StringComparison.Ordinal) == true)
@@ -291,30 +311,46 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
             return;
         }
         var result = _bridge.AcceptHostMessage(args.WebMessageAsJson);
-        if (!result.IsValid) { logService.Log(StudioLogCategory.EditorBridge, OutputSeverity.Warning, "MRT5203", "Invalid editor message.", result.Error); return; }
-        if (result.Envelope?.Type == "saveRequested") SaveRequested?.Invoke(this, result.Envelope.Payload.TryGetProperty("documentId", out var id) && id.TryGetGuid(out var guid) ? guid : Guid.Empty);
+        if (!result.IsValid)
+        {
+            logService.Log(StudioLogCategory.EditorBridge, OutputSeverity.Warning, "MRT5203", "Invalid editor message.", result.Error);
+            return;
+        }
+        if (result.Envelope?.Type == "saveRequested")
+            SaveRequested?.Invoke(this, result.Envelope.Payload.TryGetProperty("documentId", out var id) && id.TryGetGuid(out var guid) ? guid : Guid.Empty);
         if (result.Envelope?.Type == "navigationRequested")
         {
             var payload = result.Envelope.Payload.Deserialize<EditorNavigationRequestedPayload>(new JsonSerializerOptions(JsonSerializerDefaults.Web));
-            if (payload is not null) NavigationRequested?.Invoke(this, payload);
+            if (payload is not null)
+                NavigationRequested?.Invoke(this, payload);
         }
     }
 
     private async Task RouteLanguageRequestAsync(EditorMessageProtocol.EditorEnvelope<JsonElement> envelope)
     {
         var requestId = envelope.Id ?? (envelope.Payload.TryGetProperty("requestId", out var id) ? id.GetString() : null);
-        if (string.IsNullOrWhiteSpace(requestId)) return;
+        if (string.IsNullOrWhiteSpace(requestId))
+            return;
         var cancellation = new CancellationTokenSource();
         lock (_gate) _languageRequests[requestId] = cancellation;
         object response;
-        try { response = await languageProvider.HandleMonacoRequestAsync(envelope.Type, envelope.Payload, cancellation.Token); }
-        catch (OperationCanceledException) { response = languageProvider.CreateMonacoStatusResponse(envelope.Payload, true); }
+        try
+        {
+            response = await languageProvider.HandleMonacoRequestAsync(envelope.Type, envelope.Payload, cancellation.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            response = languageProvider.CreateMonacoStatusResponse(envelope.Payload, true);
+        }
         catch (Exception ex)
         {
             logService.Log(StudioLogCategory.EditorBridge, OutputSeverity.Warning, "MonacoLanguageRequest", "A Monaco language request failed.", ex.Message);
             response = languageProvider.CreateMonacoStatusResponse(envelope.Payload, false, "Language request failed.");
         }
-        finally { lock (_gate) if (_languageRequests.Remove(requestId, out var source)) source.Dispose(); }
+        finally
+        {
+            lock (_gate) if (_languageRequests.Remove(requestId, out var source)) source.Dispose();
+        }
         webView.CoreWebView2?.PostWebMessageAsJson(EditorMessageProtocol.Serialize(envelope.Type + "Response", response, requestId));
     }
 
@@ -334,21 +370,45 @@ public sealed class MonacoEditorHost(WebView2 webView, IStudioLogService logServ
 
     private void EnqueueRecoveryCommands()
     {
-        if (_theme is not null) _queue.Enqueue(new QueuedCommand(_bridge.CreateCommand("setTheme", _theme), QueueKind.Theme, null));
+        if (_theme is not null)
+            _queue.Enqueue(new QueuedCommand(_bridge.CreateCommand("setTheme", _theme), QueueKind.Theme, null));
         foreach (var snapshot in _documents.Values)
         {
             _queue.Enqueue(new QueuedCommand(_bridge.CreateCommand("openDocument", new OpenEditorDocumentPayload(snapshot.DocumentId, snapshot.Path, snapshot.Text, "martin", snapshot.Version, snapshot.ViewState)), QueueKind.Document, snapshot.DocumentId));
             _queue.Enqueue(new QueuedCommand(_bridge.CreateCommand("setReadOnly", new { documentId = snapshot.DocumentId, isReadOnly = snapshot.IsReadOnly }), QueueKind.Document, snapshot.DocumentId));
-            if (snapshot.Markers.Count > 0) _queue.Enqueue(new QueuedCommand(_bridge.CreateCommand("setMarkers", new EditorSetMarkersPayload(snapshot.DocumentId, snapshot.Markers)), QueueKind.Diagnostics, snapshot.DocumentId));
+            if (snapshot.Markers.Count > 0)
+                _queue.Enqueue(new QueuedCommand(_bridge.CreateCommand("setMarkers", new EditorSetMarkersPayload(snapshot.DocumentId, snapshot.Markers)), QueueKind.Diagnostics, snapshot.DocumentId));
         }
-        if (_activeDocumentId is Guid activeDocumentId) _queue.Enqueue(new QueuedCommand(_bridge.CreateCommand("activateDocument", new ActivateEditorDocumentPayload(activeDocumentId)), QueueKind.Document, activeDocumentId));
+        if (_activeDocumentId is Guid activeDocumentId)
+            _queue.Enqueue(new QueuedCommand(_bridge.CreateCommand("activateDocument", new ActivateEditorDocumentPayload(activeDocumentId)), QueueKind.Document, activeDocumentId));
     }
 
-    private bool ValidateDocument(Guid documentId, string type) { lock (_gate) if (_documents.ContainsKey(documentId)) return true; logService.Log(StudioLogCategory.EditorBridge, OutputSeverity.Warning, "MRT5203", $"Rejected {type} for unopened document.", documentId.ToString()); return false; }
-    private void EnsureKnownDocument(Guid documentId, string type) { lock (_gate) if (_documents.ContainsKey(documentId)) return; throw new InvalidOperationException($"Cannot send {type} for unopened document {documentId}."); }
-    private void RemoveQueued(Predicate<QueuedCommand> match) { var keep = _queue.Where(q => !match(q)).ToArray(); _queue.Clear(); foreach (var q in keep) _queue.Enqueue(q); }
+    private bool ValidateDocument(Guid documentId, string type)
+    {
+        lock (_gate) if (_documents.ContainsKey(documentId)) return true;
+        logService.Log(StudioLogCategory.EditorBridge, OutputSeverity.Warning, "MRT5203", $"Rejected {type} for unopened document.", documentId.ToString());
+        return false;
+    }
+    private void EnsureKnownDocument(Guid documentId, string type)
+    {
+        lock (_gate) if (_documents.ContainsKey(documentId)) return;
+        throw new InvalidOperationException($"Cannot send {type} for unopened document {documentId}.");
+    }
+    private void RemoveQueued(Predicate<QueuedCommand> match)
+    {
+        var keep = _queue.Where(q => !match(q)).ToArray();
+        _queue.Clear();
+        foreach (var q in keep)
+            _queue.Enqueue(q);
+    }
 
-    private enum QueueKind { Normal, Theme, Diagnostics, Document }
+    private enum QueueKind
+    {
+        Normal,
+        Theme,
+        Diagnostics,
+        Document
+    }
     private sealed record QueuedCommand(string Json, QueueKind Kind, Guid? DocumentId);
     private sealed class EditorDocumentSnapshot(Guid documentId, string path, string text, int version, bool isReadOnly)
     {

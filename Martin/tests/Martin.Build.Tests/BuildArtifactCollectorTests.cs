@@ -113,8 +113,7 @@ public sealed class BuildArtifactCollectorTests : IDisposable
         return path;
     }
 
-    static BuildOptions Options() => new()
-    {
+    static BuildOptions Options() => new() {
         OutputDirectory = "ignored",
         AssemblyName = "Demo"
     };

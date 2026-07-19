@@ -30,7 +30,7 @@ public sealed class Phase12WorkspaceIdentityTests
         var diskDocument = Assert.Single(first.Projects.Single().Documents);
 
         var documentId = await workspace.OpenDocumentAsync(projectId, project.Main,
-            SourceText.From("func main() { return 2 }", project.Main), new(7), true);
+                                                           SourceText.From("func main() { return 2 }", project.Main), new(7), true);
         var second = workspace.CurrentSnapshot;
 
         Assert.Equal(first.Id, second.Id);
@@ -92,6 +92,10 @@ public sealed class Phase12WorkspaceIdentityTests
             File.WriteAllText(Main, "func main() { return 1 }");
         }
         public MartinProject Load() => Assert.IsType<MartinProject>(MartinProjectLoader.Load(new ProjectLoadOptions { ProjectPath = Root }).Project);
-        public void Dispose() { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
+        public void Dispose()
+        {
+            if (Directory.Exists(Root))
+                Directory.Delete(Root, true);
+        }
     }
 }

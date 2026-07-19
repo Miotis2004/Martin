@@ -21,8 +21,8 @@ public sealed class ProjectLocator
         {
             var projectPath = Path.GetFullPath(options.ProjectPath);
             return File.Exists(projectPath)
-                ? CheckManifest(projectPath, diagnostics)
-                : CheckManifest(Path.Combine(projectPath, "Martin.toml"), diagnostics);
+                       ? CheckManifest(projectPath, diagnostics)
+                       : CheckManifest(Path.Combine(projectPath, "Martin.toml"), diagnostics);
         }
 
         var directory = Path.GetFullPath(options.WorkingDirectory ?? Environment.CurrentDirectory);

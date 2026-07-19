@@ -26,47 +26,47 @@ public abstract record PatternDecisionNode(string Label, TextLocation Location)
 }
 
 public sealed record TestEnumCaseDecision(string Label, TextLocation Location,
-    CompilerGeneratedLocalVariableSymbol Input, EnumCaseSymbol Case,
-    PatternDecisionNode WhenMatched, PatternDecisionNode WhenNotMatched)
+                                          CompilerGeneratedLocalVariableSymbol Input, EnumCaseSymbol Case,
+                                          PatternDecisionNode WhenMatched, PatternDecisionNode WhenNotMatched)
     : PatternDecisionNode(Label, Location)
 {
     public override ImmutableArray<PatternDecisionNode> Successors => [WhenMatched, WhenNotMatched];
 }
 
 public sealed record TestLiteralDecision(string Label, TextLocation Location,
-    CompilerGeneratedLocalVariableSymbol Input, object? Value,
-    PatternDecisionNode WhenMatched, PatternDecisionNode WhenNotMatched)
+                                         CompilerGeneratedLocalVariableSymbol Input, object? Value,
+                                         PatternDecisionNode WhenMatched, PatternDecisionNode WhenNotMatched)
     : PatternDecisionNode(Label, Location)
 {
     public override ImmutableArray<PatternDecisionNode> Successors => [WhenMatched, WhenNotMatched];
 }
 
 public sealed record TestOptionalHasValueDecision(string Label, TextLocation Location,
-    CompilerGeneratedLocalVariableSymbol Input, PatternDecisionNode WhenHasValue,
-    PatternDecisionNode WhenNil)
+                                                  CompilerGeneratedLocalVariableSymbol Input, PatternDecisionNode WhenHasValue,
+                                                  PatternDecisionNode WhenNil)
     : PatternDecisionNode(Label, Location)
 {
     public override ImmutableArray<PatternDecisionNode> Successors => [WhenHasValue, WhenNil];
 }
 
 public sealed record ExtractEnumPayloadDecision(string Label, TextLocation Location,
-    CompilerGeneratedLocalVariableSymbol Input, EnumCaseSymbol Case, int PayloadIndex,
-    CompilerGeneratedLocalVariableSymbol Destination, PatternDecisionNode Next)
+                                                CompilerGeneratedLocalVariableSymbol Input, EnumCaseSymbol Case, int PayloadIndex,
+                                                CompilerGeneratedLocalVariableSymbol Destination, PatternDecisionNode Next)
     : PatternDecisionNode(Label, Location)
 {
     public override ImmutableArray<PatternDecisionNode> Successors => [Next];
 }
 
 public sealed record ExtractOptionalValueDecision(string Label, TextLocation Location,
-    CompilerGeneratedLocalVariableSymbol Input, CompilerGeneratedLocalVariableSymbol Destination,
-    PatternDecisionNode Next)
+                                                  CompilerGeneratedLocalVariableSymbol Input, CompilerGeneratedLocalVariableSymbol Destination,
+                                                  PatternDecisionNode Next)
     : PatternDecisionNode(Label, Location)
 {
     public override ImmutableArray<PatternDecisionNode> Successors => [Next];
 }
 
 public sealed record BindPatternValueDecision(string Label, TextLocation Location,
-    CompilerGeneratedLocalVariableSymbol Value, LocalVariableSymbol Variable, PatternDecisionNode Next)
+                                              CompilerGeneratedLocalVariableSymbol Value, LocalVariableSymbol Variable, PatternDecisionNode Next)
     : PatternDecisionNode(Label, Location)
 {
     public override ImmutableArray<PatternDecisionNode> Successors => [Next];
@@ -90,10 +90,11 @@ public sealed class PatternDecisionGraphBuilder
     private int _temporary;
 
     public PatternDecisionGraph Build(BoundExpression input, ImmutableArray<BoundSwitchCase> cases,
-        TextLocation location, CancellationToken cancellationToken = default)
+                                      TextLocation location, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(input);
-        if (cases.IsDefault) cases = [];
+        if (cases.IsDefault)
+            cases = [];
         if (input.Type == TypeSymbol.Error || cases.Any(@case => @case.Pattern.HasErrors))
             throw new ArgumentException("A decision graph can only be built for a valid switch.", nameof(cases));
 
@@ -101,7 +102,8 @@ public sealed class PatternDecisionGraphBuilder
         _temporary = 0;
         var inputTemporary = Temporary(input.Type, location, "input");
         var targets = cases.Select((@case, index) =>
-            new PatternCaseTarget(index, $"case_{index}", @case, @case.Location)).ToImmutableArray();
+                                       new PatternCaseTarget(index, $"case_{index}", @case, @case.Location))
+                          .ToImmutableArray();
         var failure = new FailureDecision(Label("failure"), location);
         PatternDecisionNode entry = failure;
 
@@ -117,21 +119,23 @@ public sealed class PatternDecisionGraphBuilder
     }
 
     public PatternDecisionGraph BuildCatch(CompilerGeneratedLocalVariableSymbol errorValueInput,
-        ImmutableArray<BoundCatchClause> clauses, TextLocation location,
-        CancellationToken cancellationToken = default)
+                                           ImmutableArray<BoundCatchClause> clauses, TextLocation location,
+                                           CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(errorValueInput);
-        if (clauses.IsDefault) clauses = [];
+        if (clauses.IsDefault)
+            clauses = [];
 
         var cases = clauses.Select(clause => new BoundSwitchCase(clause.Pattern, clause.Body, clause.Location))
-            .ToImmutableArray();
+                        .ToImmutableArray();
         if (errorValueInput.Type == TypeSymbol.Error || cases.Any(@case => @case.Pattern.HasErrors))
             throw new ArgumentException("A catch decision graph can only be built for valid catch clauses.", nameof(clauses));
 
         _label = 0;
         _temporary = 0;
         var targets = cases.Select((@case, index) =>
-            new PatternCaseTarget(index, $"case_{index}", @case, @case.Location)).ToImmutableArray();
+                                       new PatternCaseTarget(index, $"case_{index}", @case, @case.Location))
+                          .ToImmutableArray();
         var failure = new FailureDecision(Label("failure"), location);
         PatternDecisionNode entry = failure;
 
@@ -147,18 +151,17 @@ public sealed class PatternDecisionGraphBuilder
     }
 
     private PatternDecisionNode BuildPattern(BoundPattern pattern, CompilerGeneratedLocalVariableSymbol input,
-        PatternDecisionNode success, PatternDecisionNode failure, CancellationToken cancellationToken)
+                                             PatternDecisionNode success, PatternDecisionNode failure, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return pattern switch
-        {
+        return pattern switch {
             BoundWildcardPattern => success,
             BoundValueBindingPattern binding => new BindPatternValueDecision(Label("bind"), pattern.Location,
-                input, binding.Variable, success),
+                                                                             input, binding.Variable, success),
             BoundLiteralPattern literal => new TestLiteralDecision(Label("literal"), pattern.Location,
-                input, literal.Value, success, failure),
+                                                                   input, literal.Value, success, failure),
             BoundNilPattern => new TestOptionalHasValueDecision(Label("optional"), pattern.Location,
-                input, failure, success),
+                                                                input, failure, success),
             BoundOptionalSomePattern some => BuildSome(some, input, success, failure, cancellationToken),
             BoundEnumCasePattern enumCase => BuildEnum(enumCase, input, success, failure, cancellationToken),
             _ => throw new ArgumentOutOfRangeException(nameof(pattern))
@@ -166,8 +169,8 @@ public sealed class PatternDecisionGraphBuilder
     }
 
     private PatternDecisionNode BuildSome(BoundOptionalSomePattern pattern,
-        CompilerGeneratedLocalVariableSymbol input, PatternDecisionNode success,
-        PatternDecisionNode failure, CancellationToken cancellationToken)
+                                          CompilerGeneratedLocalVariableSymbol input, PatternDecisionNode success,
+                                          PatternDecisionNode failure, CancellationToken cancellationToken)
     {
         var value = Temporary(pattern.OptionalType.ElementType, pattern.Location, "optional");
         var child = BuildPattern(pattern.ValuePattern, value, success, failure, cancellationToken);
@@ -176,8 +179,8 @@ public sealed class PatternDecisionGraphBuilder
     }
 
     private PatternDecisionNode BuildEnum(BoundEnumCasePattern pattern,
-        CompilerGeneratedLocalVariableSymbol input, PatternDecisionNode success,
-        PatternDecisionNode failure, CancellationToken cancellationToken)
+                                          CompilerGeneratedLocalVariableSymbol input, PatternDecisionNode success,
+                                          PatternDecisionNode failure, CancellationToken cancellationToken)
     {
         var matched = success;
         for (var i = pattern.AssociatedPatterns.Length - 1; i >= 0; i--)
@@ -186,7 +189,7 @@ public sealed class PatternDecisionGraphBuilder
             var payload = Temporary(pattern.Case.AssociatedValues[i].Type, pattern.AssociatedPatterns[i].Location, "payload");
             var child = BuildPattern(pattern.AssociatedPatterns[i], payload, matched, failure, cancellationToken);
             matched = new ExtractEnumPayloadDecision(Label("extract_enum"), pattern.AssociatedPatterns[i].Location,
-                input, pattern.Case, i, payload, child);
+                                                     input, pattern.Case, i, payload, child);
         }
         return new TestEnumCaseDecision(Label("enum"), pattern.Location, input, pattern.Case, matched, failure);
     }
@@ -210,11 +213,18 @@ internal static class PatternDecisionGraphValidator
         void Visit(PatternDecisionNode node)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (active.Contains(node)) { errors.Add($"Decision graph contains a cycle at '{node.Label}'."); return; }
-            if (!visited.Add(node)) return;
-            if (!labels.Add(node.Label)) errors.Add($"Decision label '{node.Label}' is not unique.");
+            if (active.Contains(node))
+            {
+                errors.Add($"Decision graph contains a cycle at '{node.Label}'.");
+                return;
+            }
+            if (!visited.Add(node))
+                return;
+            if (!labels.Add(node.Label))
+                errors.Add($"Decision label '{node.Label}' is not unique.");
             active.Add(node);
-            foreach (var next in node.Successors) Visit(next);
+            foreach (var next in node.Successors)
+                Visit(next);
             active.Remove(node);
         }
 

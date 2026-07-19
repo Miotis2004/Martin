@@ -13,14 +13,14 @@ public sealed class MartinProject
 
 public sealed record ProjectLoadResult
 {
-    public MartinProject? Project { get; init; }
+    public MartinProject ? Project { get; init; }
     public ImmutableArray<ProjectDiagnostic> Diagnostics { get; init; } = [];
     public bool Success => Project is not null && !Diagnostics.Any(d => d.Severity == ProjectDiagnosticSeverity.Error);
 }
 
 public sealed record ProjectLoadOptions
 {
-    public string? ProjectPath { get; init; }
-    public string? ManifestPath { get; init; }
-    public string? WorkingDirectory { get; init; }
+    public string ? ProjectPath { get; init; }
+    public string ? ManifestPath { get; init; }
+    public string ? WorkingDirectory { get; init; }
 }

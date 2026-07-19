@@ -16,8 +16,7 @@ public sealed class SymbolIdentityFactory(ProjectId projectId)
         return new SymbolId("mrt:" + Convert.ToHexString(digest).ToLowerInvariant());
     }
 
-    public string DisplaySignature(Symbol symbol) => symbol switch
-    {
+    public string DisplaySignature(Symbol symbol) => symbol switch {
         FunctionSymbol f => Callable(f.Name, f.TypeParameters.Length, f.Parameters, f.ReturnType, f.IsThrowing, f.ErrorType),
         MethodSymbol m => Callable(m.Name, m.TypeParameters.Length, m.Parameters, m.ReturnType, m.IsThrowing, m.ErrorType),
         InitializerSymbol i => Callable("init", 0, i.Parameters, i.ContainingType, i.IsThrowing, i.ErrorType),
@@ -37,8 +36,7 @@ public sealed class SymbolIdentityFactory(ProjectId projectId)
         var builtIn = IsBuiltIn(symbol);
         var scope = builtIn ? "builtin" : projectId.Value.ToString("N");
         var owner = containing?.Value ?? ContainingTypeSignature(symbol) ?? "root";
-        var shape = symbol switch
-        {
+        var shape = symbol switch {
             FunctionSymbol f => Callable(f.Name, f.TypeParameters.Length, f.Parameters, f.ReturnType, f.IsThrowing, f.ErrorType),
             MethodSymbol m => Callable(m.Name, m.TypeParameters.Length, m.Parameters, m.ReturnType, m.IsThrowing, m.ErrorType),
             InitializerSymbol i => Callable("init", 0, i.Parameters, i.ContainingType, i.IsThrowing, i.ErrorType),
@@ -59,16 +57,15 @@ public sealed class SymbolIdentityFactory(ProjectId projectId)
         return $"v1|{scope}|{symbol.Kind}|{owner}|{shape}|{source}";
     }
 
-    static string? ContainingTypeSignature(Symbol symbol) => symbol switch
-    {
+    static string? ContainingTypeSignature(Symbol symbol) => symbol switch {
         MemberSymbol m => TypeName(m.ContainingType),
         SelfParameterSymbol s => TypeName(s.ContainingType),
         TypeParameterSymbol t => $"{t.ContainingSymbol.Kind}:{t.ContainingSymbol.Name}",
         _ => null
     };
 
-    static bool IsBuiltIn(Symbol symbol) => symbol is FunctionSymbol { IsBuiltIn: true } ||
-        symbol is TypeSymbol and not NamedTypeSymbol and not TypeParameterSymbol and not ConstructedTypeSymbol && symbol.Locations.IsDefaultOrEmpty;
+    static bool IsBuiltIn(Symbol symbol) => symbol is FunctionSymbol { IsBuiltIn : true } ||
+                                            symbol is TypeSymbol and not NamedTypeSymbol and not TypeParameterSymbol and not ConstructedTypeSymbol && symbol.Locations.IsDefaultOrEmpty;
 
     static string Callable(string name, int arity, ImmutableArray<ParameterSymbol> parameters, TypeSymbol result, bool throwing, TypeSymbol? error) =>
         $"{name}`{arity}{Parameters(parameters)}->{TypeName(result)}" + (throwing ? $" throws {TypeName(error ?? TypeSymbol.Error)}" : string.Empty);
@@ -78,8 +75,7 @@ public sealed class SymbolIdentityFactory(ProjectId projectId)
 
     static string GenericSuffix(ImmutableArray<TypeParameterSymbol> parameters) => parameters.Length == 0 ? string.Empty : $"`{parameters.Length}";
 
-    static string TypeName(TypeSymbol type) => type switch
-    {
+    static string TypeName(TypeSymbol type) => type switch {
         OptionalTypeSymbol optional => TypeName(optional.ElementType) + "?",
         ConstructedTypeSymbol constructed => constructed.GenericDefinition.Name + "<" + string.Join(",", constructed.TypeArguments.Select(TypeName)) + ">",
         TypeParameterSymbol parameter => "!" + parameter.Ordinal,

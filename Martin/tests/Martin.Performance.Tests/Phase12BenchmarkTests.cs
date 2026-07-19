@@ -25,8 +25,7 @@ public sealed class Phase12BenchmarkTests(ITestOutputHelper output)
         Run(results, "compile-100-files", 100, () => Compilation.Create(BenchmarkData.Project(100, 10)).BindProgram());
 
         var (workspace, project, document) = BenchmarkData.Workspace(1_000);
-        using var cache = new LanguageAnalysisCache(new()
-        {
+        using var cache = new LanguageAnalysisCache(new() {
             MaximumDocumentVersions = 8,
             MaximumProjectVersions = 2,
             ApproximateMemoryLimitBytes = 16 * 1024 * 1024
@@ -34,17 +33,20 @@ public sealed class Phase12BenchmarkTests(ITestOutputHelper output)
         var service = new MartinLanguageService(cache);
         await RunAsync(results, "cold-analysis", 1, () => service.AnalyzeDocumentAsync(workspace, document.Id));
         await RunAsync(results, "warm-analysis", 10, async () =>
-        {
-            for (var i = 0; i < 10; i++) await service.AnalyzeDocumentAsync(workspace, document.Id);
-        });
+                                                     {
+                                                         for (var i = 0; i < 10; i++)
+                                                             await service.AnalyzeDocumentAsync(workspace, document.Id);
+                                                     });
         Run(results, "repeated-completion", 100, () =>
-        {
-            for (var i = 0; i < 100; i++) _ = service.Complete(workspace, document.Id, document.Text.Length);
-        });
+                                                 {
+                                                     for (var i = 0; i < 100; i++)
+                                                         _ = service.Complete(workspace, document.Id, document.Text.Length);
+                                                 });
         Run(results, "repeated-hover", 100, () =>
-        {
-            for (var i = 0; i < 100; i++) _ = service.Hover(workspace, document.Id, 5);
-        });
+                                            {
+                                                for (var i = 0; i < 100; i++)
+                                                    _ = service.Hover(workspace, document.Id, 5);
+                                            });
         Run(results, "reference-index-and-query", 1, () => _ = service.FindReferences(workspace, "f500"));
         Run(results, "format-1k-lines", 1, () => _ = service.GetFormattingEdits(document.Text));
         await RapidEditsAsync(results, cache, service, workspace, project, document);
@@ -62,8 +64,7 @@ public sealed class Phase12BenchmarkTests(ITestOutputHelper output)
     public async Task SchedulerReportsBoundedQueueDepthAndCancellation()
     {
         await using var workspace = new BenchmarkWorkspace(BenchmarkData.Workspace(10).Workspace);
-        await using var scheduler = new AnalysisScheduler(workspace, new()
-        {
+        await using var scheduler = new AnalysisScheduler(workspace, new() {
             MaximumConcurrency = 1,
             MaximumQueuedRequests = 4
         });
@@ -71,8 +72,10 @@ public sealed class Phase12BenchmarkTests(ITestOutputHelper output)
         var project = snapshot.Projects[0];
         var document = project.Documents[0];
         var requests = Enumerable.Range(0, 12).Select(i => scheduler.RunAsync(
-            BenchmarkData.Request(snapshot, project, document, i), AnalysisPriority.Background,
-            async (_, cancellationToken) => { await Task.Delay(5, cancellationToken); return i; })).ToArray();
+                                                          BenchmarkData.Request(snapshot, project, document, i), AnalysisPriority.Background,
+                                                          async (_, cancellationToken) =>
+                                                          { await Task.Delay(5, cancellationToken); return i; }))
+                           .ToArray();
 
         await Task.WhenAll(requests);
         Assert.InRange(scheduler.Metrics.PeakQueueDepth, 1, 4);
@@ -80,9 +83,10 @@ public sealed class Phase12BenchmarkTests(ITestOutputHelper output)
 
         using var cancellation = new CancellationTokenSource();
         var cancelled = scheduler.RunAsync(BenchmarkData.Request(snapshot, project, document, 0),
-            AnalysisPriority.Immediate,
-            async (_, cancellationToken) => { await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken); return 0; },
-            cancellation.Token);
+                                           AnalysisPriority.Immediate,
+                                           async (_, cancellationToken) =>
+                                           { await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken); return 0; },
+                                           cancellation.Token);
         await Task.Delay(10);
         var timer = Stopwatch.StartNew();
         cancellation.Cancel();
@@ -94,8 +98,8 @@ public sealed class Phase12BenchmarkTests(ITestOutputHelper output)
     }
 
     static async Task RapidEditsAsync(List<BenchmarkResult> results, LanguageAnalysisCache cache,
-        MartinLanguageService service, LanguageWorkspaceSnapshot workspace,
-        LanguageProjectSnapshot project, LanguageDocumentSnapshot document)
+                                      MartinLanguageService service, LanguageWorkspaceSnapshot workspace,
+                                      LanguageProjectSnapshot project, LanguageDocumentSnapshot document)
     {
         var timer = Stopwatch.StartNew();
         var before = GC.GetTotalAllocatedBytes(true);
@@ -108,7 +112,7 @@ public sealed class Phase12BenchmarkTests(ITestOutputHelper output)
         }
         timer.Stop();
         results.Add(new("rapid-edits", 25, timer.Elapsed.TotalMilliseconds,
-            GC.GetTotalAllocatedBytes(false) - before, cache.Metrics.DocumentEntries, cache.Metrics.ProjectEntries));
+                        GC.GetTotalAllocatedBytes(false) - before, cache.Metrics.DocumentEntries, cache.Metrics.ProjectEntries));
     }
 
     static void Run(List<BenchmarkResult> results, string name, int operations, Action action)
@@ -119,7 +123,7 @@ public sealed class Phase12BenchmarkTests(ITestOutputHelper output)
         action();
         timer.Stop();
         results.Add(new(name, operations, timer.Elapsed.TotalMilliseconds,
-            GC.GetAllocatedBytesForCurrentThread() - before));
+                        GC.GetAllocatedBytesForCurrentThread() - before));
     }
 
     static async Task RunAsync(List<BenchmarkResult> results, string name, int operations, Func<Task> action)
@@ -129,50 +133,57 @@ public sealed class Phase12BenchmarkTests(ITestOutputHelper output)
         await action();
         timer.Stop();
         results.Add(new(name, operations, timer.Elapsed.TotalMilliseconds,
-            GC.GetTotalAllocatedBytes(false) - before));
+                        GC.GetTotalAllocatedBytes(false) - before));
     }
 }
 
 public sealed record BenchmarkResult(string Name, int Operations, double ElapsedMilliseconds,
-    long AllocatedBytes, int? DocumentCacheEntries = null, int? ProjectCacheEntries = null);
+                                     long AllocatedBytes, int? DocumentCacheEntries = null, int? ProjectCacheEntries = null);
 public sealed record BenchmarkReport(int SchemaVersion, IReadOnlyList<BenchmarkResult> Results,
-    AnalysisCacheMetrics Cache);
+                                     AnalysisCacheMetrics Cache);
 
 internal static class BenchmarkData
 {
     public static string File(int lines, int offset = 0) => string.Join('\n', Enumerable.Range(0, lines)
-        .Select(i => $"func f{i + offset}() -> Int {{ return {i + offset} }}"));
+                                                                                  .Select(i => $"func f{i + offset}() -> Int {{ return {i + offset} }}"));
 
     public static SyntaxTree[] Project(int files, int linesPerFile) => Enumerable.Range(0, files)
-        .Select(file => SyntaxTree.Parse(File(linesPerFile, file * linesPerFile), $"file{file:D3}.martin")).ToArray();
+                                                                           .Select(file => SyntaxTree.Parse(File(linesPerFile, file *linesPerFile), $"file{file:D3}.martin"))
+                                                                           .ToArray();
 
     public static (LanguageWorkspaceSnapshot Workspace, LanguageProjectSnapshot Project,
-        LanguageDocumentSnapshot Document) Workspace(int lines)
+                   LanguageDocumentSnapshot Document) Workspace(int lines)
     {
         var projectId = ProjectId.CreateNew();
-        var document = new LanguageDocumentSnapshot(DocumentId.CreateNew(), "benchmark.martin", File(lines), new(0))
-        { ProjectId = projectId };
+        var document = new LanguageDocumentSnapshot(DocumentId.CreateNew(), "benchmark.martin", File(lines), new(0)) { ProjectId = projectId };
         var project = new LanguageProjectSnapshot(projectId, "benchmark", ".", new(0), [document]);
         return (new(WorkspaceId.CreateNew(), new(0), [project]), project, document);
     }
 
     public static CompletionRequest Request(LanguageWorkspaceSnapshot workspace,
-        LanguageProjectSnapshot project, LanguageDocumentSnapshot document, int position) => new()
-        {
-            WorkspaceId = workspace.Id,
-            WorkspaceVersion = workspace.Version,
-            ProjectId = project.Id,
-            ProjectVersion = project.Version,
-            DocumentId = document.Id,
-            DocumentVersion = document.Version,
-            Position = Math.Min(position, document.Text.Length)
-        };
+                                            LanguageProjectSnapshot project, LanguageDocumentSnapshot document, int position) => new() {
+        WorkspaceId = workspace.Id,
+        WorkspaceVersion = workspace.Version,
+        ProjectId = project.Id,
+        ProjectVersion = project.Version,
+        DocumentId = document.Id,
+        DocumentVersion = document.Version,
+        Position = Math.Min(position, document.Text.Length)
+    };
 }
 
 internal sealed class BenchmarkWorkspace(LanguageWorkspaceSnapshot snapshot) : ILanguageWorkspace
 {
     public LanguageWorkspaceSnapshot CurrentSnapshot { get; } = snapshot;
-    public event EventHandler<LanguageWorkspaceChangedEventArgs>? WorkspaceChanged { add { } remove { } }
+    public event EventHandler<LanguageWorkspaceChangedEventArgs>? WorkspaceChanged
+    {
+        add
+        {
+        }
+        remove
+        {
+        }
+    }
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     public Task<ProjectId> OpenProjectAsync(Martin.ProjectSystem.MartinProject project, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     public Task CloseProjectAsync(ProjectId projectId, CancellationToken cancellationToken = default) => throw new NotSupportedException();

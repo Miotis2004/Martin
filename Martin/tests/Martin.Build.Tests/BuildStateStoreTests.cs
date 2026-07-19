@@ -26,8 +26,7 @@ public sealed class BuildStateStoreTests : IDisposable
         var dll = Write(Path.Combine("bin", "Demo.dll"), "dll");
         var runtime = Write(Path.Combine("bin", "Martin.Runtime.dll"), "runtime");
 
-        var document = new BuildStateStore().CreateDocument(new BuildStateInputs
-        {
+        var document = new BuildStateStore().CreateDocument(new BuildStateInputs {
             ProjectRoot = root,
             ManifestPath = manifest,
             SourceFiles = [sourceB, sourceA],
@@ -36,13 +35,8 @@ public sealed class BuildStateStoreTests : IDisposable
             Configuration = BuildConfiguration.Release,
             TargetFramework = "net8.0",
             AssemblyName = "Demo"
-        }, new BuildResult
-        {
-            Success = true,
-            OutputDirectory = output,
-            EntryPointPath = app,
-            Artifacts = [new(BuildArtifactKind.ManagedAssembly, dll), new(BuildArtifactKind.AppHost, app), new(BuildArtifactKind.RuntimeLibrary, runtime)]
-        });
+        },
+                                                            new BuildResult { Success = true, OutputDirectory = output, EntryPointPath = app, Artifacts = [new(BuildArtifactKind.ManagedAssembly, dll), new(BuildArtifactKind.AppHost, app), new(BuildArtifactKind.RuntimeLibrary, runtime)] });
 
         Assert.Equal(BuildStateDocument.CurrentSchemaVersion, document.SchemaVersion);
         Assert.Equal("Sources/a.martin", document.Sources[0].RelativePath);
@@ -57,8 +51,7 @@ public sealed class BuildStateStoreTests : IDisposable
     public void Write_replaces_state_atomically_with_serialized_schema()
     {
         var output = Directory.CreateDirectory(Path.Combine(root, "bin")).FullName;
-        var document = new BuildStateDocument
-        {
+        var document = new BuildStateDocument {
             ProjectRoot = root,
             ManifestPath = Path.Combine(root, "Martin.toml"),
             ManifestSha256 = "abc",
@@ -96,7 +89,6 @@ public sealed class BuildStateStoreTests : IDisposable
         Assert.True(result.IsFresh);
         Assert.Equal(app, result.EntryPointPath);
     }
-
 
     [Fact]
     public void Freshness_checker_rejects_current_runtime_hash_mismatch()
@@ -155,7 +147,6 @@ public sealed class BuildStateStoreTests : IDisposable
         Assert.Equal(BuildFreshnessStatus.ArtifactMissing, new BuildFreshnessChecker().Check(output, ToCheckInputs(inputs)).Status);
     }
 
-
     [Theory]
     [InlineData("")]
     [InlineData("../outside/app.exe")]
@@ -198,8 +189,7 @@ public sealed class BuildStateStoreTests : IDisposable
         var app = Write(Path.Combine("bin", OperatingSystem.IsWindows() ? "Demo.exe" : "Demo"), "app");
         var store = new BuildStateStore();
         var inputs = new BuildStateInputs { ProjectRoot = root, ManifestPath = manifest, SourceFiles = [source], CompilerVersion = "compiler", RuntimeVersion = "runtime", Configuration = BuildConfiguration.Debug, TargetFramework = "net8.0", AssemblyName = "Demo" };
-        var document = store.CreateDocument(inputs, new BuildResult { Success = true, OutputDirectory = output, EntryPointPath = app, Artifacts = [new(BuildArtifactKind.AppHost, app)] }) with
-        {
+        var document = store.CreateDocument(inputs, new BuildResult { Success = true, OutputDirectory = output, EntryPointPath = app, Artifacts = [new(BuildArtifactKind.AppHost, app)] }) with {
             Artifacts = [new BuildArtifactState { Kind = BuildArtifactKind.AppHost, RelativePath = artifactPath, Sha256 = "abc", Length = 3 }]
         };
         store.Write(document, output);
@@ -228,8 +218,7 @@ public sealed class BuildStateStoreTests : IDisposable
         Assert.Throws<OperationCanceledException>(() => new BuildFreshnessChecker().Check(output, ToCheckInputs(inputs), cancellation.Token));
     }
 
-    static BuildFreshnessCheckInputs ToCheckInputs(BuildStateInputs inputs) => new()
-    {
+    static BuildFreshnessCheckInputs ToCheckInputs(BuildStateInputs inputs) => new() {
         ProjectRoot = inputs.ProjectRoot,
         ManifestPath = inputs.ManifestPath,
         SourceFiles = inputs.SourceFiles,

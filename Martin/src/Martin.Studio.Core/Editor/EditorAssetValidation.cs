@@ -12,18 +12,18 @@ public static class EditorAssetValidator
     public const string MonacoVersion = "0.52.2";
 
     public static readonly IReadOnlyList<string> RequiredRelativePaths =
-    [
-        "index.html",
-        "editor.js",
-        "editor.css",
-        "martin-language.js",
-        Path.Combine("monaco", "VERSION.txt"),
-        Path.Combine("monaco", "min", "vs", "loader.js"),
-        Path.Combine("themes", "martin-dark.json"),
-        Path.Combine("themes", "martin-light.json"),
-        Path.Combine("licenses", "MONACO-EDITOR.txt"),
-        Path.Combine("licenses", "THIRD-PARTY-NOTICES.txt")
-    ];
+        [
+            "index.html",
+            "editor.js",
+            "editor.css",
+            "martin-language.js",
+            Path.Combine("monaco", "VERSION.txt"),
+            Path.Combine("monaco", "min", "vs", "loader.js"),
+            Path.Combine("themes", "martin-dark.json"),
+            Path.Combine("themes", "martin-light.json"),
+            Path.Combine("licenses", "MONACO-EDITOR.txt"),
+            Path.Combine("licenses", "THIRD-PARTY-NOTICES.txt")
+        ];
 
     public static EditorAssetValidationResult Validate(string rootPath)
     {

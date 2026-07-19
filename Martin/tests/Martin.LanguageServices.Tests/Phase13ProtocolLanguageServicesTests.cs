@@ -40,8 +40,7 @@ public sealed class Phase13ProtocolLanguageServicesTests
         var witness = source.LastIndexOf("name()", StringComparison.Ordinal);
 
         var hover = service.Hover(workspace, document.Id, witness);
-        var request = new ClassificationRequest
-        {
+        var request = new ClassificationRequest {
             WorkspaceId = workspace.Id,
             WorkspaceVersion = workspace.Version,
             ProjectId = project.Id,
@@ -59,7 +58,7 @@ public sealed class Phase13ProtocolLanguageServicesTests
     }
 
     private static (MartinLanguageService Service, LanguageWorkspaceSnapshot Workspace, LanguageProjectSnapshot Project,
-        LanguageDocumentSnapshot Document) Create(string source)
+                    LanguageDocumentSnapshot Document) Create(string source)
     {
         var document = new LanguageDocumentSnapshot(DocumentId.CreateNew(), "main.martin", source, new(1));
         var project = new LanguageProjectSnapshot(ProjectId.CreateNew(), "test", ".", new(1), [document]);

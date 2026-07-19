@@ -49,7 +49,6 @@ public sealed class CommandHandlerTests
         Assert.Contains("MRT2001", console.StandardError);
     }
 
-
     [Fact]
     public async Task BuildHandlerSuppressesStatusOutputInJsonMode()
     {
@@ -81,7 +80,7 @@ public sealed class CommandHandlerTests
         Assert.Equal(string.Empty, console.StandardOutput);
         Assert.DoesNotContain("Building", console.StandardError);
         Assert.DoesNotContain("Build succeeded", console.StandardError);
-        //Assert.DoesNotContain("\u001b[", console.StandardError);
+        // Assert.DoesNotContain("\u001b[", console.StandardError);
         using var document = JsonDocument.Parse(console.StandardError);
         Assert.True(document.RootElement.TryGetProperty("diagnostics", out var diagnostics));
         Assert.Equal(JsonValueKind.Array, diagnostics.ValueKind);
@@ -132,18 +131,15 @@ public sealed class CommandHandlerTests
 
     static CommandDiagnosticService Diagnostics(TestConsole console) => new(console, new HumanDiagnosticRenderer());
 
-    static MartinProject Project() => new()
-    {
+    static MartinProject Project() => new() {
         RootDirectory = Path.Combine(Path.GetTempPath(), "martin-cli-handler-tests"),
         ManifestPath = Path.Combine(Path.GetTempPath(), "martin-cli-handler-tests", "Martin.toml"),
-        Manifest = new MartinManifest
-        {
+        Manifest = new MartinManifest {
             ManifestVersion = 1,
             Package = new PackageSection("sample", "1.0.0"),
             Target = new TargetSection("exe", "net8.0", "main")
         },
-        SourceFiles = ImmutableArray.Create(Path.Combine(Path.GetTempPath(), "main.martin")),
-        TestFiles = []
+        SourceFiles = ImmutableArray.Create(Path.Combine(Path.GetTempPath(), "main.martin")), TestFiles = []
     };
 
     sealed class StubProjectLoader(ProjectLoadResult result) : IProjectLoaderService

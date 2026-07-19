@@ -89,8 +89,7 @@ public sealed class Phase9FullPipelineIntegrationTests : IDisposable
     public async Task Phase13CrossFilePatternsAndProtocolConformanceCloseEndToEnd()
     {
         using var scenario = new PipelineScenario(root);
-        var trees = new[]
-        {
+        var trees = new[] {
             SyntaxTree.Parse("protocol Describable { func describe() -> String }", "protocol.martin"),
             SyntaxTree.Parse("struct Reporter: Describable { func describe() -> String { return \"protocol-ok\" } }", "reporter.martin"),
             SyntaxTree.Parse("enum Result { case success(Int?) case failure }", "result.martin"),
@@ -106,7 +105,7 @@ public sealed class Phase9FullPipelineIntegrationTests : IDisposable
 
         var build = await scenario.BuildAsync(compilation);
         Assert.True(build.Success, build.StandardOutput + build.StandardError +
-            string.Join(Environment.NewLine, build.Diagnostics.Select(d => d.Code + ": " + d.Message)));
+                                       string.Join(Environment.NewLine, build.Diagnostics.Select(d => d.Code + ": " + d.Message)));
 
         var run = await new MartinExecutionService().RunAsync(build, new ExecutionOptions());
         AssertRunSucceeded(run);
@@ -117,8 +116,7 @@ public sealed class Phase9FullPipelineIntegrationTests : IDisposable
     public async Task Phase14CrossFileGenericsCloseEndToEnd()
     {
         using var scenario = new PipelineScenario(root);
-        var trees = new[]
-        {
+        var trees = new[] {
             SyntaxTree.Parse("protocol Describable { func describe() -> String }", "protocol.martin"),
             SyntaxTree.Parse("struct Word: Describable { func describe() -> String { return \"generic-ok\" } }", "word.martin"),
             SyntaxTree.Parse("enum Outcome<T> { case success(T?) case failure }", "outcome.martin"),
@@ -132,20 +130,18 @@ public sealed class Phase9FullPipelineIntegrationTests : IDisposable
 
         var build = await scenario.BuildAsync(compilation);
         Assert.True(build.Success, build.StandardOutput + build.StandardError +
-            string.Join(Environment.NewLine, build.Diagnostics.Select(d => d.Code + ": " + d.Message)));
+                                       string.Join(Environment.NewLine, build.Diagnostics.Select(d => d.Code + ": " + d.Message)));
 
         var run = await new MartinExecutionService().RunAsync(build, new ExecutionOptions());
         AssertRunSucceeded(run);
         Assert.Equal("generic-ok" + Environment.NewLine, run.StandardOutput);
     }
 
-
     [Fact]
     public async Task Phase15TypedErrorsCloseEndToEndAcrossCompilerRuntimeAndLanguageServices()
     {
         using var scenario = new PipelineScenario(root);
-        var sources = new[]
-        {
+        var sources = new[] {
             ("errors.martin", "enum DecodeError<T>: Error { case invalid(value: T) case empty }"),
             ("reader.martin", "struct Decoder { func decode(_ text: String) throws DecodeError<String> -> String { throw DecodeError<String>.invalid(value: text) } }"),
             ("host.martin", "func loadMissing(_ path: String) throws FileError -> String { return try readFile(path) }"),
@@ -172,7 +168,7 @@ public sealed class Phase9FullPipelineIntegrationTests : IDisposable
 
         var build = await scenario.BuildAsync(compilation);
         Assert.True(build.Success, build.StandardOutput + build.StandardError +
-            string.Join(Environment.NewLine, build.Diagnostics.Select(d => d.Code + ": " + d.Message)));
+                                       string.Join(Environment.NewLine, build.Diagnostics.Select(d => d.Code + ": " + d.Message)));
 
         var run = await new MartinExecutionService().RunAsync(build, new ExecutionOptions());
         AssertRunSucceeded(run);
@@ -263,7 +259,14 @@ public sealed class Phase9FullPipelineIntegrationTests : IDisposable
 
     public void Dispose()
     {
-        try { if (Directory.Exists(root)) Directory.Delete(root, recursive: true); } catch { }
+        try
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, recursive: true);
+        }
+        catch
+        {
+        }
     }
 
     sealed class PipelineScenario : IDisposable
@@ -278,18 +281,18 @@ public sealed class Phase9FullPipelineIntegrationTests : IDisposable
         public string WorkDirectory { get; }
         public string OutputDirectory { get; }
 
-        public Task<BuildResult> BuildAsync(params (string Path, string Source)[] sources) => BuildAsync(CancellationToken.None, sources);
+        public Task<BuildResult> BuildAsync(params(string Path, string Source)[] sources) => BuildAsync(CancellationToken.None, sources);
 
         public Task<BuildResult> BuildAsync(Compilation compilation) =>
             BuildCompilationAsync(compilation, new BuildOptionsOverride(), CancellationToken.None);
 
-        public Task<BuildResult> BuildAsync(CancellationToken cancellationToken, params (string Path, string Source)[] sources) =>
+        public Task<BuildResult> BuildAsync(CancellationToken cancellationToken, params(string Path, string Source)[] sources) =>
             BuildAsync(new BuildOptionsOverride(), cancellationToken, sources);
 
-        public Task<BuildResult> BuildAsync(BuildOptionsOverride overrides, params (string Path, string Source)[] sources) =>
+        public Task<BuildResult> BuildAsync(BuildOptionsOverride overrides, params(string Path, string Source)[] sources) =>
             BuildAsync(overrides, CancellationToken.None, sources);
 
-        public Task<BuildResult> BuildAsync(BuildOptionsOverride overrides, CancellationToken cancellationToken, params (string Path, string Source)[] sources)
+        public Task<BuildResult> BuildAsync(BuildOptionsOverride overrides, CancellationToken cancellationToken, params(string Path, string Source)[] sources)
         {
             var compilation = Compilation.Create(sources.Select(source => SyntaxTree.Parse(source.Source, source.Path)));
             return BuildCompilationAsync(compilation, overrides, cancellationToken);
@@ -297,25 +300,25 @@ public sealed class Phase9FullPipelineIntegrationTests : IDisposable
 
         Task<BuildResult> BuildCompilationAsync(Compilation compilation, BuildOptionsOverride overrides, CancellationToken cancellationToken)
         {
-            return new MartinBuildService().BuildAsync(compilation, new BuildOptions
-            {
-                OutputDirectory = OutputDirectory,
-                AssemblyName = "Phase9Integration" + Guid.NewGuid().ToString("N")[..8],
-                UseAppHost = false,
-                OutputKind = overrides.OutputKind,
-                RuntimePath = overrides.RuntimePath
-            }, cancellationToken);
+            return new MartinBuildService().BuildAsync(compilation, new BuildOptions { OutputDirectory = OutputDirectory, AssemblyName = "Phase9Integration" + Guid.NewGuid().ToString("N")[..8], UseAppHost = false, OutputKind = overrides.OutputKind, RuntimePath = overrides.RuntimePath }, cancellationToken);
         }
 
         public void Dispose()
         {
-            try { if (Directory.Exists(WorkDirectory)) Directory.Delete(WorkDirectory, recursive: true); } catch { }
+            try
+            {
+                if (Directory.Exists(WorkDirectory))
+                    Directory.Delete(WorkDirectory, recursive: true);
+            }
+            catch
+            {
+            }
         }
     }
 
     sealed record BuildOptionsOverride
     {
         public OutputKind OutputKind { get; init; } = OutputKind.ConsoleApplication;
-        public string? RuntimePath { get; init; }
+        public string ? RuntimePath { get; init; }
     }
 }

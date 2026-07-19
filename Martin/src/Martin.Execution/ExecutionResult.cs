@@ -17,7 +17,7 @@ public sealed record ExecutionResult
         init => Status = value ? ExecutionStatus.Completed : Status;
     }
     public bool WasCancelled => Status == ExecutionStatus.Cancelled;
-    public int? ExitCode { get; init; }
+    public int ? ExitCode { get; init; }
     public string StandardOutput { get; init; } = string.Empty;
     public string StandardError { get; init; } = string.Empty;
     public ImmutableArray<Diagnostic> Diagnostics { get; init; } = [];

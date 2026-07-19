@@ -52,8 +52,7 @@ public sealed class Phase12SemanticHoverTests
     public async Task Versioned_hover_rejects_stale_requests()
     {
         var (service, workspace, project, document) = Workspace("func answer() -> Int { return 42 } func main() { answer() }");
-        var request = Request(workspace, project, document, document.Text.LastIndexOf("answer", StringComparison.Ordinal)) with
-        {
+        var request = Request(workspace, project, document, document.Text.LastIndexOf("answer", StringComparison.Ordinal)) with {
             DocumentVersion = new DocumentVersion(99)
         };
 
@@ -76,19 +75,18 @@ public sealed class Phase12SemanticHoverTests
     }
 
     static HoverRequest Request(LanguageWorkspaceSnapshot workspace, LanguageProjectSnapshot project,
-        LanguageDocumentSnapshot document, int position) => new()
-        {
-            WorkspaceId = workspace.Id,
-            WorkspaceVersion = workspace.Version,
-            ProjectId = project.Id,
-            ProjectVersion = project.Version,
-            DocumentId = document.Id,
-            DocumentVersion = document.Version,
-            Position = position
-        };
+                                LanguageDocumentSnapshot document, int position) => new() {
+        WorkspaceId = workspace.Id,
+        WorkspaceVersion = workspace.Version,
+        ProjectId = project.Id,
+        ProjectVersion = project.Version,
+        DocumentId = document.Id,
+        DocumentVersion = document.Version,
+        Position = position
+    };
 
     static (MartinLanguageService Service, LanguageWorkspaceSnapshot Workspace, LanguageProjectSnapshot Project,
-        LanguageDocumentSnapshot Document) Workspace(string source)
+            LanguageDocumentSnapshot Document) Workspace(string source)
     {
         var document = new LanguageDocumentSnapshot(DocumentId.CreateNew(), "main.martin", source, new(0));
         var project = new LanguageProjectSnapshot(ProjectId.CreateNew(), "test", ".", new(0), [document]);

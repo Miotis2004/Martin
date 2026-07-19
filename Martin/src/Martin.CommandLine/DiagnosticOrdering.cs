@@ -11,8 +11,7 @@ public static class DiagnosticOrdering
             .ThenBy(diagnostic => diagnostic.Code, StringComparer.Ordinal)
             .ThenBy(diagnostic => diagnostic.Message, StringComparer.Ordinal);
 
-    static int SeverityRank(CommandDiagnosticSeverity severity) => severity switch
-    {
+    static int SeverityRank(CommandDiagnosticSeverity severity) => severity switch {
         CommandDiagnosticSeverity.Error => 0,
         CommandDiagnosticSeverity.Warning => 1,
         _ => 2

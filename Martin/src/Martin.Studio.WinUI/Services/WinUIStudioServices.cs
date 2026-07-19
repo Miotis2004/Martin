@@ -28,8 +28,8 @@ public sealed class WinUIFileDialogService(IntPtr windowHandle) : IFileDialogSer
     }
 
     private IntPtr WindowHandle => _windowHandle != IntPtr.Zero
-        ? _windowHandle
-        : throw new InvalidOperationException("The WinUI file dialog service must be initialized with a window handle before showing pickers.");
+                                       ? _windowHandle
+                                       : throw new InvalidOperationException("The WinUI file dialog service must be initialized with a window handle before showing pickers.");
 
     public async Task<string?> PickProjectManifestAsync(CancellationToken cancellationToken = default)
     {
@@ -73,9 +73,9 @@ public sealed class WinUIMessageDialogService : IMessageDialogService
     {
         cancellationToken.ThrowIfCancellationRequested();
         var names = string.Join(Environment.NewLine, documents.Take(8).Select(d => "• " + d.DisplayName));
-        if (documents.Count > 8) names += Environment.NewLine + $"• ...and {documents.Count - 8} more";
-        var dialog = new ContentDialog
-        {
+        if (documents.Count > 8)
+            names += Environment.NewLine + $"• ...and {documents.Count - 8} more";
+        var dialog = new ContentDialog {
             Title = context == UnsavedChangesContext.ExitApplication ? "Save changes before exiting?" : "Save changes?",
             Content = $"The following document(s) have unsaved changes:" + Environment.NewLine + Environment.NewLine + names,
             PrimaryButtonText = "Save",
@@ -86,8 +86,7 @@ public sealed class WinUIMessageDialogService : IMessageDialogService
         };
         var result = await dialog.ShowAsync();
         cancellationToken.ThrowIfCancellationRequested();
-        return result switch
-        {
+        return result switch {
             ContentDialogResult.Primary => UnsavedChangesDecision.Save,
             ContentDialogResult.Secondary => UnsavedChangesDecision.Discard,
             _ => UnsavedChangesDecision.Cancel
@@ -98,8 +97,7 @@ public sealed class WinUIMessageDialogService : IMessageDialogService
         cancellationToken.ThrowIfCancellationRequested();
         if (!document.IsDirty)
         {
-            var dialog = new ContentDialog
-            {
+            var dialog = new ContentDialog {
                 Title = ExternalChangeTitle(document, kind),
                 Content = ExternalChangeMessage(document, kind, "Reload the file from disk or keep the editor's current view?"),
                 PrimaryButtonText = "Reload",
@@ -110,8 +108,7 @@ public sealed class WinUIMessageDialogService : IMessageDialogService
             };
             var result = await dialog.ShowAsync();
             cancellationToken.ThrowIfCancellationRequested();
-            return result switch
-            {
+            return result switch {
                 ContentDialogResult.Primary => ExternalChangeDecision.Reload,
                 ContentDialogResult.Secondary => ExternalChangeDecision.KeepCurrentView,
                 _ => ExternalChangeDecision.Cancel
@@ -122,8 +119,7 @@ public sealed class WinUIMessageDialogService : IMessageDialogService
         var reloadDisk = new RadioButton { Content = "Reload Disk Version", Margin = new Thickness(0, 8, 0, 0) };
         var saveAs = new RadioButton { Content = "Save As", Margin = new Thickness(0, 8, 0, 0) };
         var content = new StackPanel { Spacing = 4 };
-        content.Children.Add(new TextBlock
-        {
+        content.Children.Add(new TextBlock {
             Text = ExternalChangeMessage(document, kind, "The editor has unsaved changes. Choose how to resolve the disk change."),
             TextWrapping = TextWrapping.Wrap
         });
@@ -131,8 +127,7 @@ public sealed class WinUIMessageDialogService : IMessageDialogService
         content.Children.Add(reloadDisk);
         content.Children.Add(saveAs);
 
-        var dirtyDialog = new ContentDialog
-        {
+        var dirtyDialog = new ContentDialog {
             Title = ExternalChangeTitle(document, kind),
             Content = content,
             PrimaryButtonText = "Continue",
@@ -151,8 +146,7 @@ public sealed class WinUIMessageDialogService : IMessageDialogService
         return ExternalChangeDecision.KeepEditorVersion;
     }
 
-    private static string ExternalChangeTitle(DocumentModel document, ExternalChangeKind kind) => kind switch
-    {
+    private static string ExternalChangeTitle(DocumentModel document, ExternalChangeKind kind) => kind switch {
         ExternalChangeKind.Deleted => $"'{document.DisplayName}' was deleted outside Martin Studio",
         ExternalChangeKind.Renamed => $"'{document.DisplayName}' was renamed outside Martin Studio",
         _ => $"'{document.DisplayName}' changed outside Martin Studio"
@@ -160,8 +154,7 @@ public sealed class WinUIMessageDialogService : IMessageDialogService
 
     private static string ExternalChangeMessage(DocumentModel document, ExternalChangeKind kind, string prompt)
     {
-        var action = kind switch
-        {
+        var action = kind switch {
             ExternalChangeKind.Deleted => "deleted",
             ExternalChangeKind.Renamed => "renamed",
             _ => "changed"
@@ -183,29 +176,35 @@ public sealed class WinUIUiDispatcher(DispatcherQueue dispatcherQueue) : IUiDisp
     public bool HasThreadAccess => dispatcherQueue.HasThreadAccess;
     public Task InvokeAsync(Action action, CancellationToken cancellationToken = default)
     {
-        if (HasThreadAccess) { action(); return Task.CompletedTask; }
+        if (HasThreadAccess)
+        {
+            action();
+            return Task.CompletedTask;
+        }
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        if (!dispatcherQueue.TryEnqueue(() => { try { cancellationToken.ThrowIfCancellationRequested(); action(); tcs.SetResult(); } catch (Exception ex) { tcs.SetException(ex); } }))
+        if (!dispatcherQueue.TryEnqueue(() =>
+                                        { try { cancellationToken.ThrowIfCancellationRequested(); action(); tcs.SetResult(); } catch (Exception ex) { tcs.SetException(ex); } }))
             tcs.SetException(new InvalidOperationException("Could not enqueue UI action."));
         return tcs.Task;
     }
     public Task InvokeAsync(Func<Task> action, CancellationToken cancellationToken = default)
     {
-        if (HasThreadAccess) return action();
+        if (HasThreadAccess)
+            return action();
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         if (!dispatcherQueue.TryEnqueue(async () =>
-            {
-                try
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    await action();
-                    tcs.SetResult();
-                }
-                catch (Exception ex)
-                {
-                    tcs.SetException(ex);
-                }
-            }))
+                                        {
+                                            try
+                                            {
+                                                cancellationToken.ThrowIfCancellationRequested();
+                                                await action();
+                                                tcs.SetResult();
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                tcs.SetException(ex);
+                                            }
+                                        }))
             tcs.SetException(new InvalidOperationException("Could not enqueue UI action."));
         return tcs.Task;
     }
@@ -234,8 +233,10 @@ public sealed class WindowsFileRevealService : IFileRevealService
     public Task RevealAsync(string path, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (File.Exists(path)) Process.Start(new ProcessStartInfo("explorer.exe") { ArgumentList = { "/select,", path }, UseShellExecute = true });
-        else if (Directory.Exists(path)) Process.Start(new ProcessStartInfo("explorer.exe") { ArgumentList = { path }, UseShellExecute = true });
+        if (File.Exists(path))
+            Process.Start(new ProcessStartInfo("explorer.exe") { ArgumentList = { "/select,", path }, UseShellExecute = true });
+        else if (Directory.Exists(path))
+            Process.Start(new ProcessStartInfo("explorer.exe") { ArgumentList = { path }, UseShellExecute = true });
         return Task.CompletedTask;
     }
 }
@@ -280,7 +281,6 @@ public sealed class EditorHostProxy : IEditorHost
         _inner ?? throw new InvalidOperationException("No editor host has been attached.");
 }
 
-
 public sealed class WinUIExternalChangePolicy(IMessageDialogService dialogs, IFileDialogService files) : IExternalChangePolicy
 {
     public async Task<CleanExternalChangeChoice> ConfirmCleanChangeAsync(ExternalChange change, CancellationToken cancellationToken = default)
@@ -292,8 +292,7 @@ public sealed class WinUIExternalChangePolicy(IMessageDialogService dialogs, IFi
     public async Task<DirtyExternalChangeChoice> ConfirmDirtyChangeAsync(ExternalChange change, CancellationToken cancellationToken = default)
     {
         var decision = await dialogs.ConfirmExternalChangeAsync(change.Document, change.Kind, cancellationToken);
-        return decision switch
-        {
+        return decision switch {
             ExternalChangeDecision.KeepEditorVersion => DirtyExternalChangeChoice.KeepEditorVersion,
             ExternalChangeDecision.ReloadDiskVersion => DirtyExternalChangeChoice.ReloadDiskVersion,
             ExternalChangeDecision.SaveAs => DirtyExternalChangeChoice.SaveAs,
@@ -310,8 +309,7 @@ public sealed class WinUIDirtyProjectTransitionPolicy(IMessageDialogService dial
     public async Task<DirtyProjectTransitionChoice> ConfirmAsync(IReadOnlyList<DocumentModel> dirtyDocuments, CancellationToken cancellationToken = default)
     {
         var decision = await dialogs.ConfirmUnsavedChangesAsync(dirtyDocuments, UnsavedChangesContext.CloseProject, cancellationToken);
-        return decision switch
-        {
+        return decision switch {
             UnsavedChangesDecision.Save => DirtyProjectTransitionChoice.SaveAndContinue,
             UnsavedChangesDecision.Discard => DirtyProjectTransitionChoice.DiscardAndContinue,
             _ => DirtyProjectTransitionChoice.Cancel

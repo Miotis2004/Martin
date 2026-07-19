@@ -46,7 +46,7 @@ public sealed record ProjectAnalysis(
         ImmutableDictionary<DocumentId, SemanticModel> semanticModels,
         ImmutableArray<LanguageDiagnostic> diagnostics)
         : this(projectId, version, compilation, semanticModels, diagnostics,
-            ImmutableDictionary<DocumentId, ImmutableArray<ClassifiedSpan>>.Empty)
+               ImmutableDictionary<DocumentId, ImmutableArray<ClassifiedSpan>>.Empty)
     {
     }
 }

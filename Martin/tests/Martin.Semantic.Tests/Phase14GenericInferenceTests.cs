@@ -7,7 +7,8 @@ namespace Martin.Semantic.Tests;
 
 public sealed class Phase14GenericInferenceTests
 {
-    private sealed class Owner(string name) : Symbol(name, [])
+    private sealed class Owner(string name) : Symbol
+    (name, [])
     {
         public override SymbolKind Kind => SymbolKind.Function;
     }
@@ -24,7 +25,7 @@ public sealed class Phase14GenericInferenceTests
         var observed = factory.Construct(pair, [new OptionalTypeSymbol(TypeSymbol.String), TypeSymbol.Int]);
 
         var result = new GenericInferenceEngine().Infer([second, first],
-            [new InferenceEquation(pattern, observed)]);
+                                                        [new InferenceEquation(pattern, observed)]);
 
         Assert.True(result.Succeeded);
         Assert.Equal([first, second], result.TypeParameters);
@@ -38,11 +39,11 @@ public sealed class Phase14GenericInferenceTests
         var parameter = new TypeParameterSymbol("T", 0, owner, []);
 
         var result = new GenericInferenceEngine().Infer([parameter],
-        [
-            new(parameter, TypeSymbol.Int),
-            new(parameter, TypeSymbol.Int),
-            new(parameter, TypeSymbol.String)
-        ]);
+                                                        [
+                                                            new(parameter, TypeSymbol.Int),
+                                                            new(parameter, TypeSymbol.Int),
+                                                            new(parameter, TypeSymbol.String)
+                                                        ]);
 
         Assert.False(result.Succeeded);
         Assert.Equal([TypeSymbol.Int, TypeSymbol.String], Assert.Single(result.Conflicts).Candidates);
@@ -57,10 +58,10 @@ public sealed class Phase14GenericInferenceTests
         var second = new TypeParameterSymbol("B", 1, owner, []);
 
         var result = new GenericInferenceEngine().Infer([first, second],
-        [
-            new(first, TypeSymbol.Int),
-            new(first, TypeSymbol.String)
-        ]);
+                                                        [
+                                                            new(first, TypeSymbol.Int),
+                                                            new(first, TypeSymbol.String)
+                                                        ]);
 
         Assert.Single(result.Conflicts);
         Assert.Equal(second, Assert.Single(result.UnresolvedParameters));
@@ -75,7 +76,7 @@ public sealed class Phase14GenericInferenceTests
         var parameter = new TypeParameterSymbol("T", 0, owner, []);
 
         var result = new GenericInferenceEngine().Infer([parameter],
-            [new(parameter, TypeSymbol.String, InferenceSource.ExpectedType)]);
+                                                        [new(parameter, TypeSymbol.String, InferenceSource.ExpectedType)]);
 
         Assert.True(result.Succeeded);
         Assert.Same(TypeSymbol.String, Assert.Single(result.TypeArguments));
@@ -90,7 +91,7 @@ public sealed class Phase14GenericInferenceTests
         cancellation.Cancel();
 
         Assert.Throws<OperationCanceledException>(() => new GenericInferenceEngine().Infer(
-            [parameter], [new(parameter, TypeSymbol.Int)], cancellation.Token));
+                                                      [parameter], [new(parameter, TypeSymbol.Int)], cancellation.Token));
         Assert.Empty(parameter.Constraints);
         Assert.Same(owner, parameter.ContainingSymbol);
     }

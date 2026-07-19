@@ -16,21 +16,21 @@ public sealed class Phase14RecursiveSubstitutionTests
         var outerParameter = container.TypeParameters[0];
         var methodParameter = new TypeParameterSymbol("U", 0, container, []);
         var nestedReturn = new ConstructedTypeSymbol(pair,
-            [new OptionalTypeSymbol(outerParameter), methodParameter], []);
+                                                     [new OptionalTypeSymbol(outerParameter), methodParameter], []);
         var declaration = SyntaxTree.Parse(string.Empty).Root;
         var method = new MethodSymbol("convert", container,
-            [new ParameterSymbol("value", null, 0, outerParameter, [], true, true)],
-            nestedReturn, declaration, false, [], true, new OptionalTypeSymbol(outerParameter),
-            [methodParameter], [new ProtocolConstraint(new ProtocolTypeSymbol("Displayable", []))]);
+                                      [new ParameterSymbol("value", null, 0, outerParameter, [], true, true)],
+                                      nestedReturn, declaration, false, [], true, new OptionalTypeSymbol(outerParameter),
+                                      [methodParameter], [new ProtocolConstraint(new ProtocolTypeSymbol("Displayable", []))]);
         container.AddMember(new PropertySymbol("value", container,
-            new OptionalTypeSymbol(new ConstructedTypeSymbol(pair, [outerParameter, TypeSymbol.String], [])),
-            true, null, []));
+                                               new OptionalTypeSymbol(new ConstructedTypeSymbol(pair, [outerParameter, TypeSymbol.String], [])),
+                                               true, null, []));
         container.AddMember(method);
         container.AddMember(new InitializerSymbol(container,
-            [new ParameterSymbol("value", "value", 0, outerParameter, [])], declaration, false, [],
-            true, outerParameter));
+                                                  [new ParameterSymbol("value", "value", 0, outerParameter, [])], declaration, false, [],
+                                                  true, outerParameter));
         container.AddMember(new EnumCaseSymbol("item", container,
-            [new ParameterSymbol("payload", null, 0, new OptionalTypeSymbol(outerParameter), [])], []));
+                                               [new ParameterSymbol("payload", null, 0, new OptionalTypeSymbol(outerParameter), [])], []));
 
         var constructed = new GenericTypeFactory().Construct(container, [TypeSymbol.Int]);
 
@@ -56,7 +56,7 @@ public sealed class Phase14RecursiveSubstitutionTests
         Assert.Same(TypeSymbol.Int, initializer.Parameters[0].Type);
         Assert.Same(TypeSymbol.Int, initializer.ErrorType);
         Assert.Same(TypeSymbol.Int,
-            Assert.IsType<OptionalTypeSymbol>(Assert.Single(constructed.Cases).AssociatedValues[0].Type).ElementType);
+                    Assert.IsType<OptionalTypeSymbol>(Assert.Single(constructed.Cases).AssociatedValues[0].Type).ElementType);
     }
 
     [Fact]
@@ -66,18 +66,16 @@ public sealed class Phase14RecursiveSubstitutionTests
         var first = new TypeParameterSymbol("T", 0, owner, []);
         var second = new TypeParameterSymbol("U", 1, owner, []);
         var function = new FunctionSymbol("transform",
-            [new ParameterSymbol("input", null, 0, new OptionalTypeSymbol(first), [])],
-            second, null, false, [], [first, second], true, first);
+                                          [new ParameterSymbol("input", null, 0, new OptionalTypeSymbol(first), [])],
+                                          second, null, false, [], [first, second], true, first);
         var substitution = new TypeSubstitution(
-            ImmutableDictionary<TypeParameterSymbol, TypeSymbol>.Empty
-                .Add(first, second)
-                .Add(second, TypeSymbol.String),
+            ImmutableDictionary<TypeParameterSymbol, TypeSymbol>.Empty.Add(first, second).Add(second, TypeSymbol.String),
             new GenericTypeFactory());
 
         var result = substitution.Substitute(function);
 
         Assert.Same(TypeSymbol.String,
-            Assert.IsType<OptionalTypeSymbol>(Assert.Single(result.Parameters).Type).ElementType);
+                    Assert.IsType<OptionalTypeSymbol>(Assert.Single(result.Parameters).Type).ElementType);
         Assert.Same(TypeSymbol.String, result.ReturnType);
         Assert.Same(TypeSymbol.String, result.ErrorType);
         Assert.Same(function, result.OriginalDefinition);
@@ -105,8 +103,8 @@ public sealed class Phase14RecursiveSubstitutionTests
     {
         var placeholder = new StructTypeSymbol(name, [], []);
         var parameters = Enumerable.Range(0, arity)
-            .Select(index => new TypeParameterSymbol($"T{index}", index, placeholder, []))
-            .ToImmutableArray();
+                             .Select(index => new TypeParameterSymbol($"T{index}", index, placeholder, []))
+                             .ToImmutableArray();
         var definition = new StructTypeSymbol(name, [], parameters);
         foreach (var parameter in parameters)
             parameter.SetContainingSymbol(definition);

@@ -28,25 +28,24 @@ public sealed class Phase15BenchmarkTests(ITestOutputHelper output)
         Measure(results, "cross-file-throwing-call-graph", 320, () => Bind(Phase15Data.CrossFileThrowingCallGraph(320)));
 
         var workspace = Phase15Data.RapidEditWorkspace(80);
-        using var cache = new LanguageAnalysisCache(new()
-        {
+        using var cache = new LanguageAnalysisCache(new() {
             MaximumDocumentVersions = 4,
             MaximumProjectVersions = 2,
             ApproximateMemoryLimitBytes = 16 * 1024 * 1024
         });
         var service = new MartinLanguageService(cache);
         await MeasureAsync(results, "typed-error-language-service-rapid-edits", 80,
-            () => service.AnalyzeDocumentAsync(workspace.Workspace, workspace.Document.Id));
+                           () => service.AnalyzeDocumentAsync(workspace.Workspace, workspace.Document.Id));
 
         var report = new Phase15BenchmarkReport(1, results, cache.Metrics, PatternMatrixLimits.Default.MaximumRows,
-            PatternMatrixLimits.Default.MaximumColumns, Phase15Data.MaximumGeneratedPatternNesting);
+                                                PatternMatrixLimits.Default.MaximumColumns, Phase15Data.MaximumGeneratedPatternNesting);
         output.WriteLine(JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
 
         Assert.All(results, result =>
-        {
-            Assert.True(result.ElapsedMilliseconds >= 0);
-            Assert.True(result.AllocatedBytes >= 0);
-        });
+                            {
+                                Assert.True(result.ElapsedMilliseconds >= 0);
+                                Assert.True(result.AllocatedBytes >= 0);
+                            });
         Assert.InRange(report.Cache.ProjectEntries, 0, 2);
         Assert.InRange(report.Cache.DocumentEntries, 0, 4);
     }
@@ -58,9 +57,9 @@ public sealed class Phase15BenchmarkTests(ITestOutputHelper output)
         cancelled.Cancel();
 
         Assert.Throws<OperationCanceledException>(() =>
-            Compilation.Create(SyntaxTree.Parse(Phase15Data.SequentialThrowingCalls(32), "cancelled.martin")).BindProgram(cancelled.Token));
+                                                      Compilation.Create(SyntaxTree.Parse(Phase15Data.SequentialThrowingCalls(32), "cancelled.martin")).BindProgram(cancelled.Token));
         Assert.Throws<OperationCanceledException>(() =>
-            ErrorEffect.Combine(Enumerable.Repeat(new ErrorEffect(true, TypeSymbol.Int), 32), cancelled.Token));
+                                                      ErrorEffect.Combine(Enumerable.Repeat(new ErrorEffect(true, TypeSymbol.Int), 32), cancelled.Token));
 
         var tooLarge = Bind(Phase15Data.SwitchBeyondMatrixRowLimit(PatternMatrixLimits.Default.MaximumRows + 1), "too-large-switch.martin");
         Assert.Contains(tooLarge.Diagnostics, diagnostic => diagnostic.Code == "MRT2207");
@@ -93,40 +92,44 @@ public sealed class Phase15BenchmarkTests(ITestOutputHelper output)
     {
         action();
         var allocated = GC.GetAllocatedBytesForCurrentThread();
-        var timer = Stopwatch.StartNew(); action(); timer.Stop();
+        var timer = Stopwatch.StartNew();
+        action();
+        timer.Stop();
         results.Add(new(name, scale, timer.Elapsed.TotalMilliseconds,
-            GC.GetAllocatedBytesForCurrentThread() - allocated));
+                        GC.GetAllocatedBytesForCurrentThread() - allocated));
     }
 
     private static async Task MeasureAsync<T>(List<Phase15BenchmarkResult> results, string name, int scale, Func<Task<T>> action)
     {
         await action();
         var allocated = GC.GetTotalAllocatedBytes(true);
-        var timer = Stopwatch.StartNew(); await action(); timer.Stop();
+        var timer = Stopwatch.StartNew();
+        await action();
+        timer.Stop();
         results.Add(new(name, scale, timer.Elapsed.TotalMilliseconds,
-            GC.GetTotalAllocatedBytes(false) - allocated));
+                        GC.GetTotalAllocatedBytes(false) - allocated));
     }
 }
 
 public sealed record Phase15BenchmarkResult(string Name, int Scale, double ElapsedMilliseconds, long AllocatedBytes);
 public sealed record Phase15BenchmarkReport(int SchemaVersion, IReadOnlyList<Phase15BenchmarkResult> Results,
-    AnalysisCacheMetrics Cache, int PatternMatrixMaximumRows, int PatternMatrixMaximumColumns, int MaximumGeneratedPatternNesting);
+                                            AnalysisCacheMetrics Cache, int PatternMatrixMaximumRows, int PatternMatrixMaximumColumns, int MaximumGeneratedPatternNesting);
 
 internal static class Phase15Data
 {
     public const int MaximumGeneratedPatternNesting = 256;
 
     public static string LargeEffectBody(int calls) => Header() + LoadFunction() +
-        "func run() throws LoadError -> Int {\n" + string.Join('\n', Enumerable.Range(0, calls).Select(i => $"let value{i}: Int = try load()")) + "\nreturn 0\n}";
+                                                       "func run() throws LoadError -> Int {\n" + string.Join('\n', Enumerable.Range(0, calls).Select(i => $"let value{i}: Int = try load()")) + "\nreturn 0\n}";
 
     public static string DeepNestedTryExpressions(int depth) => Header() + LoadFunction() +
-        $"func run() throws LoadError -> Int {{ return {Enumerable.Repeat("try (", depth).Aggregate("load()", (current, prefix) => prefix + current + ")")} }}";
+                                                                $"func run() throws LoadError -> Int {{ return {Enumerable.Repeat("try (", depth).Aggregate("load()", (current, prefix) => prefix + current + ")")} }}";
 
     public static string SequentialThrowingCalls(int calls) => Header() + LoadFunction() + string.Join('\n', Enumerable.Range(0, calls).Select(i => $"func run{i}() throws LoadError -> Int {{ return try load() }}"));
 
     public static string NestedDoCatchStatements(int depth) => Header() + LoadFunction() + "func run() {\n" +
-        string.Concat(Enumerable.Repeat("do {\n", depth)) + "let value = try load()\n" +
-        string.Concat(Enumerable.Repeat("} catch .missing { print(1) } catch .denied { print(2) }\n", depth)) + "}";
+                                                               string.Concat(Enumerable.Repeat("do {\n", depth)) + "let value = try load()\n" +
+                                                               string.Concat(Enumerable.Repeat("} catch .missing { print(1) } catch .denied { print(2) }\n", depth)) + "}";
 
     public static string LargeErrorEnumCatchGraph(int cases)
     {
@@ -143,7 +146,7 @@ internal static class Phase15Data
     }
 
     public static string GenericConstructedErrors(int functions) => "enum DecodeError<T>: Error { case invalid(value: T) }\n" +
-        string.Join('\n', Enumerable.Range(0, functions).Select(i => $"func decode{i}() throws DecodeError<Int> -> Int {{ throw DecodeError<Int>.invalid(value: {i}) }}"));
+                                                                    string.Join('\n', Enumerable.Range(0, functions).Select(i => $"func decode{i}() throws DecodeError<Int> -> Int {{ throw DecodeError<Int>.invalid(value: {i}) }}"));
 
     public static IEnumerable<(string Source, string Path)> CrossFileThrowingCallGraph(int functions)
     {
@@ -152,10 +155,12 @@ internal static class Phase15Data
     }
 
     public static string SwitchBeyondMatrixRowLimit(int rows) => "enum Big { case value }\nfunc run(_ value: Big) { switch value {\n" +
-        string.Join('\n', Enumerable.Range(0, rows).Select(_ => "case .value: print(1)")) + "\n}\n}";
+                                                                 string.Join('\n', Enumerable.Range(0, rows).Select(
+                                                                                       _ => "case .value: print(1)")) +
+                                                                 "\n}\n}";
 
     public static string TooDeepPattern(int depth) => "func run(_ value: Int" + string.Concat(Enumerable.Repeat("?", depth)) + ") { switch value {\ncase " +
-        string.Concat(Enumerable.Repeat(".some(", depth)) + "let item" + string.Concat(Enumerable.Repeat(")", depth)) + ": print(item)\n}\n}";
+                                                      string.Concat(Enumerable.Repeat(".some(", depth)) + "let item" + string.Concat(Enumerable.Repeat(")", depth)) + ": print(item)\n}\n}";
 
     public static (LanguageWorkspaceSnapshot Workspace, LanguageProjectSnapshot Project, LanguageDocumentSnapshot Document) RapidEditWorkspace(int declarations)
     {

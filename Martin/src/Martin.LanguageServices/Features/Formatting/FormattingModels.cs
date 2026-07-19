@@ -20,6 +20,6 @@ public sealed record FormattingResult
 {
     public ImmutableArray<TextEdit> Edits { get; init; } = [];
     public bool WasRefused { get; init; }
-    public string? DiagnosticCode { get; init; }
-    public string? Message { get; init; }
+    public string ? DiagnosticCode { get; init; }
+    public string ? Message { get; init; }
 }

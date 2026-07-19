@@ -18,7 +18,13 @@ public interface ILanguageWorkspace : IAsyncDisposable
     Task RenameDocumentAsync(DocumentId documentId, string newFilePath, CancellationToken cancellationToken = default);
 }
 
-public enum AnalysisPriority { Immediate, Interactive, Normal, Background }
+public enum AnalysisPriority
+{
+    Immediate,
+    Interactive,
+    Normal,
+    Background
+}
 
 public abstract record LanguageRequest
 {
@@ -57,7 +63,7 @@ public sealed record LanguageAnalysisContext(LanguageWorkspaceSnapshot Workspace
 public interface IAnalysisScheduler : IAsyncDisposable
 {
     Task<LanguageResult<T>> RunAsync<T>(LanguageRequest request, AnalysisPriority priority,
-        Func<LanguageAnalysisContext, CancellationToken, Task<T>> operation, CancellationToken cancellationToken = default);
+                                        Func<LanguageAnalysisContext, CancellationToken, Task<T>> operation, CancellationToken cancellationToken = default);
     void ScheduleDocumentDiagnostics(DocumentId documentId, DocumentVersion version);
     void ScheduleProjectAnalysis(ProjectId projectId, ProjectVersion version);
     void CancelDocument(DocumentId documentId);

@@ -13,13 +13,7 @@ public sealed class DotNetBuildRunnerTests
         var executable = CreateEchoExecutable(workingDirectory, 7);
         var projectPath = Path.Combine(workingDirectory, "project with spaces.csproj");
 
-        var result = await new DotNetBuildRunner(executable).RunAsync(new DotNetBuildRequest
-        {
-            ProjectPath = projectPath,
-            WorkingDirectory = workingDirectory,
-            Configuration = BuildConfiguration.Release,
-            AdditionalArguments = ["/p:DefineConstants=A B", "/warnaserror"]
-        });
+        var result = await new DotNetBuildRunner(executable).RunAsync(new DotNetBuildRequest { ProjectPath = projectPath, WorkingDirectory = workingDirectory, Configuration = BuildConfiguration.Release, AdditionalArguments = ["/p:DefineConstants=A B", "/warnaserror"] });
 
         Assert.True(result.Started);
         Assert.True(result.Completed);
@@ -37,18 +31,14 @@ public sealed class DotNetBuildRunnerTests
             "--nologo",
             "/p:DefineConstants=A B",
             "/warnaserror"
-        ], arguments);
+        ],
+                     arguments);
     }
 
     [Fact]
     public async Task Runner_reports_startup_failure()
     {
-        var result = await new DotNetBuildRunner(Path.Combine(CreateTempDirectory(), "missing-dotnet")).RunAsync(new DotNetBuildRequest
-        {
-            ProjectPath = "missing.csproj",
-            WorkingDirectory = Path.GetTempPath(),
-            Configuration = BuildConfiguration.Debug
-        });
+        var result = await new DotNetBuildRunner(Path.Combine(CreateTempDirectory(), "missing-dotnet")).RunAsync(new DotNetBuildRequest { ProjectPath = "missing.csproj", WorkingDirectory = Path.GetTempPath(), Configuration = BuildConfiguration.Debug });
 
         Assert.False(result.Started);
         Assert.False(result.Completed);
@@ -61,12 +51,12 @@ public sealed class DotNetBuildRunnerTests
         using var cancellation = new CancellationTokenSource();
         await cancellation.CancelAsync();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => new DotNetBuildRunner().RunAsync(new DotNetBuildRequest
-        {
+        await Assert.ThrowsAsync<OperationCanceledException>(() => new DotNetBuildRunner().RunAsync(new DotNetBuildRequest {
             ProjectPath = "project.csproj",
             WorkingDirectory = Path.GetTempPath(),
             Configuration = BuildConfiguration.Debug
-        }, cancellation.Token));
+        },
+                                                                                                    cancellation.Token));
     }
 
     [Fact]
@@ -76,18 +66,12 @@ public sealed class DotNetBuildRunnerTests
         var executable = CreateSlowExecutable(workingDirectory);
         using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(250));
 
-        var result = await new DotNetBuildRunner(executable).RunAsync(new DotNetBuildRequest
-        {
-            ProjectPath = "project.csproj",
-            WorkingDirectory = workingDirectory,
-            Configuration = BuildConfiguration.Debug
-        }, cancellation.Token);
+        var result = await new DotNetBuildRunner(executable).RunAsync(new DotNetBuildRequest { ProjectPath = "project.csproj", WorkingDirectory = workingDirectory, Configuration = BuildConfiguration.Debug }, cancellation.Token);
 
         Assert.True(result.Started);
         Assert.False(result.Completed);
         Assert.True(result.WasCancelled);
     }
-
 
     [Fact]
     public async Task Runner_kills_child_process_tree_on_cancellation()
@@ -99,12 +83,7 @@ public sealed class DotNetBuildRunnerTests
         var executable = CreateChildProcessExecutable(workingDirectory);
         using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(300));
 
-        var result = await new DotNetBuildRunner(executable).RunAsync(new DotNetBuildRequest
-        {
-            ProjectPath = "project.csproj",
-            WorkingDirectory = workingDirectory,
-            Configuration = BuildConfiguration.Debug
-        }, cancellation.Token);
+        var result = await new DotNetBuildRunner(executable).RunAsync(new DotNetBuildRequest { ProjectPath = "project.csproj", WorkingDirectory = workingDirectory, Configuration = BuildConfiguration.Debug }, cancellation.Token);
 
         Assert.True(result.WasCancelled);
 
@@ -128,20 +107,20 @@ public sealed class DotNetBuildRunnerTests
         {
             var path = Path.Combine(directory, "fake-dotnet.cmd");
             File.WriteAllText(path, "@echo off\r\n" +
-                "for %%A in (%*) do echo %%~A>> args.txt\r\n" +
-                "echo stdout from runner\r\n" +
-                "echo stderr from runner 1>&2\r\n" +
-                $"exit /b {exitCode}\r\n");
+                                        "for %%A in (%*) do echo %%~A>> args.txt\r\n" +
+                                        "echo stdout from runner\r\n" +
+                                        "echo stderr from runner 1>&2\r\n" +
+                                        $"exit /b {exitCode}\r\n");
             return path;
         }
 
         var script = Path.Combine(directory, "fake-dotnet.sh");
         File.WriteAllText(script, "#!/usr/bin/env sh\n" +
-            ": > args.txt\n" +
-            "for arg in \"$@\"; do printf '%s\\n' \"$arg\" >> args.txt; done\n" +
-            "printf '%s\\n' 'stdout from runner'\n" +
-            "printf '%s\\n' 'stderr from runner' >&2\n" +
-            $"exit {exitCode}\n");
+                                      ": > args.txt\n" +
+                                      "for arg in \"$@\"; do printf '%s\\n' \"$arg\" >> args.txt; done\n" +
+                                      "printf '%s\\n' 'stdout from runner'\n" +
+                                      "printf '%s\\n' 'stderr from runner' >&2\n" +
+                                      $"exit {exitCode}\n");
         File.SetUnixFileMode(script, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
         return script;
     }
@@ -172,17 +151,16 @@ public sealed class DotNetBuildRunnerTests
         File.WriteAllText(
             script,
             "#!/usr/bin/env sh\n" +
-            "sleep 30 &\n" +
-            "printf '%s\\n' \"$!\" > child.pid\n" +
-            "wait\n");
+                "sleep 30 &\n" +
+                "printf '%s\\n' \"$!\" > child.pid\n" +
+                "wait\n");
 
         File.SetUnixFileMode(
             script,
             UnixFileMode.UserRead |
-            UnixFileMode.UserWrite |
-            UnixFileMode.UserExecute);
+                UnixFileMode.UserWrite |
+                UnixFileMode.UserExecute);
 
         return script;
     }
-
 }

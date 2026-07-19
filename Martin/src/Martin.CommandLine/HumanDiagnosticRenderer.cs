@@ -10,8 +10,8 @@ public sealed class HumanDiagnosticRenderer(bool useColor = false) : DiagnosticR
         {
             var location = FormatLocation(diagnostic);
             writer.WriteLine(location.Length == 0
-                ? $"{FormatSeverity(diagnostic.Severity)} {diagnostic.Code}: {diagnostic.Message}"
-                : $"{location}: {FormatSeverity(diagnostic.Severity)} {diagnostic.Code}: {diagnostic.Message}");
+                                 ? $"{FormatSeverity(diagnostic.Severity)} {diagnostic.Code}: {diagnostic.Message}"
+                                 : $"{location}: {FormatSeverity(diagnostic.Severity)} {diagnostic.Code}: {diagnostic.Message}");
 
             _sourceExcerptRenderer.Render(diagnostic, writer);
 
@@ -21,16 +21,16 @@ public sealed class HumanDiagnosticRenderer(bool useColor = false) : DiagnosticR
                 if (related.Length == 0)
                     continue;
 
-                writer.WriteLine(relatedLocation.Message is { Length: > 0 } message
-                    ? $"  related: {related}: {message}"
-                    : $"  related: {related}");
+                writer.WriteLine(relatedLocation.Message is { Length : > 0 } message
+                                     ? $"  related: {related}: {message}"
+                                     : $"  related: {related}");
             }
         }
     }
 
     static string FormatLocation(CommandDiagnostic diagnostic)
     {
-        if (diagnostic.Location is { } location)
+        if (diagnostic.Location is {} location)
             return FormatLocation(location);
 
         return diagnostic.Path ?? string.Empty;
@@ -38,7 +38,7 @@ public sealed class HumanDiagnosticRenderer(bool useColor = false) : DiagnosticR
 
     static string FormatLocation(CommandTextLocation location)
     {
-        if (location.FilePath is { Length: > 0 } filePath && location.StartLine > 0)
+        if (location.FilePath is { Length : > 0 } filePath && location.StartLine > 0)
             return $"{filePath}({location.StartLine},{Math.Max(location.StartColumn, 1)})";
 
         return location.FilePath ?? string.Empty;
@@ -47,9 +47,9 @@ public sealed class HumanDiagnosticRenderer(bool useColor = false) : DiagnosticR
     string FormatSeverity(CommandDiagnosticSeverity severity)
     {
         var text = severity.ToString().ToLowerInvariant();
-        if (!useColor) return text;
-        var code = severity switch
-        {
+        if (!useColor)
+            return text;
+        var code = severity switch {
             CommandDiagnosticSeverity.Error => "31",
             CommandDiagnosticSeverity.Warning => "33",
             _ => "36"

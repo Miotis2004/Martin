@@ -19,7 +19,8 @@ public sealed class DiagnosticRendererTests
             new HumanDiagnosticRenderer().Render([
                 new CommandDiagnostic { Code = "MRT1000", Severity = CommandDiagnosticSeverity.Warning, Message = "later", Location = Loc(path, 1, 1, 1, 2) },
                 new CommandDiagnostic { Code = "MRT2004", Severity = CommandDiagnosticSeverity.Error, Message = "Name 'missing' does not exist.", Location = Loc(path, 2, 8, 2, 15) }
-            ], writer);
+            ],
+                                                 writer);
 
             var output = writer.ToString();
             Assert.StartsWith($"{path}(2,8): error MRT2004", output, StringComparison.Ordinal);
@@ -36,8 +37,7 @@ public sealed class DiagnosticRendererTests
     [Fact]
     public void JsonRendererWritesEnvelopeWithFullLocationsAndRelatedLocations()
     {
-        var diagnostic = new CommandDiagnostic
-        {
+        var diagnostic = new CommandDiagnostic {
             Code = "MRT2004",
             Severity = CommandDiagnosticSeverity.Error,
             Message = "Name 'missing' does not exist.",
@@ -53,14 +53,13 @@ public sealed class DiagnosticRendererTests
         Assert.Equal("MRT2004", rendered.GetProperty("code").GetString());
         Assert.Equal(4, rendered.GetProperty("location").GetProperty("startLine").GetInt32());
         Assert.Equal(18, rendered.GetProperty("location").GetProperty("endColumn").GetInt32());
-        Assert.Equal("Sources/other.martin", rendered.GetProperty("relatedLocations")[0].GetProperty("location").GetProperty("filePath").GetString());
+        Assert.Equal("Sources/other.martin", rendered.GetProperty("relatedLocations") [0].GetProperty("location").GetProperty("filePath").GetString());
     }
 
     [Fact]
     public void JsonRendererMatchesDocumentedEnvelopeContract()
     {
-        var diagnostic = new CommandDiagnostic
-        {
+        var diagnostic = new CommandDiagnostic {
             Code = "MRT2004",
             Severity = CommandDiagnosticSeverity.Error,
             Message = "Name 'missing' does not exist.",
@@ -89,8 +88,7 @@ public sealed class DiagnosticRendererTests
         Assert.False(rendered.TryGetProperty("path", out _));
     }
 
-    static CommandTextLocation Loc(string filePath, int startLine, int startColumn, int endLine, int endColumn) => new()
-    {
+    static CommandTextLocation Loc(string filePath, int startLine, int startColumn, int endLine, int endColumn) => new() {
         FilePath = filePath,
         StartLine = startLine,
         StartColumn = startColumn,

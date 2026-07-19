@@ -30,8 +30,7 @@ public sealed record DiagnosticSnapshot
     public required ProjectId ProjectId { get; init; }
     public required ProjectVersion ProjectVersion { get; init; }
     public required LanguageDiagnosticSource Source { get; init; }
-    public ImmutableDictionary<DocumentId, DocumentDiagnosticSet> Documents { get; init; }
-        = ImmutableDictionary<DocumentId, DocumentDiagnosticSet>.Empty;
+    public ImmutableDictionary<DocumentId, DocumentDiagnosticSet> Documents { get; init; } = ImmutableDictionary<DocumentId, DocumentDiagnosticSet>.Empty;
 }
 
 public sealed class DiagnosticSnapshotEventArgs(DiagnosticSnapshot snapshot) : EventArgs

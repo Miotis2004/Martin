@@ -101,7 +101,12 @@ public sealed class Phase4CliIntegrationTests
     static async Task<(int ExitCode, string Stdout, string Stderr)> Dotnet(string project, string cwd, params string[] args)
     {
         var psi = new ProcessStartInfo("dotnet") { WorkingDirectory = cwd, RedirectStandardOutput = true, RedirectStandardError = true };
-        psi.ArgumentList.Add("run"); psi.ArgumentList.Add("--project"); psi.ArgumentList.Add(project); psi.ArgumentList.Add("--"); foreach (var a in args) psi.ArgumentList.Add(a);
+        psi.ArgumentList.Add("run");
+        psi.ArgumentList.Add("--project");
+        psi.ArgumentList.Add(project);
+        psi.ArgumentList.Add("--");
+        foreach (var a in args)
+            psi.ArgumentList.Add(a);
         using var p = Process.Start(psi)!;
         var stdout = await p.StandardOutput.ReadToEndAsync();
         var stderr = await p.StandardError.ReadToEndAsync();
@@ -109,5 +114,14 @@ public sealed class Phase4CliIntegrationTests
         return (p.ExitCode, stdout, stderr);
     }
 
-    sealed class TempDir : IDisposable { public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MartinCliTests", Guid.NewGuid().ToString("N")); public TempDir() => Directory.CreateDirectory(Path); public void Dispose() { if (Directory.Exists(Path)) Directory.Delete(Path, true); } }
+    sealed class TempDir : IDisposable
+    {
+        public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MartinCliTests", Guid.NewGuid().ToString("N"));
+        public TempDir() => Directory.CreateDirectory(Path);
+        public void Dispose()
+        {
+            if (Directory.Exists(Path))
+                Directory.Delete(Path, true);
+        }
+    }
 }

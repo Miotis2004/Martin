@@ -14,8 +14,8 @@ public sealed record PatternBindingContext
     public required BoundScope CaseScope { get; init; }
     public required SourceText SourceText { get; init; }
     public required int NestingDepth { get; init; }
-    public TypeSymbol? ExpectedEnum { get; init; }
-    public OptionalTypeSymbol? ExpectedOptional { get; init; }
+    public TypeSymbol         ? ExpectedEnum { get; init; }
+    public OptionalTypeSymbol ? ExpectedOptional { get; init; }
 }
 
 /// <summary>Binds pattern syntax without treating patterns as expressions.</summary>
@@ -34,7 +34,7 @@ public sealed class PatternBinder
     }
 
     public BoundPattern Bind(PatternSyntax syntax, PatternBindingContext context, DiagnosticBag diagnostics,
-        CancellationToken cancellationToken = default)
+                             CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(syntax);
         ArgumentNullException.ThrowIfNull(context);
@@ -44,21 +44,20 @@ public sealed class PatternBinder
     }
 
     private BoundPattern BindCore(PatternSyntax syntax, PatternBindingContext context, DiagnosticBag diagnostics,
-        CancellationToken cancellationToken)
+                                  CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var location = new TextLocation(context.SourceText, syntax.Span);
         if (context.NestingDepth >= MaximumNestingDepth)
         {
             diagnostics.Report(new("MRT2157", DiagnosticSeverity.Error,
-                $"Pattern nesting exceeds the supported limit of {MaximumNestingDepth}.", location));
+                                   $"Pattern nesting exceeds the supported limit of {MaximumNestingDepth}.", location));
             return Error(context.InputType, location);
         }
         if (context.InputType == TypeSymbol.Error)
             return new BoundWildcardPattern(TypeSymbol.Error, location, hasErrors: true);
 
-        return syntax switch
-        {
+        return syntax switch {
             WildcardPatternSyntax => new BoundWildcardPattern(context.InputType, location),
             LiteralPatternSyntax literal => BindLiteral(literal, context.InputType, context.SourceText, diagnostics),
             ValueBindingPatternSyntax binding => BindValue(binding, context, diagnostics),
@@ -72,8 +71,7 @@ public sealed class PatternBinder
 
     private BoundPattern BindLiteral(LiteralPatternSyntax syntax, TypeSymbol inputType, SourceText text, DiagnosticBag diagnostics)
     {
-        var expected = syntax.LiteralToken.Kind switch
-        {
+        var expected = syntax.LiteralToken.Kind switch {
             SyntaxKind.TrueKeyword or SyntaxKind.FalseKeyword => TypeSymbol.Bool,
             SyntaxKind.IntegerLiteralToken => TypeSymbol.Int,
             SyntaxKind.FloatingPointLiteralToken => TypeSymbol.Double,
@@ -84,7 +82,7 @@ public sealed class PatternBinder
         var valid = inputType == expected;
         if (!valid)
             diagnostics.Report(new("MRT2201", DiagnosticSeverity.Error,
-                $"Literal pattern of type '{expected.Name}' cannot match '{inputType.Name}'.", location));
+                                   $"Literal pattern of type '{expected.Name}' cannot match '{inputType.Name}'.", location));
         return new BoundLiteralPattern(syntax.LiteralToken.Value, inputType, location, !valid);
     }
 
@@ -96,49 +94,47 @@ public sealed class PatternBinder
         var duplicate = syntax.Identifier.IsMissing || !_bindings.Add(variable.Name);
         if (duplicate)
             diagnostics.Report(new("MRT2202", DiagnosticSeverity.Error,
-                $"Pattern binding '{variable.Name}' is already declared in this pattern.", location));
+                                   $"Pattern binding '{variable.Name}' is already declared in this pattern.", location));
         else
         {
             context.CaseScope.TryDeclareVariable(variable);
-            if (_declaredSymbols is not null) _declaredSymbols[syntax] = variable;
-            if (_symbolInfo is not null) _symbolInfo[syntax.Identifier] = variable;
+            if (_declaredSymbols is not null)
+                _declaredSymbols[syntax] = variable;
+            if (_symbolInfo is not null)
+                _symbolInfo[syntax.Identifier] = variable;
         }
         return new BoundValueBindingPattern(variable, context.InputType, patternLocation, duplicate);
     }
 
     private static BoundPattern BindNil(TypeSymbol inputType, TextLocation location, DiagnosticBag diagnostics)
     {
-        if (inputType is OptionalTypeSymbol optional) return new BoundNilPattern(optional, location);
+        if (inputType is OptionalTypeSymbol optional)
+            return new BoundNilPattern(optional, location);
         diagnostics.Report(new("MRT2203", DiagnosticSeverity.Error,
-            $"The 'nil' pattern requires an optional input, not '{inputType.Name}'.", location));
+                               $"The 'nil' pattern requires an optional input, not '{inputType.Name}'.", location));
         return Error(inputType, location);
     }
 
     private BoundPattern BindSome(OptionalSomePatternSyntax syntax, PatternBindingContext context, DiagnosticBag diagnostics,
-        CancellationToken cancellationToken)
+                                  CancellationToken cancellationToken)
     {
         var location = new TextLocation(context.SourceText, syntax.Span);
         if (context.InputType is not OptionalTypeSymbol optional)
         {
             diagnostics.Report(new("MRT2204", DiagnosticSeverity.Error,
-                $"The '.some' pattern requires an optional input, not '{context.InputType.Name}'.", location));
+                                   $"The '.some' pattern requires an optional input, not '{context.InputType.Name}'.", location));
             return Error(context.InputType, location);
         }
-        var child = BindCore(syntax.ValuePattern, context with
-        {
-            InputType = optional.ElementType,
-            ExpectedOptional = null,
-            NestingDepth = context.NestingDepth + 1
-        }, diagnostics, cancellationToken);
+        var child = BindCore(syntax.ValuePattern, context with { InputType = optional.ElementType, ExpectedOptional = null, NestingDepth = context.NestingDepth + 1 }, diagnostics, cancellationToken);
         return new BoundOptionalSomePattern(optional, child, location);
     }
 
     private BoundPattern BindIdentifier(IdentifierPatternSyntax syntax, PatternBindingContext context,
-        DiagnosticBag diagnostics, CancellationToken cancellationToken)
+                                        DiagnosticBag diagnostics, CancellationToken cancellationToken)
     {
         // A bare identifier is an enum-case lookup, never an implicit variable declaration.
         var token = new SyntaxToken(SyntaxKind.IdentifierToken, syntax.Identifier.Position,
-            syntax.Identifier.Text, syntax.Identifier.Value, syntax.Identifier.IsMissing);
+                                    syntax.Identifier.Text, syntax.Identifier.Value, syntax.Identifier.IsMissing);
         var result = BindEnum(new EnumCasePatternSyntax(null, null, token, null), context, diagnostics, cancellationToken);
         if (result is BoundEnumCasePattern enumCase && _symbolInfo is not null)
             _symbolInfo[syntax.Identifier] = enumCase.Case;
@@ -146,25 +142,24 @@ public sealed class PatternBinder
     }
 
     private BoundPattern BindEnum(EnumCasePatternSyntax syntax, PatternBindingContext context, DiagnosticBag diagnostics,
-        CancellationToken cancellationToken)
+                                  CancellationToken cancellationToken)
     {
         var location = new TextLocation(context.SourceText, syntax.Span);
-        var enumDefinition = context.InputType switch
-        {
+        var enumDefinition = context.InputType switch {
             EnumTypeSymbol definition => definition,
-            ConstructedTypeSymbol { GenericDefinition: EnumTypeSymbol definition } => definition,
+            ConstructedTypeSymbol { GenericDefinition : EnumTypeSymbol definition } => definition,
             _ => null
         };
         if (enumDefinition is null)
         {
             diagnostics.Report(new("MRT2205", DiagnosticSeverity.Error,
-                $"Enum case pattern '{syntax.CaseName.Text}' cannot match '{context.InputType.Name}'.", location));
+                                   $"Enum case pattern '{syntax.CaseName.Text}' cannot match '{context.InputType.Name}'.", location));
             return Error(context.InputType, location);
         }
         if (syntax.Qualifier is not null && syntax.Qualifier.Text != enumDefinition.Name)
         {
             diagnostics.Report(new("MRT2206", DiagnosticSeverity.Error,
-                $"Enum qualifier '{syntax.Qualifier.Text}' does not match input type '{context.InputType.Name}'.", syntax.Qualifier.Location(context.SourceText)));
+                                   $"Enum qualifier '{syntax.Qualifier.Text}' does not match input type '{context.InputType.Name}'.", syntax.Qualifier.Location(context.SourceText)));
             return Error(context.InputType, location);
         }
         var cases = context.InputType is ConstructedTypeSymbol constructed ? constructed.Cases : enumDefinition.Cases;
@@ -172,23 +167,19 @@ public sealed class PatternBinder
         if (enumCase is null)
         {
             diagnostics.Report(new("MRT2145", DiagnosticSeverity.Error,
-                $"Enum '{context.InputType.Name}' has no case named '{syntax.CaseName.Text}'.", syntax.CaseName.Location(context.SourceText)));
+                                   $"Enum '{context.InputType.Name}' has no case named '{syntax.CaseName.Text}'.", syntax.CaseName.Location(context.SourceText)));
             return Error(context.InputType, location);
         }
-        if (_symbolInfo is not null) _symbolInfo[syntax.CaseName] = enumCase;
+        if (_symbolInfo is not null)
+            _symbolInfo[syntax.CaseName] = enumCase;
         var arguments = syntax.Arguments?.Arguments ?? [];
         var countValid = arguments.Count == enumCase.AssociatedValues.Length;
         if (!countValid)
             diagnostics.Report(new("MRT2142", DiagnosticSeverity.Error,
-                $"Enum case '{enumCase.Name}' expects {enumCase.AssociatedValues.Length} associated values, but {arguments.Count} were provided.", location));
+                                   $"Enum case '{enumCase.Name}' expects {enumCase.AssociatedValues.Length} associated values, but {arguments.Count} were provided.", location));
         var children = ImmutableArray.CreateBuilder<BoundPattern>();
         for (var i = 0; i < Math.Min(arguments.Count, enumCase.AssociatedValues.Length); i++)
-            children.Add(BindCore(arguments[i], context with
-            {
-                InputType = enumCase.AssociatedValues[i].Type,
-                ExpectedEnum = null,
-                NestingDepth = context.NestingDepth + 1
-            }, diagnostics, cancellationToken));
+            children.Add(BindCore(arguments[i], context with { InputType = enumCase.AssociatedValues[i].Type, ExpectedEnum = null, NestingDepth = context.NestingDepth + 1 }, diagnostics, cancellationToken));
         return new BoundEnumCasePattern(context.InputType, enumCase, children.ToImmutable(), location, !countValid);
     }
 

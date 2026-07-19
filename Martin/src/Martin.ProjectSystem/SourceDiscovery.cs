@@ -57,8 +57,7 @@ public sealed class SourceDiscovery
 
     static IEnumerable<(string RelativePath, string FullPath)> EnumerateMartinFiles(string rootDirectory, CancellationToken cancellationToken)
     {
-        var options = new EnumerationOptions
-        {
+        var options = new EnumerationOptions {
             RecurseSubdirectories = true,
             IgnoreInaccessible = false,
             AttributesToSkip = FileAttributes.ReparsePoint

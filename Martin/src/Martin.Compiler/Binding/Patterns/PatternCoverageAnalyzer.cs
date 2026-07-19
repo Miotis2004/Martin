@@ -30,14 +30,15 @@ public static class MissingPatternWitnessDiagnosticRenderer
     public static string Render(MissingPatternWitness witness)
     {
         ArgumentNullException.ThrowIfNull(witness);
-        if (witness.Constructor is null) return "_";
+        if (witness.Constructor is null)
+            return "_";
         var name = witness.Type is ConstructedTypeSymbol &&
-                   witness.Constructor.Kind == PatternConstructorKind.EnumCase
-            ? witness.Type.Name + witness.Constructor.Name
-            : witness.Constructor.Name;
+                           witness.Constructor.Kind == PatternConstructorKind.EnumCase
+                       ? witness.Type.Name + witness.Constructor.Name
+                       : witness.Constructor.Name;
         return witness.Arguments.IsEmpty
-            ? name
-            : name + "(" + string.Join(", ", witness.Arguments.Select(Render)) + ")";
+                   ? name
+                   : name + "(" + string.Join(", ", witness.Arguments.Select(Render)) + ")";
     }
 }
 
@@ -63,8 +64,10 @@ public sealed class PatternCoverageAnalyzer
         PatternMatrixLimits? limits = null,
         int maximumUnreachableCases = DefaultMaximumUnreachableCases)
     {
-        if (maximumWitnesses <= 0) throw new ArgumentOutOfRangeException(nameof(maximumWitnesses));
-        if (maximumUnreachableCases <= 0) throw new ArgumentOutOfRangeException(nameof(maximumUnreachableCases));
+        if (maximumWitnesses <= 0)
+            throw new ArgumentOutOfRangeException(nameof(maximumWitnesses));
+        if (maximumUnreachableCases <= 0)
+            throw new ArgumentOutOfRangeException(nameof(maximumUnreachableCases));
         _maximumWitnesses = maximumWitnesses;
         _maximumUnreachableCases = maximumUnreachableCases;
         _limits = limits ?? PatternMatrixLimits.Default;
@@ -110,7 +113,8 @@ public sealed class PatternCoverageAnalyzer
         foreach (var witness in EnumerateWitnesses(matrix, [inputType], cancellationToken))
         {
             result.Add(witness[0]);
-            if (result.Count == _maximumWitnesses) break;
+            if (result.Count == _maximumWitnesses)
+                break;
         }
         return result.ToImmutable();
     }
@@ -123,7 +127,8 @@ public sealed class PatternCoverageAnalyzer
         cancellationToken.ThrowIfCancellationRequested();
         if (types.IsEmpty)
         {
-            if (matrix.Rows.IsEmpty) yield return [];
+            if (matrix.Rows.IsEmpty)
+                yield return [];
             yield break;
         }
 
@@ -156,7 +161,8 @@ public sealed class PatternCoverageAnalyzer
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (candidate.IsEmpty) return matrix.Rows.IsEmpty ? [] : null;
+        if (candidate.IsEmpty)
+            return matrix.Rows.IsEmpty ? [] : null;
 
         var head = candidate[0];
         var tail = candidate.RemoveAt(0);
@@ -164,7 +170,8 @@ public sealed class PatternCoverageAnalyzer
         {
             var specialized = arguments.AddRange(tail);
             var found = FindWitness(matrix.Specialize(constructor, cancellationToken), specialized, cancellationToken);
-            if (found is null) return null;
+            if (found is null)
+                return null;
             var children = found.Value.Take(constructor.Arity).ToImmutableArray();
             return found.Value.RemoveRange(0, constructor.Arity).Insert(0, new MissingPatternWitness(constructor, children, head.InputType));
         }
@@ -179,9 +186,11 @@ public sealed class PatternCoverageAnalyzer
         foreach (var item in domain.Constructors)
         {
             var wildcardArguments = item.ArgumentTypes
-                .Select(type => (BoundPattern)new BoundWildcardPattern(type, head.Location)).ToImmutableArray();
+                                        .Select(type => (BoundPattern) new BoundWildcardPattern(type, head.Location))
+                                        .ToImmutableArray();
             var found = FindWitness(matrix.Specialize(item, cancellationToken), wildcardArguments.AddRange(tail), cancellationToken);
-            if (found is null) continue;
+            if (found is null)
+                continue;
             var children = found.Value.Take(item.Arity).ToImmutableArray();
             return found.Value.RemoveRange(0, item.Arity).Insert(0, new MissingPatternWitness(item, children, head.InputType));
         }
@@ -193,16 +202,14 @@ public sealed class PatternCoverageAnalyzer
         out PatternConstructor constructor,
         out ImmutableArray<BoundPattern> arguments)
     {
-        (constructor, arguments) = pattern switch
-        {
+        (constructor, arguments) = pattern switch {
             BoundEnumCasePattern value => (PatternConstructor.ForEnumCase(value.Case), value.AssociatedPatterns),
             BoundOptionalSomePattern value => (PatternConstructor.OptionalSome(value.OptionalType.ElementType), [value.ValuePattern]),
             BoundNilPattern => (PatternConstructor.OptionalNone, []),
-            BoundLiteralPattern { Value: bool value } => (PatternConstructor.Boolean(value), []),
+            BoundLiteralPattern { Value : bool value } => (PatternConstructor.Boolean(value), []),
             BoundLiteralPattern value => (PatternConstructor.Literal(value.Value), []),
             _ => (null!, []),
         };
         return constructor is not null;
     }
-
 }

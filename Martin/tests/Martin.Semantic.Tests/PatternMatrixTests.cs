@@ -29,7 +29,7 @@ public sealed class PatternMatrixTests
     {
         var result = new EnumTypeSymbol("Result", []);
         var success = new EnumCaseSymbol("success", result,
-            [new ParameterSymbol("value", null, 0, new OptionalTypeSymbol(TypeSymbol.Bool), [])], []);
+                                         [new ParameterSymbol("value", null, 0, new OptionalTypeSymbol(TypeSymbol.Bool), [])], []);
         result.AddMember(success);
         var variable = new LocalVariableSymbol("result", true, result, [Location]);
         var matrix = new PatternMatrix([
@@ -69,15 +69,19 @@ public sealed class PatternMatrixTests
     {
         var wildcard = new BoundWildcardPattern(TypeSymbol.Int, Location);
         Assert.Throws<ArgumentException>(() => new PatternMatrix([
-            new PatternMatrixRow([wildcard], 0), new PatternMatrixRow([], 1),
-        ]));
+                                             new PatternMatrixRow([wildcard], 0),
+                                             new PatternMatrixRow([], 1),
+                                         ]));
         Assert.Throws<InvalidOperationException>(() => new PatternMatrix([
-            new PatternMatrixRow([wildcard], 0), new PatternMatrixRow([wildcard], 1),
-        ], new PatternMatrixLimits(MaximumRows: 1)));
+                                                     new PatternMatrixRow([wildcard], 0),
+                                                     new PatternMatrixRow([wildcard], 1),
+                                                 ],
+                                                                         new PatternMatrixLimits(MaximumRows: 1)));
         using var source = new CancellationTokenSource();
         source.Cancel();
         Assert.Throws<OperationCanceledException>(() => new PatternMatrix([
-            new PatternMatrixRow([wildcard], 0),
-        ], cancellationToken: source.Token));
+                                                      new PatternMatrixRow([wildcard], 0),
+                                                  ],
+                                                                          cancellationToken: source.Token));
     }
 }

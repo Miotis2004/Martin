@@ -8,14 +8,12 @@ public readonly record struct SymbolIdentity(SymbolKind Kind, string ContainingS
     public static SymbolIdentity Create(Symbol symbol)
     {
         ArgumentNullException.ThrowIfNull(symbol);
-        var scope = symbol switch
-        {
+        var scope = symbol switch {
             TypeParameterSymbol parameter => Create(parameter.ContainingSymbol).StableKey,
             MemberSymbol member => TypeIdentity.Create(member.ContainingType).StableKey,
             _ => string.Empty
         };
-        var arity = symbol switch
-        {
+        var arity = symbol switch {
             NamedTypeSymbol type => type.TypeParameters.Length,
             FunctionSymbol function => function.TypeParameters.Length,
             MethodSymbol method => method.TypeParameters.Length,

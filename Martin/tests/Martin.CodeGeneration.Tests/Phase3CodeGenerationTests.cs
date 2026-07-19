@@ -37,7 +37,7 @@ public sealed class Phase3CodeGenerationTests
         Assert.Contains("double __local_x", cs);
         AssertContainsAny(cs, "((double)5L)", "((double)5)", "(double)5");
         Assert.Contains("checked(__local_left + __local_right)", cs);
-        //Assert.Contains("if ((__local_y == 42L))", cs);
+        // Assert.Contains("if ((__local_y == 42L))", cs);
         Assert.Contains("else", cs);
         Assert.Contains("while (false)", cs);
     }
@@ -46,7 +46,8 @@ public sealed class Phase3CodeGenerationTests
     public void EscapesStringLiteralsAndIsDeterministic()
     {
         var source = "func main() { print(\"quote \\\" slash \\\\ tab \\t newline \\n nul \\0\") }";
-        var a = Emit(source); var b = Emit(source);
+        var a = Emit(source);
+        var b = Emit(source);
         Assert.Equal(a, b);
         Assert.Contains("\\\"", a);
         Assert.Contains("\\\\", a);
@@ -54,7 +55,6 @@ public sealed class Phase3CodeGenerationTests
         Assert.Contains("\\n", a);
         Assert.Contains("\\0", a);
     }
-
 
     [Fact]
     public void GeneratedFunctionsAreOrderedDeterministically()

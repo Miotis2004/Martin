@@ -11,26 +11,214 @@ namespace Martin.Compiler;
 
 public sealed class Compilation
 {
-    readonly GenericTypeFactory _genericTypes = new(); readonly List<GenericTypeConstruction> _genericConstructions = []; readonly List<GenericCallableConstruction> _genericCallableConstructions = []; readonly Dictionary<SyntaxNode, Symbol> _declared = []; readonly Dictionary<SyntaxNode, Symbol> _symbols = []; readonly Dictionary<ExpressionSyntax, TypeSymbol> _types = []; readonly Dictionary<ExpressionSyntax, Conversion> _conversions = []; readonly Dictionary<SyntaxNode, GenericUseInfo> _genericUses = []; readonly Dictionary<SyntaxNode, TypedErrorUseInfo> _typedErrorUses = []; readonly HashSet<NamedTypeSymbol> _declaredErrorConformances = new(); BoundProgram? _program; private Compilation(ImmutableArray<SyntaxTree> trees) { SyntaxTrees = trees; }
+    readonly GenericTypeFactory _genericTypes = new();
+    readonly List<GenericTypeConstruction> _genericConstructions = [];
+    readonly List<GenericCallableConstruction> _genericCallableConstructions = [];
+    readonly Dictionary<SyntaxNode, Symbol> _declared = [];
+    readonly Dictionary<SyntaxNode, Symbol> _symbols = [];
+    readonly Dictionary<ExpressionSyntax, TypeSymbol> _types = [];
+    readonly Dictionary<ExpressionSyntax, Conversion> _conversions = [];
+    readonly Dictionary<SyntaxNode, GenericUseInfo> _genericUses = [];
+    readonly Dictionary<SyntaxNode, TypedErrorUseInfo> _typedErrorUses = [];
+    readonly HashSet<NamedTypeSymbol> _declaredErrorConformances = new();
+    BoundProgram? _program;
+    private Compilation(ImmutableArray<SyntaxTree> trees)
+    {
+        SyntaxTrees = trees;
+    }
     public ImmutableArray<SyntaxTree> SyntaxTrees { get; }
-    public GenericTypeFactory GenericTypes => _genericTypes; public ImmutableArray<Diagnostic> Diagnostics => BindProgram().Diagnostics; public static Compilation Create(params SyntaxTree[] syntaxTrees) => new([.. syntaxTrees]); public static Compilation Create(IEnumerable<SyntaxTree> syntaxTrees) => new([.. syntaxTrees]); public SemanticModel GetSemanticModel(SyntaxTree syntaxTree) { if (!SyntaxTrees.Contains(syntaxTree)) throw new ArgumentException("The syntax tree is not part of this compilation.", nameof(syntaxTree)); BindProgram(); return new(this, syntaxTree, _declared, _symbols, _types, _conversions, _genericUses, _typedErrorUses); }
-    public ImmutableArray<ProtocolConformance> GetConformances() => BindProgram().Conformances; public ImmutableArray<ProtocolConformanceAttempt> GetConformanceAttempts() => BindProgram().ConformanceAttempts; public ProtocolConformance? GetConformance(NamedTypeSymbol type, ProtocolTypeSymbol protocol) { ArgumentNullException.ThrowIfNull(type); ArgumentNullException.ThrowIfNull(protocol); return BindProgram().Conformances.FirstOrDefault(c => ReferenceEquals(c.Type, type) && ReferenceEquals(c.Protocol, protocol)); }
-    public MemberSymbol? GetWitness(ProtocolRequirementSymbol requirement, NamedTypeSymbol conformingType) { ArgumentNullException.ThrowIfNull(requirement); ArgumentNullException.ThrowIfNull(conformingType); return BindProgram().Conformances.FirstOrDefault(c => ReferenceEquals(c.Type, conformingType) && ReferenceEquals(c.Protocol, requirement.ContainingProtocol))?.Witnesses.GetValueOrDefault(requirement); }
-    public ImmutableArray<ProtocolRequirementSymbol> GetSatisfiedRequirements(MemberSymbol witness) { ArgumentNullException.ThrowIfNull(witness); return BindProgram().Conformances.SelectMany(c => c.RequirementsByWitness.TryGetValue(witness, out var requirements) ? requirements : []).Distinct().ToImmutableArray(); }
-    internal ImmutableArray<Symbol> GetAllSymbols() { var program = BindProgram(); return TypeSymbol.BuiltIns.Cast<Symbol>().Concat(BuiltIns.PrintFunctions).Concat(BuiltIns.ConsoleFunctions).Concat(BuiltIns.RuntimeBoundaryFunctions).Concat(program.NamedTypes).Concat(program.Functions).Distinct().ToImmutableArray(); }
-    internal SwitchAnalysisResult? FindSwitchAnalysis(TextLocation location) { var p = BindProgram(); return AllSwitches(p).FirstOrDefault(s => ReferenceEquals(s.Location?.Text, location.Text) && s.Location?.Span == location.Span)?.Analysis; }
-    internal BoundPattern? FindPattern(TextLocation location) => AllSwitches(BindProgram()).SelectMany(s => s.Cases).SelectMany(c => FlattenPatterns(c.Pattern)).FirstOrDefault(p => ReferenceEquals(p.Location.Text, location.Text) && p.Location.Span == location.Span); static IEnumerable<BoundSwitchStatement> AllSwitches(BoundProgram p) => p.FunctionBodies.Values.Concat(p.MethodBodies.Values).Concat(p.InitializerBodies.Values).SelectMany(FindSwitches); static IEnumerable<BoundPattern> FlattenPatterns(BoundPattern pattern) { yield return pattern; switch (pattern) { case BoundEnumCasePattern e: foreach (var child in e.AssociatedPatterns) foreach (var nested in FlattenPatterns(child)) yield return nested; break; case BoundOptionalSomePattern s: foreach (var nested in FlattenPatterns(s.ValuePattern)) yield return nested; break; } }
-    static IEnumerable<BoundSwitchStatement> FindSwitches(BoundStatement statement) { if (statement is BoundSwitchStatement sw) { yield return sw; foreach (var c in sw.Cases) foreach (var nested in FindSwitches(c.Body)) yield return nested; } else if (statement is BoundBlockStatement b) { foreach (var s in b.Statements) foreach (var nested in FindSwitches(s)) yield return nested; } else if (statement is BoundIfStatement i) { foreach (var nested in FindSwitches(i.ThenStatement)) yield return nested; if (i.ElseStatement is not null) foreach (var nested in FindSwitches(i.ElseStatement)) yield return nested; } else if (statement is BoundIfLetStatement il) { foreach (var nested in FindSwitches(il.ThenStatement)) yield return nested; if (il.ElseStatement is not null) foreach (var nested in FindSwitches(il.ElseStatement)) yield return nested; } else if (statement is BoundWhileStatement w) { foreach (var nested in FindSwitches(w.Body)) yield return nested; } }
-    public BoundProgram BindProgram(CancellationToken cancellationToken = default) { if (_program is not null) return _program; cancellationToken.ThrowIfCancellationRequested(); var program = Bind(cancellationToken); cancellationToken.ThrowIfCancellationRequested(); return _program = program; }
+    public GenericTypeFactory GenericTypes => _genericTypes;
+    public ImmutableArray<Diagnostic> Diagnostics => BindProgram().Diagnostics;
+    public static Compilation Create(params SyntaxTree[] syntaxTrees) => new([..syntaxTrees]);
+    public static Compilation Create(IEnumerable<SyntaxTree> syntaxTrees) => new([..syntaxTrees]);
+    public SemanticModel GetSemanticModel(SyntaxTree syntaxTree)
+    {
+        if (!SyntaxTrees.Contains(syntaxTree))
+            throw new ArgumentException("The syntax tree is not part of this compilation.", nameof(syntaxTree));
+        BindProgram();
+        return new(this, syntaxTree, _declared, _symbols, _types, _conversions, _genericUses, _typedErrorUses);
+    }
+    public ImmutableArray<ProtocolConformance> GetConformances() => BindProgram().Conformances;
+    public ImmutableArray<ProtocolConformanceAttempt> GetConformanceAttempts() => BindProgram().ConformanceAttempts;
+    public ProtocolConformance? GetConformance(NamedTypeSymbol type, ProtocolTypeSymbol protocol)
+    {
+        ArgumentNullException.ThrowIfNull(type);
+        ArgumentNullException.ThrowIfNull(protocol);
+        return BindProgram().Conformances.FirstOrDefault(c => ReferenceEquals(c.Type, type) && ReferenceEquals(c.Protocol, protocol));
+    }
+    public MemberSymbol? GetWitness(ProtocolRequirementSymbol requirement, NamedTypeSymbol conformingType)
+    {
+        ArgumentNullException.ThrowIfNull(requirement);
+        ArgumentNullException.ThrowIfNull(conformingType);
+        return BindProgram().Conformances.FirstOrDefault(c => ReferenceEquals(c.Type, conformingType) && ReferenceEquals(c.Protocol, requirement.ContainingProtocol))?.Witnesses.GetValueOrDefault(requirement);
+    }
+    public ImmutableArray<ProtocolRequirementSymbol> GetSatisfiedRequirements(MemberSymbol witness)
+    {
+        ArgumentNullException.ThrowIfNull(witness);
+        return BindProgram().Conformances.SelectMany(c => c.RequirementsByWitness.TryGetValue(witness, out var requirements) ? requirements : []).Distinct().ToImmutableArray();
+    }
+    internal ImmutableArray<Symbol> GetAllSymbols()
+    {
+        var program = BindProgram();
+        return TypeSymbol.BuiltIns.Cast<Symbol>().Concat(BuiltIns.PrintFunctions).Concat(BuiltIns.ConsoleFunctions).Concat(BuiltIns.RuntimeBoundaryFunctions).Concat(program.NamedTypes).Concat(program.Functions).Distinct().ToImmutableArray();
+    }
+    internal SwitchAnalysisResult? FindSwitchAnalysis(TextLocation location)
+    {
+        var p = BindProgram();
+        return AllSwitches(p).FirstOrDefault(s => ReferenceEquals(s.Location?.Text, location.Text) && s.Location?.Span == location.Span)?.Analysis;
+    }
+    internal BoundPattern? FindPattern(TextLocation location) => AllSwitches(BindProgram()).SelectMany(s => s.Cases).SelectMany(c => FlattenPatterns(c.Pattern)).FirstOrDefault(p => ReferenceEquals(p.Location.Text, location.Text) && p.Location.Span == location.Span);
+    static IEnumerable<BoundSwitchStatement> AllSwitches(BoundProgram p) => p.FunctionBodies.Values.Concat(p.MethodBodies.Values).Concat(p.InitializerBodies.Values).SelectMany(FindSwitches);
+    static IEnumerable<BoundPattern> FlattenPatterns(BoundPattern pattern)
+    {
+        yield return pattern;
+        switch (pattern)
+        {
+        case BoundEnumCasePattern e:
+            foreach (var child in e.AssociatedPatterns)
+                foreach (var nested in FlattenPatterns(child))
+                    yield return nested;
+            break;
+        case BoundOptionalSomePattern s:
+            foreach (var nested in FlattenPatterns(s.ValuePattern))
+                yield return nested;
+            break;
+        }
+    }
+    static IEnumerable<BoundSwitchStatement> FindSwitches(BoundStatement statement)
+    {
+        if (statement is BoundSwitchStatement sw)
+        {
+            yield return sw;
+            foreach (var c in sw.Cases)
+                foreach (var nested in FindSwitches(c.Body))
+                    yield return nested;
+        }
+        else if (statement is BoundBlockStatement b)
+        {
+            foreach (var s in b.Statements)
+                foreach (var nested in FindSwitches(s))
+                    yield return nested;
+        }
+        else if (statement is BoundIfStatement i)
+        {
+            foreach (var nested in FindSwitches(i.ThenStatement))
+                yield return nested;
+            if (i.ElseStatement is not null)
+                foreach (var nested in FindSwitches(i.ElseStatement))
+                    yield return nested;
+        }
+        else if (statement is BoundIfLetStatement il)
+        {
+            foreach (var nested in FindSwitches(il.ThenStatement))
+                yield return nested;
+            if (il.ElseStatement is not null)
+                foreach (var nested in FindSwitches(il.ElseStatement))
+                    yield return nested;
+        }
+        else if (statement is BoundWhileStatement w)
+        {
+            foreach (var nested in FindSwitches(w.Body))
+                yield return nested;
+        }
+    }
+    public BoundProgram BindProgram(CancellationToken cancellationToken = default)
+    {
+        if (_program is not null)
+            return _program;
+        cancellationToken.ThrowIfCancellationRequested();
+        var program = Bind(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        return _program = program;
+    }
     BoundProgram Bind(CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested(); var diagnostics = new DiagnosticBag(); foreach (var t in SyntaxTrees) { cancellationToken.ThrowIfCancellationRequested(); diagnostics.AddRange(t.Diagnostics); }
-        var global = BuiltIns.CreateRoot(); var named = new List<NamedTypeSymbol>(); foreach (var tree in SyntaxTrees) { cancellationToken.ThrowIfCancellationRequested(); foreach (var m in tree.Root.Members.Where(m => m.Kind is SyntaxKind.StructDeclaration or SyntaxKind.ClassDeclaration or SyntaxKind.EnumDeclaration or SyntaxKind.ProtocolDeclaration)) { var ch = ((GenericMemberSyntax)m).Children; var name = (SyntaxToken)ch[1]; var locations = ImmutableArray.Create(name.Location(tree.Text)); var tparams = CreateTypeParameters(ch.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.TypeParameterList), name.Text, tree.Text, diagnostics); NamedTypeSymbol nt = m.Kind switch { SyntaxKind.StructDeclaration => new StructTypeSymbol(name.Text, locations, tparams), SyntaxKind.ClassDeclaration => new ClassTypeSymbol(name.Text, locations, tparams), SyntaxKind.ProtocolDeclaration => new ProtocolTypeSymbol(name.Text, locations), _ => new EnumTypeSymbol(name.Text, locations, tparams) }; foreach (var tp in tparams) tp.SetConstraints(BindTypeParameterConstraints(ch.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.TypeParameterList), tp, global, tree.Text, diagnostics)); _declared[m] = nt; if (!global.TryDeclareType(nt)) diagnostics.Report(new("MRT2100", DiagnosticSeverity.Error, $"Type '{nt.Name}' is already declared.", name.Location(tree.Text))); else named.Add(nt); } }
-        RegisterDeclaredErrorConformances(global, diagnostics, cancellationToken); foreach (var tree in SyntaxTrees) { cancellationToken.ThrowIfCancellationRequested(); foreach (var m in tree.Root.Members.OfType<GenericMemberSyntax>().Where(m => m.Kind is SyntaxKind.StructDeclaration or SyntaxKind.ClassDeclaration or SyntaxKind.EnumDeclaration or SyntaxKind.ProtocolDeclaration)) DeclareMembers(m, tree.Text, (NamedTypeSymbol)_declared[m], global, diagnostics); }
-        var funcs = new List<FunctionSymbol>(); foreach (var tree in SyntaxTrees) foreach (var m in tree.Root.Members.Where(m => m.Kind == SyntaxKind.FunctionDeclaration)) { var f = DeclareFunction((GenericMemberSyntax)m, tree.Text, global, diagnostics); funcs.Add(f); }
-        var bodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>(); foreach (var f in funcs.Where(f => f.ReturnType != TypeSymbol.Error)) { var binder = new Binder(f.Locations.FirstOrDefault().Text, global, _genericTypes, _genericConstructions, _genericCallableConstructions, f, null, null, diagnostics, _declared, _symbols, _types, _conversions, _genericUses, _typedErrorUses, cancellationToken); var bodySyntax = (GenericStatementSyntax)f.Declaration!.GetChildren().Last(); var body = (BoundBlockStatement)binder.BindStatement(bodySyntax); bodies[f] = body; ValidatePropagation(f, body, diagnostics, cancellationToken); if (f.ReturnType != TypeSymbol.Void && !Returns(body)) diagnostics.Report(new("MRT2017", DiagnosticSeverity.Error, $"Not all code paths return a value in function '{f.Name}'.", f.Locations.FirstOrDefault())); }
-        var mb = ImmutableDictionary.CreateBuilder<MethodSymbol, BoundBlockStatement>(); var ib = ImmutableDictionary.CreateBuilder<InitializerSymbol, BoundBlockStatement>(); foreach (var t in named) { foreach (var init in t.Initializers.Where(i => !i.IsSynthesized)) { var binder = new Binder(init.Locations.FirstOrDefault().Text, global, _genericTypes, _genericConstructions, _genericCallableConstructions, null, t, init, diagnostics, _declared, _symbols, _types, _conversions, _genericUses, _typedErrorUses, cancellationToken); foreach (var p in init.Parameters) binder.DeclareParameter(p); var body = (BoundBlockStatement)binder.BindStatement((GenericStatementSyntax)init.Declaration!.GetChildren().Last()); ib[init] = body; ValidatePropagation(init, body, diagnostics, cancellationToken); ValidateInitializer(init, body, diagnostics); } foreach (var meth in t.Methods) { var binder = new Binder(meth.Locations.FirstOrDefault().Text, global, _genericTypes, _genericConstructions, _genericCallableConstructions, null, t, meth, diagnostics, _declared, _symbols, _types, _conversions, _genericUses, _typedErrorUses, cancellationToken); foreach (var p in meth.Parameters) binder.DeclareParameter(p); var body = (BoundBlockStatement)binder.BindStatement((GenericStatementSyntax)meth.Declaration.GetChildren().Last()); mb[meth] = body; ValidatePropagation(meth, body, diagnostics, cancellationToken); if (meth.ReturnType != TypeSymbol.Void && !Returns(body)) diagnostics.Report(new("MRT2017", DiagnosticSeverity.Error, $"Not all code paths return a value in method '{meth.Name}'.", meth.Locations.FirstOrDefault())); } }
-        var attempts = ValidateConformances(SyntaxTrees, named, global, diagnostics, cancellationToken); ValidateGenericConstructions(attempts, diagnostics, cancellationToken); var conformances = attempts.Select(a => a.Validated).OfType<ProtocolConformance>().ToImmutableArray(); if (!named.Any(t => ReferenceEquals(t, BuiltIns.FileError))) named.Insert(0, BuiltIns.FileError); return new(diagnostics.ToImmutableArray(), bodies.ToImmutable(), funcs.ToImmutableArray(), named.ToImmutableArray(), mb.ToImmutable(), ib.ToImmutable(), conformances, attempts);
+        cancellationToken.ThrowIfCancellationRequested();
+        var diagnostics = new DiagnosticBag();
+        foreach (var t in SyntaxTrees)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            diagnostics.AddRange(t.Diagnostics);
+        }
+        var global = BuiltIns.CreateRoot();
+        var named = new List<NamedTypeSymbol>();
+        foreach (var tree in SyntaxTrees)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            foreach (var m in tree.Root.Members.Where(m => m.Kind is SyntaxKind.StructDeclaration or SyntaxKind.ClassDeclaration or SyntaxKind.EnumDeclaration or SyntaxKind.ProtocolDeclaration))
+            {
+                var ch = ((GenericMemberSyntax)m).Children;
+                var name = (SyntaxToken)ch[1];
+                var locations = ImmutableArray.Create(name.Location(tree.Text));
+                var tparams = CreateTypeParameters(ch.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.TypeParameterList), name.Text, tree.Text, diagnostics);
+                NamedTypeSymbol nt = m.Kind switch { SyntaxKind.StructDeclaration => new StructTypeSymbol(name.Text, locations, tparams), SyntaxKind.ClassDeclaration => new ClassTypeSymbol(name.Text, locations, tparams), SyntaxKind.ProtocolDeclaration => new ProtocolTypeSymbol(name.Text, locations),
+                                                     _ => new EnumTypeSymbol(name.Text, locations, tparams) };
+                foreach (var tp in tparams)
+                    tp.SetConstraints(BindTypeParameterConstraints(ch.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.TypeParameterList), tp, global, tree.Text, diagnostics));
+                _declared[m] = nt;
+                if (!global.TryDeclareType(nt))
+                    diagnostics.Report(new("MRT2100", DiagnosticSeverity.Error, $"Type '{nt.Name}' is already declared.", name.Location(tree.Text)));
+                else
+                    named.Add(nt);
+            }
+        }
+        RegisterDeclaredErrorConformances(global, diagnostics, cancellationToken);
+        foreach (var tree in SyntaxTrees)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            foreach (var m in tree.Root.Members.OfType<GenericMemberSyntax>().Where(m => m.Kind is SyntaxKind.StructDeclaration or SyntaxKind.ClassDeclaration or SyntaxKind.EnumDeclaration or SyntaxKind.ProtocolDeclaration))
+                DeclareMembers(m, tree.Text, (NamedTypeSymbol)_declared[m], global, diagnostics);
+        }
+        var funcs = new List<FunctionSymbol>();
+        foreach (var tree in SyntaxTrees)
+            foreach (var m in tree.Root.Members.Where(m => m.Kind == SyntaxKind.FunctionDeclaration))
+            {
+                var f = DeclareFunction((GenericMemberSyntax)m, tree.Text, global, diagnostics);
+                funcs.Add(f);
+            }
+        var bodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>();
+        foreach (var f in funcs.Where(f => f.ReturnType != TypeSymbol.Error))
+        {
+            var binder = new Binder(f.Locations.FirstOrDefault().Text, global, _genericTypes, _genericConstructions, _genericCallableConstructions, f, null, null, diagnostics, _declared, _symbols, _types, _conversions, _genericUses, _typedErrorUses, cancellationToken);
+            var bodySyntax = (GenericStatementSyntax)f.Declaration!.GetChildren().Last();
+            var body = (BoundBlockStatement)binder.BindStatement(bodySyntax);
+            bodies[f] = body;
+            ValidatePropagation(f, body, diagnostics, cancellationToken);
+            if (f.ReturnType != TypeSymbol.Void && !Returns(body))
+                diagnostics.Report(new("MRT2017", DiagnosticSeverity.Error, $"Not all code paths return a value in function '{f.Name}'.", f.Locations.FirstOrDefault()));
+        }
+        var mb = ImmutableDictionary.CreateBuilder<MethodSymbol, BoundBlockStatement>();
+        var ib = ImmutableDictionary.CreateBuilder<InitializerSymbol, BoundBlockStatement>();
+        foreach (var t in named)
+        {
+            foreach (var init in t.Initializers.Where(i => !i.IsSynthesized))
+            {
+                var binder = new Binder(init.Locations.FirstOrDefault().Text, global, _genericTypes, _genericConstructions, _genericCallableConstructions, null, t, init, diagnostics, _declared, _symbols, _types, _conversions, _genericUses, _typedErrorUses, cancellationToken);
+                foreach (var p in init.Parameters)
+                    binder.DeclareParameter(p);
+                var body = (BoundBlockStatement)binder.BindStatement((GenericStatementSyntax)init.Declaration!.GetChildren().Last());
+                ib[init] = body;
+                ValidatePropagation(init, body, diagnostics, cancellationToken);
+                ValidateInitializer(init, body, diagnostics);
+            }
+            foreach (var meth in t.Methods)
+            {
+                var binder = new Binder(meth.Locations.FirstOrDefault().Text, global, _genericTypes, _genericConstructions, _genericCallableConstructions, null, t, meth, diagnostics, _declared, _symbols, _types, _conversions, _genericUses, _typedErrorUses, cancellationToken);
+                foreach (var p in meth.Parameters)
+                    binder.DeclareParameter(p);
+                var body = (BoundBlockStatement)binder.BindStatement((GenericStatementSyntax)meth.Declaration.GetChildren().Last());
+                mb[meth] = body;
+                ValidatePropagation(meth, body, diagnostics, cancellationToken);
+                if (meth.ReturnType != TypeSymbol.Void && !Returns(body))
+                    diagnostics.Report(new("MRT2017", DiagnosticSeverity.Error, $"Not all code paths return a value in method '{meth.Name}'.", meth.Locations.FirstOrDefault()));
+            }
+        }
+        var attempts = ValidateConformances(SyntaxTrees, named, global, diagnostics, cancellationToken);
+        ValidateGenericConstructions(attempts, diagnostics, cancellationToken);
+        var conformances = attempts.Select(a => a.Validated).OfType<ProtocolConformance>().ToImmutableArray();
+        if (!named.Any(t => ReferenceEquals(t, BuiltIns.FileError)))
+            named.Insert(0, BuiltIns.FileError);
+        return new(diagnostics.ToImmutableArray(), bodies.ToImmutable(), funcs.ToImmutableArray(), named.ToImmutableArray(), mb.ToImmutable(), ib.ToImmutable(), conformances, attempts);
     }
 
     void ValidateGenericConstructions(ImmutableArray<ProtocolConformanceAttempt> attempts, DiagnosticBag diagnostics, CancellationToken cancellationToken)
@@ -58,26 +246,352 @@ public sealed class Compilation
                 }
             }
         }
-
     }
 
-    ImmutableArray<TypeParameterSymbol> CreateTypeParameters(GenericSyntaxNode? list, string ownerName, SourceText text, DiagnosticBag d) { if (list == null) return []; var result = ImmutableArray.CreateBuilder<TypeParameterSymbol>(); var seen = new HashSet<string>(); Symbol owner = new StubSymbol(ownerName); foreach (var p in list.Children.OfType<GenericSyntaxNode>().Where(x => x.Kind == SyntaxKind.TypeParameter)) { var tok = p.Children.OfType<SyntaxToken>().First(t => t.Kind == SyntaxKind.IdentifierToken); if (!seen.Add(tok.Text)) d.Report(new("MRT2183", DiagnosticSeverity.Error, $"Type parameter '{tok.Text}' is already declared.", tok.Location(text))); result.Add(new TypeParameterSymbol(tok.Text, result.Count, owner, [tok.Location(text)])); } return result.ToImmutable(); }
-    ImmutableArray<GenericConstraint> BindTypeParameterConstraints(GenericSyntaxNode? list, TypeParameterSymbol tp, BoundScope global, SourceText text, DiagnosticBag d) { if (list == null) return []; var node = list.Children.OfType<GenericSyntaxNode>().Where(x => x.Kind == SyntaxKind.TypeParameter).ElementAtOrDefault(tp.Ordinal); if (node == null || !node.Children.OfType<SyntaxToken>().Any(t => t.Kind == SyntaxKind.ColonToken)) return []; var ty = BindTypeSyntax(node.Children.Last(), global, text, d, true); if (ty is ProtocolTypeSymbol p) return [new ProtocolConstraint(p)]; d.Report(new("MRT2189", DiagnosticSeverity.Error, $"Generic constraint kind '{ty.Name}' is not supported in this language version.", new TextLocation(text, node.Children.Last().Span))); return []; }
-    sealed class StubSymbol(string name) : Symbol(name, []) { public override SymbolKind Kind => SymbolKind.Type; }
-    ImmutableArray<ProtocolConformanceAttempt> ValidateConformances(ImmutableArray<SyntaxTree> trees, List<NamedTypeSymbol> named, BoundScope global, DiagnosticBag d, CancellationToken cancellationToken) { cancellationToken.ThrowIfCancellationRequested(); var attempts = ImmutableArray.CreateBuilder<ProtocolConformanceAttempt>(); foreach (var tree in trees) foreach (var m in tree.Root.Members.OfType<GenericMemberSyntax>().Where(x => x.Kind is SyntaxKind.StructDeclaration or SyntaxKind.ClassDeclaration or SyntaxKind.EnumDeclaration)) { var type = (NamedTypeSymbol)_declared[m]; var clause = m.Children.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.ProtocolConformanceClause); if (clause == null) continue; var seen = new HashSet<ProtocolTypeSymbol>(); foreach (var tn in clause.Children.OfType<GenericSyntaxNode>().Where(x => x.Kind is SyntaxKind.TypeClause or SyntaxKind.OptionalType)) { var protoType = BindTypeSyntax(tn, global, tree.Text, d, true); if (ReferenceEquals(protoType, TypeSymbol.Error)) continue; if (protoType is not ProtocolTypeSymbol proto) { d.Report(new("MRT2163", DiagnosticSeverity.Error, $"Type '{protoType.Name}' is not a protocol.", new TextLocation(tree.Text, tn.Span))); continue; } _symbols[tn] = proto; if (!seen.Add(proto)) { d.Report(new("MRT2164", DiagnosticSeverity.Error, $"Protocol '{proto.Name}' is listed more than once.", new TextLocation(tree.Text, tn.Span))); continue; } var witnesses = ImmutableDictionary.CreateBuilder<ProtocolRequirementSymbol, MemberSymbol>(); var mismatches = ImmutableDictionary.CreateBuilder<ProtocolRequirementSymbol, ProtocolRequirementMatch>(); var reverse = new Dictionary<MemberSymbol, List<ProtocolRequirementSymbol>>(); foreach (var req in proto.Requirements) { cancellationToken.ThrowIfCancellationRequested(); var match = ProtocolRequirementMatcher.Match(req, type.Members, type.IsStruct); if (match.IsSuccess) { var witness = match.Witness!; witnesses[req] = witness; if (!reverse.TryGetValue(witness, out var requirements)) reverse[witness] = requirements = []; requirements.Add(req); continue; } mismatches[req] = match; if (match.IsAmbiguous) d.Report(new("MRT2177", DiagnosticSeverity.Error, $"More than one member can satisfy protocol requirement '{req.Name}'.", new TextLocation(tree.Text, tn.Span))); else if (match.Mismatch is { } mismatch) ReportConformanceMismatch(req, mismatch, d); else d.Report(new("MRT2161", DiagnosticSeverity.Error, $"Required member '{req.Name}' is missing.", new TextLocation(tree.Text, tn.Span))); } var reverseMap = reverse.ToImmutableDictionary(pair => pair.Key, pair => pair.Value.ToImmutableArray()); attempts.Add(new(type, proto, new TextLocation(tree.Text, tn.Span), mismatches.ToImmutable(), witnesses.ToImmutable(), reverseMap)); } } return attempts.ToImmutable(); }
-    static void ReportConformanceMismatch(ProtocolRequirementSymbol requirement, ConformanceMismatch mismatch, DiagnosticBag d) { var location = mismatch.Candidate.Locations.FirstOrDefault(); var diagnostic = mismatch.Kind switch { ConformanceMismatchKind.ParameterLabel => new Diagnostic("MRT2171", DiagnosticSeverity.Error, $"Parameter label at position {mismatch.ParameterIndex + 1} does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.ParameterType => new Diagnostic("MRT2172", DiagnosticSeverity.Error, $"Parameter type at position {mismatch.ParameterIndex + 1} does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.ReturnType => new Diagnostic("MRT2173", DiagnosticSeverity.Error, $"Return type does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.Mutation => new Diagnostic("MRT2166", DiagnosticSeverity.Error, $"Method '{mismatch.Candidate.Name}' has incompatible mutating behavior for requirement '{requirement.Name}'.", location), ConformanceMismatchKind.Throwing => new Diagnostic("MRT2174", DiagnosticSeverity.Error, $"Throwing behavior does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.ErrorType => new Diagnostic("MRT2175", DiagnosticSeverity.Error, $"Error type does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.GenericMetadata => new Diagnostic("MRT2176", DiagnosticSeverity.Error, $"Generic requirement metadata does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.PropertyWritability => new Diagnostic("MRT2165", DiagnosticSeverity.Error, $"Property '{mismatch.Candidate.Name}' must be writable to satisfy requirement '{requirement.Name}'.", location), _ => new Diagnostic("MRT2162", DiagnosticSeverity.Error, $"Member '{mismatch.Candidate.Name}' does not match protocol requirement '{requirement.Name}'.", location) }; d.Report(diagnostic); }
+    ImmutableArray<TypeParameterSymbol> CreateTypeParameters(GenericSyntaxNode? list, string ownerName, SourceText text, DiagnosticBag d)
+    {
+        if (list == null)
+            return [];
+        var result = ImmutableArray.CreateBuilder<TypeParameterSymbol>();
+        var seen = new HashSet<string>();
+        Symbol owner = new StubSymbol(ownerName);
+        foreach (var p in list.Children.OfType<GenericSyntaxNode>().Where(x => x.Kind == SyntaxKind.TypeParameter))
+        {
+            var tok = p.Children.OfType<SyntaxToken>().First(t => t.Kind == SyntaxKind.IdentifierToken);
+            if (!seen.Add(tok.Text))
+                d.Report(new("MRT2183", DiagnosticSeverity.Error, $"Type parameter '{tok.Text}' is already declared.", tok.Location(text)));
+            result.Add(new TypeParameterSymbol(tok.Text, result.Count, owner, [tok.Location(text)]));
+        }
+        return result.ToImmutable();
+    }
+    ImmutableArray<GenericConstraint> BindTypeParameterConstraints(GenericSyntaxNode? list, TypeParameterSymbol tp, BoundScope global, SourceText text, DiagnosticBag d)
+    {
+        if (list == null)
+            return [];
+        var node = list.Children.OfType<GenericSyntaxNode>().Where(x => x.Kind == SyntaxKind.TypeParameter).ElementAtOrDefault(tp.Ordinal);
+        if (node == null || !node.Children.OfType<SyntaxToken>().Any(t => t.Kind == SyntaxKind.ColonToken))
+            return [];
+        var ty = BindTypeSyntax(node.Children.Last(), global, text, d, true);
+        if (ty is ProtocolTypeSymbol p)
+            return [new ProtocolConstraint(p)];
+        d.Report(new("MRT2189", DiagnosticSeverity.Error, $"Generic constraint kind '{ty.Name}' is not supported in this language version.", new TextLocation(text, node.Children.Last().Span)));
+        return [];
+    }
+    sealed class StubSymbol(string name) : Symbol
+    (name, [])
+    {
+        public override SymbolKind Kind => SymbolKind.Type;
+    }
+    ImmutableArray<ProtocolConformanceAttempt> ValidateConformances(ImmutableArray<SyntaxTree> trees, List<NamedTypeSymbol> named, BoundScope global, DiagnosticBag d, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var attempts = ImmutableArray.CreateBuilder<ProtocolConformanceAttempt>();
+        foreach (var tree in trees)
+            foreach (var m in tree.Root.Members.OfType<GenericMemberSyntax>().Where(x => x.Kind is SyntaxKind.StructDeclaration or SyntaxKind.ClassDeclaration or SyntaxKind.EnumDeclaration))
+            {
+                var type = (NamedTypeSymbol)_declared[m];
+                var clause = m.Children.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.ProtocolConformanceClause);
+                if (clause == null)
+                    continue;
+                var seen = new HashSet<ProtocolTypeSymbol>();
+                foreach (var tn in clause.Children.OfType<GenericSyntaxNode>().Where(x => x.Kind is SyntaxKind.TypeClause or SyntaxKind.OptionalType))
+                {
+                    var protoType = BindTypeSyntax(tn, global, tree.Text, d, true);
+                    if (ReferenceEquals(protoType, TypeSymbol.Error))
+                        continue;
+                    if (protoType is not ProtocolTypeSymbol proto)
+                    {
+                        d.Report(new("MRT2163", DiagnosticSeverity.Error, $"Type '{protoType.Name}' is not a protocol.", new TextLocation(tree.Text, tn.Span)));
+                        continue;
+                    }
+                    _symbols[tn] = proto;
+                    if (!seen.Add(proto))
+                    {
+                        d.Report(new("MRT2164", DiagnosticSeverity.Error, $"Protocol '{proto.Name}' is listed more than once.", new TextLocation(tree.Text, tn.Span)));
+                        continue;
+                    }
+                    var witnesses = ImmutableDictionary.CreateBuilder<ProtocolRequirementSymbol, MemberSymbol>();
+                    var mismatches = ImmutableDictionary.CreateBuilder<ProtocolRequirementSymbol, ProtocolRequirementMatch>();
+                    var reverse = new Dictionary<MemberSymbol, List<ProtocolRequirementSymbol>>();
+                    foreach (var req in proto.Requirements)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        var match = ProtocolRequirementMatcher.Match(req, type.Members, type.IsStruct);
+                        if (match.IsSuccess)
+                        {
+                            var witness = match.Witness!;
+                            witnesses[req] = witness;
+                            if (!reverse.TryGetValue(witness, out var requirements))
+                                reverse[witness] = requirements = [];
+                            requirements.Add(req);
+                            continue;
+                        }
+                        mismatches[req] = match;
+                        if (match.IsAmbiguous)
+                            d.Report(new("MRT2177", DiagnosticSeverity.Error, $"More than one member can satisfy protocol requirement '{req.Name}'.", new TextLocation(tree.Text, tn.Span)));
+                        else if (match.Mismatch is {} mismatch)
+                            ReportConformanceMismatch(req, mismatch, d);
+                        else
+                            d.Report(new("MRT2161", DiagnosticSeverity.Error, $"Required member '{req.Name}' is missing.", new TextLocation(tree.Text, tn.Span)));
+                    }
+                    var reverseMap = reverse.ToImmutableDictionary(pair => pair.Key, pair => pair.Value.ToImmutableArray());
+                    attempts.Add(new(type, proto, new TextLocation(tree.Text, tn.Span), mismatches.ToImmutable(), witnesses.ToImmutable(), reverseMap));
+                }
+            }
+        return attempts.ToImmutable();
+    }
+    static void ReportConformanceMismatch(ProtocolRequirementSymbol requirement, ConformanceMismatch mismatch, DiagnosticBag d)
+    {
+        var location = mismatch.Candidate.Locations.FirstOrDefault();
+        var diagnostic = mismatch.Kind switch { ConformanceMismatchKind.ParameterLabel => new Diagnostic("MRT2171", DiagnosticSeverity.Error, $"Parameter label at position {mismatch.ParameterIndex + 1} does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.ParameterType => new Diagnostic("MRT2172", DiagnosticSeverity.Error, $"Parameter type at position {mismatch.ParameterIndex + 1} does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.ReturnType => new Diagnostic("MRT2173", DiagnosticSeverity.Error, $"Return type does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.Mutation => new Diagnostic("MRT2166", DiagnosticSeverity.Error, $"Method '{mismatch.Candidate.Name}' has incompatible mutating behavior for requirement '{requirement.Name}'.", location), ConformanceMismatchKind.Throwing => new Diagnostic("MRT2174", DiagnosticSeverity.Error, $"Throwing behavior does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.ErrorType => new Diagnostic("MRT2175", DiagnosticSeverity.Error, $"Error type does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.GenericMetadata => new Diagnostic("MRT2176", DiagnosticSeverity.Error, $"Generic requirement metadata does not match requirement '{requirement.Name}'.", location), ConformanceMismatchKind.PropertyWritability => new Diagnostic("MRT2165", DiagnosticSeverity.Error, $"Property '{mismatch.Candidate.Name}' must be writable to satisfy requirement '{requirement.Name}'.", location),
+                                                _ => new Diagnostic("MRT2162", DiagnosticSeverity.Error, $"Member '{mismatch.Candidate.Name}' does not match protocol requirement '{requirement.Name}'.", location) };
+        d.Report(diagnostic);
+    }
     static bool SameType(TypeSymbol a, TypeSymbol b) => a == b || (a is OptionalTypeSymbol ao && b is OptionalTypeSymbol bo && SameType(ao.ElementType, bo.ElementType));
     static bool ParamsMatch(ImmutableArray<ParameterSymbol> a, ImmutableArray<ParameterSymbol> b) => a.Length == b.Length && a.Zip(b).All(x => x.First.Label == x.Second.Label && SameType(x.First.Type, x.Second.Type));
 
-    TypeSymbol BindTypeSyntax(SyntaxNode node, BoundScope scope, SourceText text, DiagnosticBag d, bool allowProtocol = false) { if (node is GenericSyntaxNode gn && gn.Kind == SyntaxKind.GenericName) { var result = GenericTypeBinding.Bind(gn, text, name => scope.TryLookupType(name, out var type) ? type : null, argument => BindTypeSyntax(argument, scope, text, d, allowProtocol), _genericTypes, d, _genericConstructions); if (!ReferenceEquals(result, TypeSymbol.Error)) _symbols[node] = result; return result; } if (node is GenericSyntaxNode g && g.Kind == SyntaxKind.OptionalType) { var elem = BindTypeSyntax(g.Children[0], scope, text, d, allowProtocol); if (elem == TypeSymbol.Void) d.Report(new("MRT2124", DiagnosticSeverity.Error, "Optional type cannot wrap Void.", new TextLocation(text, node.Span))); var optional = new OptionalTypeSymbol(elem); _symbols[node] = optional; return optional; } var tok = node.GetChildren().OfType<SyntaxToken>().FirstOrDefault(t => t.Kind == SyntaxKind.IdentifierToken) ?? node as SyntaxToken; if (tok == null || !scope.TryLookupType(tok.Text, out var type)) { d.Report(new("MRT2014", DiagnosticSeverity.Error, $"Type '{tok?.Text}' is not defined.", tok == null ? new TextLocation(text, node.Span) : tok.Location(text))); return TypeSymbol.Error; } if (type is ProtocolTypeSymbol && !allowProtocol) d.Report(new("MRT2167", DiagnosticSeverity.Error, $"Protocol existential values are not supported in this language version.", tok.Location(text))); _symbols[node] = type; return type; }
-    void DeclareMembers(GenericMemberSyntax m, SourceText text, NamedTypeSymbol type, BoundScope global, DiagnosticBag d) { var typeScope = new BoundScope(global); foreach (var tp in type.TypeParameters) typeScope.TryDeclareType(tp); var requirementIds = new HashSet<string>(StringComparer.Ordinal); var memberNames = new HashSet<string>(); foreach (var node in m.Children.OfType<GenericSyntaxNode>()) { if (node.Kind == SyntaxKind.ProtocolPropertyRequirement) { var protocol = (ProtocolTypeSymbol)type; var toks = node.Children.OfType<SyntaxToken>().ToArray(); var name = toks.First(t => t.Kind == SyntaxKind.IdentifierToken); var isStatic = toks.Any(t => t.Kind == SyntaxKind.StaticKeyword); var propertyType = BindTypeSyntax(node.Children.OfType<GenericSyntaxNode>().Last(), typeScope, text, d); var requiresSetter = toks.Any(t => t.Kind == SyntaxKind.VarKeyword); var stableId = ProtocolRequirementId(protocol, name.Text, "property", [], propertyType); if (!requirementIds.Add(stableId)) d.Report(new("MRT2170", DiagnosticSeverity.Error, $"Protocol requirement '{name.Text}' is already declared.", name.Location(text))); if (isStatic) d.Report(new("MRT2179", DiagnosticSeverity.Error, "Static protocol requirements are not supported in this language version.", toks.First(t => t.Kind == SyntaxKind.StaticKeyword).Location(text))); var req = new ProtocolPropertyRequirementSymbol(name.Text, protocol, propertyType, true, requiresSetter, stableId, [name.Location(text)], isStatic); type.AddMember(req); _declared[node] = req; } else if (node.Kind == SyntaxKind.ProtocolMethodRequirement) { var protocol = (ProtocolTypeSymbol)type; var name = node.Children.OfType<SyntaxToken>().First(t => t.Kind == SyntaxKind.IdentifierToken); var isStatic = node.Children.OfType<SyntaxToken>().Any(t => t.Kind == SyntaxKind.StaticKeyword); var tplist = node.Children.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.TypeParameterList); var tps = CreateTypeParameters(tplist, $"{protocol.Name}.{name.Text}", text, d); var requirementScope = new BoundScope(typeScope); foreach (var tp in tps) requirementScope.TryDeclareType(tp); foreach (var tp in tps) tp.SetConstraints(BindTypeParameterConstraints(tplist, tp, global, text, d)); var ps = BindParameters(node.Children.OfType<GenericSyntaxNode>().First(x => x.Kind == SyntaxKind.ParameterList), text, requirementScope, d); var ret = BindReturnType(node, text, requirementScope, d); var mut = node.Children.OfType<SyntaxToken>().Any(t => t.Kind == SyntaxKind.MutatingKeyword); var err = BindThrowsType(node, text, requirementScope, d); var genericRequirements = tps.SelectMany(tp => tp.Constraints).ToImmutableArray(); var stableId = ProtocolRequirementId(protocol, name.Text, "method", ps, ret, tps.Length, err); if (!requirementIds.Add(stableId)) d.Report(new("MRT2170", DiagnosticSeverity.Error, $"Protocol requirement '{name.Text}' is already declared.", name.Location(text))); if (isStatic) d.Report(new("MRT2179", DiagnosticSeverity.Error, "Static protocol requirements are not supported in this language version.", node.Children.OfType<SyntaxToken>().First(t => t.Kind == SyntaxKind.StaticKeyword).Location(text))); var req = new ProtocolMethodRequirementSymbol(name.Text, protocol, ps, ret, mut, err != null, err, tps, genericRequirements, stableId, [name.Location(text)], isStatic); foreach (var tp in tps) tp.SetContainingSymbol(req); type.AddMember(req); _declared[node] = req; } else if (node.Kind == SyntaxKind.EnumCaseDeclaration) { var toks = node.Children.OfType<SyntaxToken>().Where(t => t.Kind == SyntaxKind.IdentifierToken).ToArray(); var name = toks[0]; if (!memberNames.Add(name.Text)) d.Report(new("MRT2144", DiagnosticSeverity.Error, $"Enum case '{name.Text}' is already declared.", name.Location(text))); var plist = node.Children.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.ParameterList); var ps = plist == null ? ImmutableArray<ParameterSymbol>.Empty : BindParameters(plist, text, typeScope, d); var c = new EnumCaseSymbol(name.Text, type, ps, [name.Location(text)]); type.AddMember(c); _declared[node] = c; } else if (node.Kind == SyntaxKind.PropertyDeclaration) { var toks = node.Children.OfType<SyntaxToken>().ToArray(); var ro = toks[0].Kind == SyntaxKind.LetKeyword; var name = toks[1]; var ptype = BindTypeSyntax(node.Children[3], typeScope, text, d); if (!memberNames.Add(name.Text)) d.Report(new("MRT2101", DiagnosticSeverity.Error, $"Member '{name.Text}' is already declared in type '{type.Name}'.", name.Location(text))); var prop = new PropertySymbol(name.Text, type, ptype, ro, node.Children.OfType<ExpressionSyntax>().FirstOrDefault(), [name.Location(text)]); type.AddMember(prop); _declared[node] = prop; } else if (node.Kind == SyntaxKind.MethodDeclaration) { var name = node.Children.OfType<SyntaxToken>().First(t => t.Kind == SyntaxKind.IdentifierToken); if (!memberNames.Add(name.Text)) d.Report(new("MRT2101", DiagnosticSeverity.Error, $"Member '{name.Text}' is already declared in type '{type.Name}'.", name.Location(text))); var tplist = node.Children.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.TypeParameterList); var tps = CreateTypeParameters(tplist, $"{type.Name}.{name.Text}", text, d); var methodScope = new BoundScope(typeScope); foreach (var tp in tps) methodScope.TryDeclareType(tp); foreach (var tp in tps) tp.SetConstraints(BindTypeParameterConstraints(tplist, tp, global, text, d)); var ps = BindParameters(node.Children.OfType<GenericSyntaxNode>().First(x => x.Kind == SyntaxKind.ParameterList), text, methodScope, d); var ret = BindReturnType(node, text, methodScope, d); var mut = node.Children.OfType<SyntaxToken>().Any(t => t.Kind == SyntaxKind.MutatingKeyword); if (mut && type.IsClass) d.Report(new("MRT2110", DiagnosticSeverity.Error, $"Class method '{name.Text}' cannot be mutating.", name.Location(text))); var err = BindThrowsType(node, text, methodScope, d); var genericRequirements = tps.SelectMany(tp => tp.Constraints).ToImmutableArray(); var meth = new MethodSymbol(name.Text, type, ps, ret, node, mut, [name.Location(text)], err != null, err, tps, genericRequirements); foreach (var tp in tps) tp.SetContainingSymbol(meth); type.AddMember(meth); _declared[node] = meth; } else if (node.Kind == SyntaxKind.InitializerDeclaration) { var ps = BindParameters(node.Children.OfType<GenericSyntaxNode>().First(x => x.Kind == SyntaxKind.ParameterList), text, typeScope, d); var err = BindThrowsType(node, text, typeScope, d); var init = new InitializerSymbol(type, ps, node, false, type.Locations, err != null, err); type.AddMember(init); _declared[node] = init; } } if (type.IsEnum || type is ProtocolTypeSymbol) return; if (!type.Initializers.Any()) { var ps = type.Properties.Select((p, i) => new ParameterSymbol(p.Name, p.Name, i, p.Type, p.Locations)).ToImmutableArray(); type.AddMember(new InitializerSymbol(type, ps, null, true, type.Locations)); } }
-    static string ProtocolRequirementId(ProtocolTypeSymbol protocol, string name, string kind, ImmutableArray<ParameterSymbol> parameters, TypeSymbol resultType, int typeParameterCount = 0, TypeSymbol? errorType = null) { static string TypeId(TypeSymbol type) => type switch { OptionalTypeSymbol optional => TypeId(optional.ElementType) + "?", ConstructedTypeSymbol constructed => constructed.GenericDefinition.Name + "<" + string.Join(",", constructed.TypeArguments.Select(TypeId)) + ">", TypeParameterSymbol parameter => "`" + parameter.Ordinal, _ => type.Name }; var signature = string.Join(",", parameters.OrderBy(p => p.Ordinal).Select(p => (p.Label ?? "_") + ":" + TypeId(p.Type))); var throwing = errorType is null ? string.Empty : " throws " + TypeId(errorType); return $"{protocol.Name}::{kind}:{name}`{typeParameterCount}({signature}){throwing}->{TypeId(resultType)}"; }
-    ImmutableArray<ParameterSymbol> BindParameters(GenericSyntaxNode plist, SourceText text, BoundScope global, DiagnosticBag d) { var ps = new List<ParameterSymbol>(); var ordinal = 0; var seen = new HashSet<string>(); foreach (var p in plist.Children.OfType<GenericSyntaxNode>().Where(x => x.Kind == SyntaxKind.Parameter)) { var toks = p.Children.OfType<SyntaxToken>().Where(t => t.Kind == SyntaxKind.IdentifierToken).ToArray(); var hasExternalName = toks.Length >= 2; var label = toks[0].IsMissing || toks[0].Text == "_" ? null : toks[0].Text; var name = hasExternalName ? toks[1].Text : toks[0].Text; var type = BindTypeSyntax(p.Children.Last(), global, text, d); if (!seen.Add(name)) d.Report(new("MRT2019", DiagnosticSeverity.Error, $"Parameter '{name}' is already declared.", toks[hasExternalName ? 1 : 0].Location(text))); var sym = new ParameterSymbol(name, label, ordinal++, type, [toks[hasExternalName ? 1 : 0].Location(text)]); ps.Add(sym); _declared[p] = sym; } return ps.ToImmutableArray(); }
-    TypeSymbol? BindThrowsType(SyntaxNode node, SourceText text, BoundScope global, DiagnosticBag d) { var tc = node.GetChildren().OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.ThrowsClause); if (tc == null) return null; var err = BindTypeSyntax(tc.Children.Last(), global, text, d, true); if (!IsSupportedErrorType(err)) d.Report(new("MRT2194", DiagnosticSeverity.Error, $"Type '{err.Name}' does not conform to Error.", new TextLocation(text, tc.Span))); return err; }
-    bool IsSupportedErrorType(TypeSymbol type) => ReferenceEquals(type, BuiltIns.FileError) || type switch { NamedTypeSymbol named => _declaredErrorConformances.Contains(named), ConstructedTypeSymbol constructed => _declaredErrorConformances.Contains(constructed.GenericDefinition), TypeParameterSymbol parameter => parameter.Constraints.OfType<ProtocolConstraint>().Any(c => ReferenceEquals(c.Protocol, BuiltIns.ErrorProtocol)), _ => false };
-    void RegisterDeclaredErrorConformances(BoundScope global, DiagnosticBag diagnostics, CancellationToken cancellationToken) { foreach (var tree in SyntaxTrees) { foreach (var declaration in tree.Root.Members.OfType<GenericMemberSyntax>().Where(m => m.Kind is SyntaxKind.StructDeclaration or SyntaxKind.ClassDeclaration or SyntaxKind.EnumDeclaration)) { cancellationToken.ThrowIfCancellationRequested(); var clause = declaration.Children.OfType<GenericSyntaxNode>().FirstOrDefault(n => n.Kind == SyntaxKind.ProtocolConformanceClause); if (clause is null) continue; foreach (var typeSyntax in clause.Children.OfType<GenericSyntaxNode>().Where(n => n.Kind is SyntaxKind.TypeClause or SyntaxKind.OptionalType)) { var protocol = BindTypeSyntax(typeSyntax, global, tree.Text, diagnostics, true); if (ReferenceEquals(protocol, BuiltIns.ErrorProtocol)) { _declaredErrorConformances.Add((NamedTypeSymbol)_declared[declaration]); break; } } } } }
-    TypeSymbol BindReturnType(SyntaxNode node, SourceText text, BoundScope global, DiagnosticBag d) { var ret = TypeSymbol.Void; var rc = node.GetChildren().OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.ReturnTypeClause); if (rc != null) { ret = BindTypeSyntax(rc.Children.Last(), global, text, d); } return ret; }
-    FunctionSymbol DeclareFunction(GenericMemberSyntax m, SourceText text, BoundScope global, DiagnosticBag d) { var ch = m.Children; var nameTok = (SyntaxToken)ch[1]; var tplist = ch.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.TypeParameterList); var tps = CreateTypeParameters(tplist, nameTok.Text, text, d); var fscope = new BoundScope(global); foreach (var tp in tps) fscope.TryDeclareType(tp); foreach (var tp in tps) tp.SetConstraints(BindTypeParameterConstraints(tplist, tp, global, text, d)); var plist = ch.OfType<GenericSyntaxNode>().First(x => x.Kind == SyntaxKind.ParameterList); var ps = BindParameters(plist, text, fscope, d); var ret = BindReturnType(m, text, fscope, d); var err = BindThrowsType(m, text, fscope, d); var f = new FunctionSymbol(nameTok.Text, ps, ret, m, false, [nameTok.Location(text)], tps, err != null, err); _declared[m] = f; if (!global.TryDeclareFunction(f)) d.Report(new("MRT2018", DiagnosticSeverity.Error, $"Function '{f.Name}' is already declared.", nameTok.Location(text))); return f; }
+    TypeSymbol BindTypeSyntax(SyntaxNode node, BoundScope scope, SourceText text, DiagnosticBag d, bool allowProtocol = false)
+    {
+        if (node is GenericSyntaxNode gn && gn.Kind == SyntaxKind.GenericName)
+        {
+            var result = GenericTypeBinding.Bind(gn, text, name => scope.TryLookupType(name, out var type) ? type : null, argument => BindTypeSyntax(argument, scope, text, d, allowProtocol), _genericTypes, d, _genericConstructions);
+            if (!ReferenceEquals(result, TypeSymbol.Error))
+                _symbols[node] = result;
+            return result;
+        }
+        if (node is GenericSyntaxNode g && g.Kind == SyntaxKind.OptionalType)
+        {
+            var elem = BindTypeSyntax(g.Children[0], scope, text, d, allowProtocol);
+            if (elem == TypeSymbol.Void)
+                d.Report(new("MRT2124", DiagnosticSeverity.Error, "Optional type cannot wrap Void.", new TextLocation(text, node.Span)));
+            var optional = new OptionalTypeSymbol(elem);
+            _symbols[node] = optional;
+            return optional;
+        }
+        var tok = node.GetChildren().OfType<SyntaxToken>().FirstOrDefault(t => t.Kind == SyntaxKind.IdentifierToken) ?? node as SyntaxToken;
+        if (tok == null || !scope.TryLookupType(tok.Text, out var type))
+        {
+            d.Report(new("MRT2014", DiagnosticSeverity.Error, $"Type '{tok?.Text}' is not defined.", tok == null ? new TextLocation(text, node.Span) : tok.Location(text)));
+            return TypeSymbol.Error;
+        }
+        if (type is ProtocolTypeSymbol && !allowProtocol)
+            d.Report(new("MRT2167", DiagnosticSeverity.Error, $"Protocol existential values are not supported in this language version.", tok.Location(text)));
+        _symbols[node] = type;
+        return type;
+    }
+    void DeclareMembers(GenericMemberSyntax m, SourceText text, NamedTypeSymbol type, BoundScope global, DiagnosticBag d)
+    {
+        var typeScope = new BoundScope(global);
+        foreach (var tp in type.TypeParameters)
+            typeScope.TryDeclareType(tp);
+        var requirementIds = new HashSet<string>(StringComparer.Ordinal);
+        var memberNames = new HashSet<string>();
+        foreach (var node in m.Children.OfType<GenericSyntaxNode>())
+        {
+            if (node.Kind == SyntaxKind.ProtocolPropertyRequirement)
+            {
+                var protocol = (ProtocolTypeSymbol)type;
+                var toks = node.Children.OfType<SyntaxToken>().ToArray();
+                var name = toks.First(t => t.Kind == SyntaxKind.IdentifierToken);
+                var isStatic = toks.Any(t => t.Kind == SyntaxKind.StaticKeyword);
+                var propertyType = BindTypeSyntax(node.Children.OfType<GenericSyntaxNode>().Last(), typeScope, text, d);
+                var requiresSetter = toks.Any(t => t.Kind == SyntaxKind.VarKeyword);
+                var stableId = ProtocolRequirementId(protocol, name.Text, "property", [], propertyType);
+                if (!requirementIds.Add(stableId))
+                    d.Report(new("MRT2170", DiagnosticSeverity.Error, $"Protocol requirement '{name.Text}' is already declared.", name.Location(text)));
+                if (isStatic)
+                    d.Report(new("MRT2179", DiagnosticSeverity.Error, "Static protocol requirements are not supported in this language version.", toks.First(t => t.Kind == SyntaxKind.StaticKeyword).Location(text)));
+                var req = new ProtocolPropertyRequirementSymbol(name.Text, protocol, propertyType, true, requiresSetter, stableId, [name.Location(text)], isStatic);
+                type.AddMember(req);
+                _declared[node] = req;
+            }
+            else if (node.Kind == SyntaxKind.ProtocolMethodRequirement)
+            {
+                var protocol = (ProtocolTypeSymbol)type;
+                var name = node.Children.OfType<SyntaxToken>().First(t => t.Kind == SyntaxKind.IdentifierToken);
+                var isStatic = node.Children.OfType<SyntaxToken>().Any(t => t.Kind == SyntaxKind.StaticKeyword);
+                var tplist = node.Children.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.TypeParameterList);
+                var tps = CreateTypeParameters(tplist, $"{protocol.Name}.{name.Text}", text, d);
+                var requirementScope = new BoundScope(typeScope);
+                foreach (var tp in tps)
+                    requirementScope.TryDeclareType(tp);
+                foreach (var tp in tps)
+                    tp.SetConstraints(BindTypeParameterConstraints(tplist, tp, global, text, d));
+                var ps = BindParameters(node.Children.OfType<GenericSyntaxNode>().First(x => x.Kind == SyntaxKind.ParameterList), text, requirementScope, d);
+                var ret = BindReturnType(node, text, requirementScope, d);
+                var mut = node.Children.OfType<SyntaxToken>().Any(t => t.Kind == SyntaxKind.MutatingKeyword);
+                var err = BindThrowsType(node, text, requirementScope, d);
+                var genericRequirements = tps.SelectMany(tp => tp.Constraints).ToImmutableArray();
+                var stableId = ProtocolRequirementId(protocol, name.Text, "method", ps, ret, tps.Length, err);
+                if (!requirementIds.Add(stableId))
+                    d.Report(new("MRT2170", DiagnosticSeverity.Error, $"Protocol requirement '{name.Text}' is already declared.", name.Location(text)));
+                if (isStatic)
+                    d.Report(new("MRT2179", DiagnosticSeverity.Error, "Static protocol requirements are not supported in this language version.", node.Children.OfType<SyntaxToken>().First(t => t.Kind == SyntaxKind.StaticKeyword).Location(text)));
+                var req = new ProtocolMethodRequirementSymbol(name.Text, protocol, ps, ret, mut, err != null, err, tps, genericRequirements, stableId, [name.Location(text)], isStatic);
+                foreach (var tp in tps)
+                    tp.SetContainingSymbol(req);
+                type.AddMember(req);
+                _declared[node] = req;
+            }
+            else if (node.Kind == SyntaxKind.EnumCaseDeclaration)
+            {
+                var toks = node.Children.OfType<SyntaxToken>().Where(t => t.Kind == SyntaxKind.IdentifierToken).ToArray();
+                var name = toks[0];
+                if (!memberNames.Add(name.Text))
+                    d.Report(new("MRT2144", DiagnosticSeverity.Error, $"Enum case '{name.Text}' is already declared.", name.Location(text)));
+                var plist = node.Children.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.ParameterList);
+                var ps = plist == null ? ImmutableArray<ParameterSymbol>.Empty : BindParameters(plist, text, typeScope, d);
+                var c = new EnumCaseSymbol(name.Text, type, ps, [name.Location(text)]);
+                type.AddMember(c);
+                _declared[node] = c;
+            }
+            else if (node.Kind == SyntaxKind.PropertyDeclaration)
+            {
+                var toks = node.Children.OfType<SyntaxToken>().ToArray();
+                var ro = toks[0].Kind == SyntaxKind.LetKeyword;
+                var name = toks[1];
+                var ptype = BindTypeSyntax(node.Children[3], typeScope, text, d);
+                if (!memberNames.Add(name.Text))
+                    d.Report(new("MRT2101", DiagnosticSeverity.Error, $"Member '{name.Text}' is already declared in type '{type.Name}'.", name.Location(text)));
+                var prop = new PropertySymbol(name.Text, type, ptype, ro, node.Children.OfType<ExpressionSyntax>().FirstOrDefault(), [name.Location(text)]);
+                type.AddMember(prop);
+                _declared[node] = prop;
+            }
+            else if (node.Kind == SyntaxKind.MethodDeclaration)
+            {
+                var name = node.Children.OfType<SyntaxToken>().First(t => t.Kind == SyntaxKind.IdentifierToken);
+                if (!memberNames.Add(name.Text))
+                    d.Report(new("MRT2101", DiagnosticSeverity.Error, $"Member '{name.Text}' is already declared in type '{type.Name}'.", name.Location(text)));
+                var tplist = node.Children.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.TypeParameterList);
+                var tps = CreateTypeParameters(tplist, $"{type.Name}.{name.Text}", text, d);
+                var methodScope = new BoundScope(typeScope);
+                foreach (var tp in tps)
+                    methodScope.TryDeclareType(tp);
+                foreach (var tp in tps)
+                    tp.SetConstraints(BindTypeParameterConstraints(tplist, tp, global, text, d));
+                var ps = BindParameters(node.Children.OfType<GenericSyntaxNode>().First(x => x.Kind == SyntaxKind.ParameterList), text, methodScope, d);
+                var ret = BindReturnType(node, text, methodScope, d);
+                var mut = node.Children.OfType<SyntaxToken>().Any(t => t.Kind == SyntaxKind.MutatingKeyword);
+                if (mut && type.IsClass)
+                    d.Report(new("MRT2110", DiagnosticSeverity.Error, $"Class method '{name.Text}' cannot be mutating.", name.Location(text)));
+                var err = BindThrowsType(node, text, methodScope, d);
+                var genericRequirements = tps.SelectMany(tp => tp.Constraints).ToImmutableArray();
+                var meth = new MethodSymbol(name.Text, type, ps, ret, node, mut, [name.Location(text)], err != null, err, tps, genericRequirements);
+                foreach (var tp in tps)
+                    tp.SetContainingSymbol(meth);
+                type.AddMember(meth);
+                _declared[node] = meth;
+            }
+            else if (node.Kind == SyntaxKind.InitializerDeclaration)
+            {
+                var ps = BindParameters(node.Children.OfType<GenericSyntaxNode>().First(x => x.Kind == SyntaxKind.ParameterList), text, typeScope, d);
+                var err = BindThrowsType(node, text, typeScope, d);
+                var init = new InitializerSymbol(type, ps, node, false, type.Locations, err != null, err);
+                type.AddMember(init);
+                _declared[node] = init;
+            }
+        }
+        if (type.IsEnum || type is ProtocolTypeSymbol)
+            return;
+        if (!type.Initializers.Any())
+        {
+            var ps = type.Properties.Select((p, i) => new ParameterSymbol(p.Name, p.Name, i, p.Type, p.Locations)).ToImmutableArray();
+            type.AddMember(new InitializerSymbol(type, ps, null, true, type.Locations));
+        }
+    }
+    static string ProtocolRequirementId(ProtocolTypeSymbol protocol, string name, string kind, ImmutableArray<ParameterSymbol> parameters, TypeSymbol resultType, int typeParameterCount = 0, TypeSymbol? errorType = null)
+    {
+        static string TypeId(TypeSymbol type) => type switch { OptionalTypeSymbol optional => TypeId(optional.ElementType) + "?", ConstructedTypeSymbol constructed => constructed.GenericDefinition.Name + "<" + string.Join(",", constructed.TypeArguments.Select(TypeId)) + ">", TypeParameterSymbol parameter => "`" + parameter.Ordinal,
+                                                               _ => type.Name };
+        var signature = string.Join(",", parameters.OrderBy(p => p.Ordinal).Select(p => (p.Label ?? "_") + ":" + TypeId(p.Type)));
+        var throwing = errorType is null ? string.Empty : " throws " + TypeId(errorType);
+        return $"{protocol.Name}::{kind}:{name}`{typeParameterCount}({signature}){throwing}->{TypeId(resultType)}";
+    }
+    ImmutableArray<ParameterSymbol> BindParameters(GenericSyntaxNode plist, SourceText text, BoundScope global, DiagnosticBag d)
+    {
+        var ps = new List<ParameterSymbol>();
+        var ordinal = 0;
+        var seen = new HashSet<string>();
+        foreach (var p in plist.Children.OfType<GenericSyntaxNode>().Where(x => x.Kind == SyntaxKind.Parameter))
+        {
+            var toks = p.Children.OfType<SyntaxToken>().Where(t => t.Kind == SyntaxKind.IdentifierToken).ToArray();
+            var hasExternalName = toks.Length >= 2;
+            var label = toks[0].IsMissing || toks[0].Text == "_" ? null : toks[0].Text;
+            var name = hasExternalName ? toks[1].Text : toks[0].Text;
+            var type = BindTypeSyntax(p.Children.Last(), global, text, d);
+            if (!seen.Add(name))
+                d.Report(new("MRT2019", DiagnosticSeverity.Error, $"Parameter '{name}' is already declared.", toks[hasExternalName ? 1 : 0].Location(text)));
+            var sym = new ParameterSymbol(name, label, ordinal++, type, [toks [hasExternalName ? 1 : 0].Location(text)]);
+            ps.Add(sym);
+            _declared[p] = sym;
+        }
+        return ps.ToImmutableArray();
+    }
+    TypeSymbol? BindThrowsType(SyntaxNode node, SourceText text, BoundScope global, DiagnosticBag d)
+    {
+        var tc = node.GetChildren().OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.ThrowsClause);
+        if (tc == null)
+            return null;
+        var err = BindTypeSyntax(tc.Children.Last(), global, text, d, true);
+        if (!IsSupportedErrorType(err))
+            d.Report(new("MRT2194", DiagnosticSeverity.Error, $"Type '{err.Name}' does not conform to Error.", new TextLocation(text, tc.Span)));
+        return err;
+    }
+    bool IsSupportedErrorType(TypeSymbol type) => ReferenceEquals(type, BuiltIns.FileError) || type switch { NamedTypeSymbol named => _declaredErrorConformances.Contains(named), ConstructedTypeSymbol constructed => _declaredErrorConformances.Contains(constructed.GenericDefinition), TypeParameterSymbol parameter => parameter.Constraints.OfType<ProtocolConstraint>().Any(c => ReferenceEquals(c.Protocol, BuiltIns.ErrorProtocol)),
+                                                                                                             _ => false };
+    void RegisterDeclaredErrorConformances(BoundScope global, DiagnosticBag diagnostics, CancellationToken cancellationToken)
+    {
+        foreach (var tree in SyntaxTrees)
+        {
+            foreach (var declaration in tree.Root.Members.OfType<GenericMemberSyntax>().Where(m => m.Kind is SyntaxKind.StructDeclaration or SyntaxKind.ClassDeclaration or SyntaxKind.EnumDeclaration))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var clause = declaration.Children.OfType<GenericSyntaxNode>().FirstOrDefault(n => n.Kind == SyntaxKind.ProtocolConformanceClause);
+                if (clause is null)
+                    continue;
+                foreach (var typeSyntax in clause.Children.OfType<GenericSyntaxNode>().Where(n => n.Kind is SyntaxKind.TypeClause or SyntaxKind.OptionalType))
+                {
+                    var protocol = BindTypeSyntax(typeSyntax, global, tree.Text, diagnostics, true);
+                    if (ReferenceEquals(protocol, BuiltIns.ErrorProtocol))
+                    {
+                        _declaredErrorConformances.Add((NamedTypeSymbol)_declared[declaration]);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    TypeSymbol BindReturnType(SyntaxNode node, SourceText text, BoundScope global, DiagnosticBag d)
+    {
+        var ret = TypeSymbol.Void;
+        var rc = node.GetChildren().OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.ReturnTypeClause);
+        if (rc != null)
+        {
+            ret = BindTypeSyntax(rc.Children.Last(), global, text, d);
+        }
+        return ret;
+    }
+    FunctionSymbol DeclareFunction(GenericMemberSyntax m, SourceText text, BoundScope global, DiagnosticBag d)
+    {
+        var ch = m.Children;
+        var nameTok = (SyntaxToken)ch[1];
+        var tplist = ch.OfType<GenericSyntaxNode>().FirstOrDefault(x => x.Kind == SyntaxKind.TypeParameterList);
+        var tps = CreateTypeParameters(tplist, nameTok.Text, text, d);
+        var fscope = new BoundScope(global);
+        foreach (var tp in tps)
+            fscope.TryDeclareType(tp);
+        foreach (var tp in tps)
+            tp.SetConstraints(BindTypeParameterConstraints(tplist, tp, global, text, d));
+        var plist = ch.OfType<GenericSyntaxNode>().First(x => x.Kind == SyntaxKind.ParameterList);
+        var ps = BindParameters(plist, text, fscope, d);
+        var ret = BindReturnType(m, text, fscope, d);
+        var err = BindThrowsType(m, text, fscope, d);
+        var f = new FunctionSymbol(nameTok.Text, ps, ret, m, false, [nameTok.Location(text)], tps, err != null, err);
+        _declared[m] = f;
+        if (!global.TryDeclareFunction(f))
+            d.Report(new("MRT2018", DiagnosticSeverity.Error, $"Function '{f.Name}' is already declared.", nameTok.Location(text)));
+        return f;
+    }
 
     static void ValidatePropagation(FunctionSymbol function, BoundBlockStatement body, DiagnosticBag d, CancellationToken cancellationToken)
     {
@@ -90,7 +604,8 @@ public sealed class Compilation
     static void ValidatePropagation(bool isThrowing, TypeSymbol? declaredErrorType, BoundStatement body, TextLocation fallbackLocation, DiagnosticBag d, CancellationToken cancellationToken)
     {
         var residual = AggregateAcknowledgedEffect(body, cancellationToken);
-        if (!residual.Effect.CanThrow) return;
+        if (!residual.Effect.CanThrow)
+            return;
         var location = residual.Location ?? fallbackLocation;
         if (residual.Effect.IsConflicting)
         {
@@ -101,8 +616,13 @@ public sealed class Compilation
                 d.Report(new("MRT2192", DiagnosticSeverity.Error, "Acknowledged incompatible error effects must be caught or propagated by a throwing callable.", location));
             return;
         }
-        if (residual.Effect.ErrorType == TypeSymbol.Error) return;
-        if (!isThrowing || declaredErrorType is null) { d.Report(new("MRT2192", DiagnosticSeverity.Error, $"Acknowledged error effect '{residual.Effect.ErrorType}' must be caught or propagated by a throwing callable.", location)); return; }
+        if (residual.Effect.ErrorType == TypeSymbol.Error)
+            return;
+        if (!isThrowing || declaredErrorType is null)
+        {
+            d.Report(new("MRT2192", DiagnosticSeverity.Error, $"Acknowledged error effect '{residual.Effect.ErrorType}' must be caught or propagated by a throwing callable.", location));
+            return;
+        }
         if (!TypeIdentity.Create(declaredErrorType).Equals(TypeIdentity.Create(residual.Effect.ErrorType!)))
             d.Report(new("MRT2199", DiagnosticSeverity.Error, $"Callable declares error type '{declaredErrorType}', but an acknowledged effect has type '{residual.Effect.ErrorType}'.", location));
     }
@@ -111,28 +631,76 @@ public sealed class Compilation
         cancellationToken.ThrowIfCancellationRequested();
         switch (statement)
         {
-            case BoundBlockStatement block: return Combine(block.Statements.Select(s => AggregateAcknowledgedEffect(s, cancellationToken)), cancellationToken);
-            case BoundVariableDeclaration variable: return FromExpression(variable.Initializer, variable.Location);
-            case BoundExpressionStatement expression: return FromExpression(expression.Expression, expression.Location);
-            case BoundReturnStatement ret: return ret.Expression is null ? (ErrorEffect.None, null) : FromExpression(ret.Expression, ret.Location);
-            case BoundThrowStatement { SuppressesPropagationDiagnostics: true }: return (ErrorEffect.None, null);
-            case BoundThrowStatement thr: return (new ErrorEffect(true, thr.ErrorType), thr.Location);
-            case BoundIfStatement iff: return Combine([FromExpression(iff.Condition, iff.Location), AggregateAcknowledgedEffect(iff.ThenStatement, cancellationToken), iff.ElseStatement is null ? (ErrorEffect.None, null) : AggregateAcknowledgedEffect(iff.ElseStatement, cancellationToken)], cancellationToken);
-            case BoundIfLetStatement iff: return Combine([FromExpression(iff.OptionalExpression, iff.Location), AggregateAcknowledgedEffect(iff.ThenStatement, cancellationToken), iff.ElseStatement is null ? (ErrorEffect.None, null) : AggregateAcknowledgedEffect(iff.ElseStatement, cancellationToken)], cancellationToken);
-            case BoundWhileStatement loop: return Combine([FromExpression(loop.Condition, loop.Location), AggregateAcknowledgedEffect(loop.Body, cancellationToken)], cancellationToken);
-            case BoundSwitchStatement sw: return Combine([FromExpression(sw.Expression, sw.Location), .. sw.Cases.Select(c => AggregateAcknowledgedEffect(c.Body, cancellationToken))], cancellationToken);
-            case BoundDoCatchStatement doCatch: return Combine(doCatch.CatchClauses.Select(c => AggregateAcknowledgedEffect(c.Body, cancellationToken)), cancellationToken);
-            default: return (ErrorEffect.None, null);
-        }
+        case BoundBlockStatement block:
+            return Combine(block.Statements.Select(s => AggregateAcknowledgedEffect(s, cancellationToken)), cancellationToken);
+        case BoundVariableDeclaration variable:
+            return FromExpression(variable.Initializer, variable.Location);
+        case BoundExpressionStatement expression:
+            return FromExpression(expression.Expression, expression.Location);
+        case BoundReturnStatement ret:
+            return ret.Expression is null ? (ErrorEffect.None, null) : FromExpression(ret.Expression, ret.Location);
+        case BoundThrowStatement { SuppressesPropagationDiagnostics:
+            true
+        }: return (ErrorEffect.None, null);
+    case BoundThrowStatement thr:
+        return (new ErrorEffect(true, thr.ErrorType), thr.Location);
+    case BoundIfStatement iff:
+        return Combine([FromExpression(iff.Condition, iff.Location), AggregateAcknowledgedEffect(iff.ThenStatement, cancellationToken), iff.ElseStatement is null ? (ErrorEffect.None, null) : AggregateAcknowledgedEffect(iff.ElseStatement, cancellationToken)], cancellationToken);
+    case BoundIfLetStatement iff:
+        return Combine([FromExpression(iff.OptionalExpression, iff.Location), AggregateAcknowledgedEffect(iff.ThenStatement, cancellationToken), iff.ElseStatement is null ? (ErrorEffect.None, null) : AggregateAcknowledgedEffect(iff.ElseStatement, cancellationToken)], cancellationToken);
+    case BoundWhileStatement loop:
+        return Combine([FromExpression(loop.Condition, loop.Location), AggregateAcknowledgedEffect(loop.Body, cancellationToken)], cancellationToken);
+    case BoundSwitchStatement sw:
+        return Combine([FromExpression(sw.Expression, sw.Location), ..sw.Cases.Select(c => AggregateAcknowledgedEffect(c.Body, cancellationToken))], cancellationToken);
+    case BoundDoCatchStatement doCatch:
+        return Combine(doCatch.CatchClauses.Select(c => AggregateAcknowledgedEffect(c.Body, cancellationToken)), cancellationToken);
+    default:
+        return (ErrorEffect.None, null);
     }
-    static (ErrorEffect Effect, TextLocation? Location) FromExpression(BoundExpression expression, TextLocation? location) => expression.ErrorEffect.CanThrow ? (expression.ErrorEffect, location) : (ErrorEffect.None, null);
-    static (ErrorEffect Effect, TextLocation? Location) Combine(IEnumerable<(ErrorEffect Effect, TextLocation? Location)> items, CancellationToken cancellationToken)
+}
+static (ErrorEffect Effect, TextLocation? Location) FromExpression(BoundExpression expression, TextLocation? location) => expression.ErrorEffect.CanThrow ? (expression.ErrorEffect, location) : (ErrorEffect.None, null);
+static (ErrorEffect Effect, TextLocation? Location) Combine(IEnumerable<(ErrorEffect Effect, TextLocation? Location)> items, CancellationToken cancellationToken)
+{
+    ErrorEffect result = ErrorEffect.None;
+    TextLocation? location = null;
+    foreach (var item in items)
     {
-        ErrorEffect result = ErrorEffect.None; TextLocation? location = null;
-        foreach (var item in items) { cancellationToken.ThrowIfCancellationRequested(); if (!item.Effect.CanThrow) continue; location ??= item.Location; result = ErrorEffect.Combine(result, item.Effect); if (result.IsConflicting) return (result, location); }
-        return (result, location);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!item.Effect.CanThrow)
+            continue;
+        location ??= item.Location;
+        result = ErrorEffect.Combine(result, item.Effect);
+        if (result.IsConflicting)
+            return (result, location);
     }
+    return (result, location);
+}
 
-    static void ValidateInitializer(InitializerSymbol init, BoundBlockStatement body, DiagnosticBag d) { var assigned = new HashSet<PropertySymbol>(); void Walk(BoundStatement s) { switch (s) { case BoundExpressionStatement { Expression: BoundPropertyAssignmentExpression a } when a.Receiver is BoundVariableExpression { Variable: SelfParameterSymbol }: if (!assigned.Add(a.Property) && a.Property.IsReadOnly) d.Report(new("MRT2108", DiagnosticSeverity.Error, $"Property '{a.Property.Name}' is initialized more than once.", a.Property.Locations.FirstOrDefault())); break; case BoundBlockStatement b: foreach (var x in b.Statements) Walk(x); break; } } Walk(body); var properties = init.ContainingType switch { NamedTypeSymbol nt => nt.Properties, ConstructedTypeSymbol ct => ct.Properties, _ => ImmutableArray<PropertySymbol>.Empty }; foreach (var p in properties) if (!assigned.Contains(p) && p.DefaultValueSyntax == null) d.Report(new("MRT2103", DiagnosticSeverity.Error, $"Stored property '{p.Name}' is not initialized.", p.Locations.FirstOrDefault())); }
-    static bool Returns(BoundStatement s) => s switch { BoundReturnStatement => true, BoundBlockStatement b => b.Statements.LastOrDefault() is { } last && Returns(last), BoundIfStatement i => i.ElseStatement != null && Returns(i.ThenStatement) && Returns(i.ElseStatement), BoundIfLetStatement i => i.ElseStatement != null && Returns(i.ThenStatement) && Returns(i.ElseStatement), _ => false };
+static void ValidateInitializer(InitializerSymbol init, BoundBlockStatement body, DiagnosticBag d)
+{
+    var assigned = new HashSet<PropertySymbol>();
+    void Walk(BoundStatement s)
+    {
+        switch (s)
+        {
+        case BoundExpressionStatement { Expression:
+            BoundPropertyAssignmentExpression a
+        }
+        when a.Receiver is BoundVariableExpression { Variable : SelfParameterSymbol } : if (!assigned.Add(a.Property) && a.Property.IsReadOnly) d.Report(new("MRT2108", DiagnosticSeverity.Error, $"Property '{a.Property.Name}' is initialized more than once.", a.Property.Locations.FirstOrDefault()));
+        break;
+    case BoundBlockStatement b:
+        foreach (var x in b.Statements)
+            Walk(x);
+        break;
+    }
+}
+Walk(body);
+var properties = init.ContainingType switch { NamedTypeSymbol nt => nt.Properties, ConstructedTypeSymbol ct => ct.Properties,
+                                              _ => ImmutableArray<PropertySymbol>.Empty };
+foreach (var p in properties)
+    if (!assigned.Contains(p) && p.DefaultValueSyntax == null)
+        d.Report(new("MRT2103", DiagnosticSeverity.Error, $"Stored property '{p.Name}' is not initialized.", p.Locations.FirstOrDefault()));
+}
+static bool Returns(BoundStatement s) => s switch { BoundReturnStatement => true, BoundBlockStatement b => b.Statements.LastOrDefault() is {} last && Returns(last), BoundIfStatement i => i.ElseStatement != null && Returns(i.ThenStatement) && Returns(i.ElseStatement), BoundIfLetStatement i => i.ElseStatement != null && Returns(i.ThenStatement) && Returns(i.ElseStatement),
+                                                    _ => false };
 }

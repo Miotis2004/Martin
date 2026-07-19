@@ -17,7 +17,8 @@ public sealed class Phase14ExplicitGenericCallTests
         Assert.Empty(compilation.Diagnostics);
         var use = compilation.BindProgram().Functions.Single(function => function.Name == "use");
         var call = Assert.IsType<BoundCallExpression>(Assert.IsType<BoundReturnStatement>(
-            Assert.Single(compilation.BindProgram().FunctionBodies[use].Statements)).Expression);
+                                                                Assert.Single(compilation.BindProgram().FunctionBodies[use].Statements))
+                                                          .Expression);
         Assert.Same(TypeSymbol.Int, call.Type);
         Assert.Equal([TypeSymbol.Int], call.TypeArguments);
         Assert.Equal("identity", call.OriginalDefinition.Name);
@@ -33,7 +34,8 @@ public sealed class Phase14ExplicitGenericCallTests
         Assert.Empty(compilation.Diagnostics);
         var use = compilation.BindProgram().Functions.Single(function => function.Name == "use");
         var call = Assert.IsType<BoundMethodCallExpression>(Assert.IsType<BoundReturnStatement>(
-            Assert.Single(compilation.BindProgram().FunctionBodies[use].Statements)).Expression);
+                                                                      Assert.Single(compilation.BindProgram().FunctionBodies[use].Statements))
+                                                                .Expression);
         Assert.Same(TypeSymbol.String, call.Type);
         Assert.Equal([TypeSymbol.String], call.TypeArguments);
         Assert.Same(TypeSymbol.String, Assert.Single(call.Method.Parameters).Type);

@@ -19,18 +19,16 @@ public sealed record LanguageProjectSnapshot(ProjectId Id, string Name, string R
     public string ManifestPath { get; init; } = string.Empty;
     public LanguageProjectSnapshot UpsertDocument(LanguageDocumentSnapshot document)
     {
-        var documents = Documents.RemoveAll(d => d.Id == document.Id).Add(document)
-            .Sort((a, b) => StringComparer.OrdinalIgnoreCase.Compare(a.FilePath, b.FilePath));
+        var documents = Documents.RemoveAll(d => d.Id == document.Id).Add(document).Sort((a, b) => StringComparer.OrdinalIgnoreCase.Compare(a.FilePath, b.FilePath));
         return this with { Documents = documents, Version = Version.Next() };
     }
 }
 
 public sealed record LanguageWorkspaceSnapshot(WorkspaceId Id, WorkspaceVersion Version, ImmutableArray<LanguageProjectSnapshot> Projects)
 {
-    public LanguageProjectSnapshot? FindProject(ProjectId id) => Projects.FirstOrDefault(p => p.Id == id);
-    public LanguageDocumentSnapshot? FindDocument(DocumentId id) => Projects.SelectMany(p => p.Documents).FirstOrDefault(d => d.Id == id);
-    public LanguageWorkspaceSnapshot UpsertProject(LanguageProjectSnapshot project) => this with
-    {
+    public LanguageProjectSnapshot  ? FindProject(ProjectId id) => Projects.FirstOrDefault(p => p.Id == id);
+    public LanguageDocumentSnapshot ? FindDocument(DocumentId id) => Projects.SelectMany(p => p.Documents).FirstOrDefault(d => d.Id == id);
+    public LanguageWorkspaceSnapshot UpsertProject(LanguageProjectSnapshot project) => this with {
         Projects = Projects.RemoveAll(p => p.Id == project.Id).Add(project),
         Version = Version.Next()
     };

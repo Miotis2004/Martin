@@ -13,7 +13,7 @@ public sealed class Phase12AnalysisCacheTests
         using var cache = new LanguageAnalysisCache();
         var service = new MartinLanguageService(cache);
         var document = new LanguageDocumentSnapshot(DocumentId.CreateNew(), "main.martin",
-            "func add(_ value: Int) -> Int { return value }\nfunc main() { print(add(1)) }", new(0));
+                                                    "func add(_ value: Int) -> Int { return value }\nfunc main() { print(add(1)) }", new(0));
         var project = new LanguageProjectSnapshot(ProjectId.CreateNew(), "p", ".", new(0), [document]);
         var workspace = new LanguageWorkspaceSnapshot(WorkspaceId.CreateNew(), new(0), [project]);
         var call = document.Text.LastIndexOf("add", StringComparison.Ordinal);
@@ -118,9 +118,11 @@ public sealed class Phase12AnalysisCacheTests
             new(1),
             [new(project, "p", ".", new(1), [current])]));
 
-        using var currentLease = await cache.GetOrCreateDocumentAsync(new(id, new(2)), _ => Task.FromResult(CreateDocument(id, new(2), current.Text)));
+        using var currentLease = await cache.GetOrCreateDocumentAsync(new(id, new(2)),
+                                                                      _ => Task.FromResult(CreateDocument(id, new(2), current.Text)));
         var historicalId = DocumentId.CreateNew();
-        using var historicalLease = await cache.GetOrCreateDocumentAsync(new(historicalId, new(1)), _ => Task.FromResult(CreateDocument(historicalId, new(1), "let old = 0")));
+        using var historicalLease = await cache.GetOrCreateDocumentAsync(new(historicalId, new(1)),
+                                                                         _ => Task.FromResult(CreateDocument(historicalId, new(1), "let old = 0")));
         Assert.Equal(2, cache.Metrics.DocumentEntries); // the over-capacity entry is actively leased
         historicalLease.Dispose();
 
@@ -139,9 +141,11 @@ public sealed class Phase12AnalysisCacheTests
             WorkspaceId.CreateNew(),
             new(0),
             [new(projectId, "p", ".", new(0), [document])]));
-        using var documentLease = await cache.GetOrCreateDocumentAsync(new(documentId, new(0)), _ => Task.FromResult(CreateDocument(documentId, new(0), document.Text)));
+        using var documentLease = await cache.GetOrCreateDocumentAsync(new(documentId, new(0)),
+                                                                       _ => Task.FromResult(CreateDocument(documentId, new(0), document.Text)));
         var compilation = documentLease.Value.Compilation;
-        using var projectLease = await cache.GetOrCreateProjectAsync(new(projectId, new(0)), _ => Task.FromResult(new ProjectAnalysis(projectId, new(0), compilation, ImmutableDictionary<DocumentId, SemanticModel>.Empty, [])));
+        using var projectLease = await cache.GetOrCreateProjectAsync(new(projectId, new(0)),
+                                                                     _ => Task.FromResult(new ProjectAnalysis(projectId, new(0), compilation, ImmutableDictionary<DocumentId, SemanticModel>.Empty, [])));
 
         documentLease.Dispose();
         projectLease.Dispose();
@@ -157,8 +161,7 @@ public sealed class Phase12AnalysisCacheTests
         using var cache = new LanguageAnalysisCache();
         var service = new MartinLanguageService(cache);
         var projectId = ProjectId.CreateNew();
-        var document = new LanguageDocumentSnapshot(DocumentId.CreateNew(), "main.martin", "func main() {}", new(0))
-        {
+        var document = new LanguageDocumentSnapshot(DocumentId.CreateNew(), "main.martin", "func main() {}", new(0)) {
             ProjectId = projectId
         };
         var project = new LanguageProjectSnapshot(projectId, "p", ".", new(0), [document]);

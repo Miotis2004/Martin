@@ -7,7 +7,7 @@ namespace Martin.ProjectSystem;
 public sealed record MartinProjectCreationOptions
 {
     public required string ProjectName { get; init; }
-    public string? BasePath { get; init; }
+    public string ? BasePath { get; init; }
     public bool Force { get; init; }
     public bool CreateGitIgnore { get; init; } = true;
     public string TargetFramework { get; init; } = "net8.0";
@@ -15,7 +15,7 @@ public sealed record MartinProjectCreationOptions
 
 public sealed record MartinProjectCreationResult
 {
-    public string? ProjectDirectory { get; init; }
+    public string ? ProjectDirectory { get; init; }
     public ImmutableArray<ProjectDiagnostic> Diagnostics { get; init; } = [];
     public bool Success => ProjectDirectory is not null && Diagnostics.All(d => d.Severity != ProjectDiagnosticSeverity.Error);
 }
@@ -95,8 +95,13 @@ public sealed class MartinProjectCreator
         {
             if (!string.IsNullOrEmpty(staging) && Directory.Exists(staging))
             {
-                try { Directory.Delete(staging, recursive: true); }
-                catch { }
+                try
+                {
+                    Directory.Delete(staging, recursive: true);
+                }
+                catch
+                {
+                }
             }
         }
     }

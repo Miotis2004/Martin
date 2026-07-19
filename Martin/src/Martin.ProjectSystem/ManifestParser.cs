@@ -11,8 +11,7 @@ public sealed class ManifestParser
 
     static readonly HashSet<string> KnownTopLevelKeys = new(StringComparer.OrdinalIgnoreCase) { "manifest-version" };
     static readonly HashSet<string> KnownSections = new(StringComparer.OrdinalIgnoreCase) { "package", "target", "sources", "build", "tests" };
-    static readonly Dictionary<string, HashSet<string>> KnownSectionKeys = new(StringComparer.OrdinalIgnoreCase)
-    {
+    static readonly Dictionary<string, HashSet<string>> KnownSectionKeys = new(StringComparer.OrdinalIgnoreCase) {
         ["package"] = new(StringComparer.OrdinalIgnoreCase) { "name", "version" },
         ["target"] = new(StringComparer.OrdinalIgnoreCase) { "kind", "framework", "entry" },
         ["sources"] = new(StringComparer.OrdinalIgnoreCase) { "include", "exclude" },
@@ -29,13 +28,15 @@ public sealed class ManifestParser
             cancellationToken.ThrowIfCancellationRequested();
             var text = File.ReadAllText(path);
             var model = new TomlManifestParser().Parse(path, text, diagnostics, cancellationToken);
-            if (model is null) return null;
+            if (model is null)
+                return null;
 
             cancellationToken.ThrowIfCancellationRequested();
             ValidateUnknownKeys(model, diagnostics, path);
 
             var manifestVersion = RequiredInt(model, model.Top, "manifest-version", diagnostics, path);
-            if (manifestVersion is null) return null;
+            if (manifestVersion is null)
+                return null;
             if (manifestVersion.Value != SupportedManifestVersion)
             {
                 diagnostics.Add(ProjectDiagnostics.Error("MRT4005", $"Manifest schema version '{manifestVersion.Value}' is not supported.", path));
@@ -44,7 +45,8 @@ public sealed class ManifestParser
 
             var package = RequiredSection(model, model.Sections, "package", diagnostics, path);
             var target = RequiredSection(model, model.Sections, "target", diagnostics, path);
-            if (package is null || target is null) return null;
+            if (package is null || target is null)
+                return null;
 
             var nameValue = RequiredString(model, package, "package.name", diagnostics, path);
             var versionValue = RequiredString(model, package, "package.version", diagnostics, path);
@@ -60,14 +62,17 @@ public sealed class ManifestParser
 
             if (nameValue is not null && versionValue is not null && kind is not null && framework is not null && entry is not null)
                 ValidateManifestValues(nameValue, versionValue, kind, framework, entry, diagnostics, path);
-            if (buildOutput is not null) ValidatePath("build.output", buildOutput, diagnostics, path);
-            if (buildIntermediate is not null) ValidatePath("build.intermediate", buildIntermediate, diagnostics, path);
-            foreach (var pattern in sourceInclude.Concat(sourceExclude).Concat(testInclude)) ValidateGlob(pattern, diagnostics, path);
+            if (buildOutput is not null)
+                ValidatePath("build.output", buildOutput, diagnostics, path);
+            if (buildIntermediate is not null)
+                ValidatePath("build.intermediate", buildIntermediate, diagnostics, path);
+            foreach (var pattern in sourceInclude.Concat(sourceExclude).Concat(testInclude))
+                ValidateGlob(pattern, diagnostics, path);
 
-            if (diagnostics.Any(d => d.Severity == ProjectDiagnosticSeverity.Error)) return null;
+            if (diagnostics.Any(d => d.Severity == ProjectDiagnosticSeverity.Error))
+                return null;
 
-            return new MartinManifest
-            {
+            return new MartinManifest {
                 ManifestVersion = manifestVersion.Value,
                 Package = new(nameValue!, versionValue!),
                 Target = new(kind!, framework!, entry!),
@@ -76,7 +81,10 @@ public sealed class ManifestParser
                 Tests = new() { Include = testInclude }
             };
         }
-        catch (OperationCanceledException) { throw; }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch
         {
             diagnostics.Add(ProjectDiagnostics.Error("MRT4002", "Martin.toml could not be parsed.", path));
@@ -133,16 +141,22 @@ public sealed class ManifestParser
 
     static void ValidateManifestValues(string name, string version, string kind, string framework, string entry, ImmutableArray<ProjectDiagnostic>.Builder diagnostics, string path)
     {
-        if (!Regex.IsMatch(name, "^[A-Za-z_][A-Za-z0-9_.-]*$")) diagnostics.Add(ProjectDiagnostics.Error("MRT4013", $"Package name '{name}' is invalid.", path));
-        if (!Regex.IsMatch(version, "^\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$")) diagnostics.Add(ProjectDiagnostics.Error("MRT4014", $"Package version '{version}' is invalid.", path));
-        if (kind != "executable") diagnostics.Add(ProjectDiagnostics.Error("MRT4015", $"Target kind '{kind}' is not supported.", path));
-        if (!Regex.IsMatch(framework, "^net(8|9|10)\\.0$")) diagnostics.Add(ProjectDiagnostics.Error("MRT4004", "Manifest value 'target.framework' is invalid.", path));
-        if (string.IsNullOrWhiteSpace(entry) || !Regex.IsMatch(entry, "^[A-Za-z_][A-Za-z0-9_.]*$")) diagnostics.Add(ProjectDiagnostics.Error("MRT4004", "Manifest value 'target.entry' is invalid.", path));
+        if (!Regex.IsMatch(name, "^[A-Za-z_][A-Za-z0-9_.-]*$"))
+            diagnostics.Add(ProjectDiagnostics.Error("MRT4013", $"Package name '{name}' is invalid.", path));
+        if (!Regex.IsMatch(version, "^\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$"))
+            diagnostics.Add(ProjectDiagnostics.Error("MRT4014", $"Package version '{version}' is invalid.", path));
+        if (kind != "executable")
+            diagnostics.Add(ProjectDiagnostics.Error("MRT4015", $"Target kind '{kind}' is not supported.", path));
+        if (!Regex.IsMatch(framework, "^net(8|9|10)\\.0$"))
+            diagnostics.Add(ProjectDiagnostics.Error("MRT4004", "Manifest value 'target.framework' is invalid.", path));
+        if (string.IsNullOrWhiteSpace(entry) || !Regex.IsMatch(entry, "^[A-Za-z_][A-Za-z0-9_.]*$"))
+            diagnostics.Add(ProjectDiagnostics.Error("MRT4004", "Manifest value 'target.entry' is invalid.", path));
     }
 
     static Dictionary<string, object>? RequiredSection(ParsedTomlManifest model, Dictionary<string, Dictionary<string, object>> sections, string key, ImmutableArray<ProjectDiagnostic>.Builder diagnostics, string path)
     {
-        if (sections.TryGetValue(key, out var value)) return value;
+        if (sections.TryGetValue(key, out var value))
+            return value;
         diagnostics.Add(ErrorForKey(model, key, "MRT4003", $"Required manifest section '{key}' is missing.", path));
         return null;
     }
@@ -150,8 +164,13 @@ public sealed class ManifestParser
     static int? RequiredInt(ParsedTomlManifest model, Dictionary<string, object> section, string key, ImmutableArray<ProjectDiagnostic>.Builder diagnostics, string path)
     {
         var localKey = key.Contains('.', StringComparison.Ordinal) ? key[(key.LastIndexOf('.') + 1)..] : key;
-        if (!section.TryGetValue(localKey, out var value)) { diagnostics.Add(ErrorForKey(model, key, "MRT4003", $"Required manifest key '{key}' is missing.", path)); return null; }
-        if (value is long number && number is >= int.MinValue and <= int.MaxValue) return (int)number;
+        if (!section.TryGetValue(localKey, out var value))
+        {
+            diagnostics.Add(ErrorForKey(model, key, "MRT4003", $"Required manifest key '{key}' is missing.", path));
+            return null;
+        }
+        if (value is long number && number is >= int.MinValue and <= int.MaxValue)
+            return (int)number;
         diagnostics.Add(ErrorForKey(model, key, "MRT4009", $"Manifest key '{key}' must be an integer.", path));
         return null;
     }
@@ -159,8 +178,13 @@ public sealed class ManifestParser
     static string? RequiredString(ParsedTomlManifest model, Dictionary<string, object> section, string key, ImmutableArray<ProjectDiagnostic>.Builder diagnostics, string path)
     {
         var localKey = key.Contains('.', StringComparison.Ordinal) ? key[(key.LastIndexOf('.') + 1)..] : key;
-        if (!section.TryGetValue(localKey, out var value)) { diagnostics.Add(ErrorForKey(model, key, "MRT4003", $"Required manifest key '{key}' is missing.", path)); return null; }
-        if (value is string stringValue) return stringValue;
+        if (!section.TryGetValue(localKey, out var value))
+        {
+            diagnostics.Add(ErrorForKey(model, key, "MRT4003", $"Required manifest key '{key}' is missing.", path));
+            return null;
+        }
+        if (value is string stringValue)
+            return stringValue;
         diagnostics.Add(ErrorForKey(model, key, "MRT4009", $"Manifest key '{key}' must be a string.", path));
         return null;
     }
@@ -168,16 +192,20 @@ public sealed class ManifestParser
     static string? OptionalString(ParsedTomlManifest model, Dictionary<string, object>? section, string key, string defaultValue, ImmutableArray<ProjectDiagnostic>.Builder diagnostics, string path)
     {
         var localKey = key.Contains('.', StringComparison.Ordinal) ? key[(key.LastIndexOf('.') + 1)..] : key;
-        if (section is null || !section.TryGetValue(localKey, out var value)) return defaultValue;
-        if (value is string stringValue) return stringValue;
+        if (section is null || !section.TryGetValue(localKey, out var value))
+            return defaultValue;
+        if (value is string stringValue)
+            return stringValue;
         diagnostics.Add(ErrorForKey(model, key, "MRT4009", $"Manifest key '{key}' must be a string.", path));
         return null;
     }
 
     static ImmutableArray<string> OptionalStringArray(ParsedTomlManifest model, Dictionary<string, Dictionary<string, object>> sections, string section, string key, string[] defaultValue, ImmutableArray<ProjectDiagnostic>.Builder diagnostics, string path)
     {
-        if (!sections.TryGetValue(section, out var map) || !map.TryGetValue(key, out var value)) return defaultValue.ToImmutableArray();
-        if (value is TomlArray array && array.All(item => item is string)) return array.Cast<string>().ToImmutableArray();
+        if (!sections.TryGetValue(section, out var map) || !map.TryGetValue(key, out var value))
+            return defaultValue.ToImmutableArray();
+        if (value is TomlArray array && array.All(item => item is string))
+            return array.Cast<string>().ToImmutableArray();
         diagnostics.Add(ErrorForKey(model, $"{section}.{key}", "MRT4009", $"Manifest key '{section}.{key}' must be an array of strings.", path));
         return [];
     }
@@ -234,7 +262,8 @@ internal static class ManifestLocationScanner
         {
             var line = lines[index];
             var trimmed = line.TrimStart();
-            if (trimmed.Length == 0 || trimmed[0] == '#') continue;
+            if (trimmed.Length == 0 || trimmed[0] == '#')
+                continue;
             if (trimmed.StartsWith("[", StringComparison.Ordinal) && trimmed.Contains(']', StringComparison.Ordinal))
             {
                 section = trimmed[1..trimmed.IndexOf(']')].Trim();
@@ -243,9 +272,11 @@ internal static class ManifestLocationScanner
             }
 
             var equals = line.IndexOf('=');
-            if (equals < 0) continue;
+            if (equals < 0)
+                continue;
             var rawKey = line[..equals].Trim();
-            if (rawKey.Length == 0) continue;
+            if (rawKey.Length == 0)
+                continue;
             var fullKey = string.IsNullOrEmpty(section) ? rawKey : $"{section}.{rawKey}";
             locations.TryAdd(fullKey, (index + 1, line.IndexOf(rawKey, StringComparison.Ordinal) + 1));
         }

@@ -37,9 +37,12 @@ public readonly record struct ErrorEffect
         TypeSymbol? result = null;
         foreach (var effect in effects)
         {
-            if (!effect.CanThrow) continue;
-            if (effect.IsConflicting) return Conflicting;
-            if (result is null) result = effect.ErrorType;
+            if (!effect.CanThrow)
+                continue;
+            if (effect.IsConflicting)
+                return Conflicting;
+            if (result is null)
+                result = effect.ErrorType;
             else if (!TypeIdentity.Create(result).Equals(TypeIdentity.Create(effect.ErrorType!)))
                 return Conflicting;
         }

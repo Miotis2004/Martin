@@ -5,8 +5,7 @@ namespace Martin.CommandLine;
 
 public sealed class JsonDiagnosticRenderer : DiagnosticRenderer
 {
-    static readonly JsonSerializerOptions Options = new()
-    {
+    static readonly JsonSerializerOptions Options = new() {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };

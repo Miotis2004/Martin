@@ -7,7 +7,7 @@ namespace Martin.CodeGeneration.Tests;
 
 public sealed class Phase9SourceMappingTests
 {
-    static CodeGenerationResult Emit(params (string Path, string Source)[] sources)
+    static CodeGenerationResult Emit(params(string Path, string Source)[] sources)
     {
         var trees = sources.Select(s => SyntaxTree.Parse(s.Source, s.Path)).ToArray();
         var program = Compilation.Create(trees).BindProgram();

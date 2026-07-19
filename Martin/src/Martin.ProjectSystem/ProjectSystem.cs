@@ -15,12 +15,14 @@ public static class MartinProjectLoader
 
         cancellationToken.ThrowIfCancellationRequested();
         var manifestPath = locator.ResolveManifest(options, diagnostics);
-        if (manifestPath is null) return new() { Diagnostics = diagnostics.ToImmutable() };
+        if (manifestPath is null)
+            return new() { Diagnostics = diagnostics.ToImmutable() };
 
         var rootDirectory = Path.GetDirectoryName(manifestPath)!;
         cancellationToken.ThrowIfCancellationRequested();
         var manifest = parser.Parse(manifestPath, diagnostics, cancellationToken);
-        if (manifest is null) return new() { Diagnostics = diagnostics.ToImmutable() };
+        if (manifest is null)
+            return new() { Diagnostics = diagnostics.ToImmutable() };
 
         var generatedExcludePatterns = ImmutableArray.Create(
             manifest.Build.Output + "/**",
@@ -47,10 +49,8 @@ public static class MartinProjectLoader
             diagnostics.Add(ProjectDiagnostics.Error("MRT4006", "No Martin source files were found.", manifestPath));
         }
 
-        return new()
-        {
-            Project = new()
-            {
+        return new() {
+            Project = new() {
                 RootDirectory = rootDirectory,
                 ManifestPath = manifestPath,
                 Manifest = manifest,

@@ -87,7 +87,8 @@ public sealed class Phase14GenericIdentityTests
         var factory = new GenericTypeFactory();
 
         var constructions = await Task.WhenAll(Enumerable.Range(0, 32)
-            .Select(_ => Task.Run(() => factory.Construct(definition, [TypeSymbol.String]))));
+                                                   .Select(
+                                                       _ => Task.Run(() => factory.Construct(definition, [TypeSymbol.String]))));
 
         Assert.All(constructions, construction => Assert.Same(constructions[0], construction));
         Assert.All(constructions, construction => Assert.Same(TypeSymbol.String, Assert.Single(construction.Properties).Type));

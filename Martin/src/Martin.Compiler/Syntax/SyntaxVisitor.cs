@@ -3,7 +3,11 @@ namespace Martin.Compiler.Syntax;
 public abstract class SyntaxVisitor
 {
     public virtual void Visit(SyntaxNode? node) => node?.Accept(this);
-    public virtual void DefaultVisit(SyntaxNode node) { foreach (var child in node.GetChildren()) Visit(child); }
+    public virtual void DefaultVisit(SyntaxNode node)
+    {
+        foreach (var child in node.GetChildren())
+            Visit(child);
+    }
     public virtual void VisitWildcardPattern(WildcardPatternSyntax node) => DefaultVisit(node);
     public virtual void VisitIdentifierPattern(IdentifierPatternSyntax node) => DefaultVisit(node);
     public virtual void VisitLiteralPattern(LiteralPatternSyntax node) => DefaultVisit(node);

@@ -54,8 +54,7 @@ public sealed class Phase14GenericLanguageServicesTests
         const string source = "struct Box<T> { let value: T } func main() { let box = Box<Int>(value: 1) let answer = box.value }";
         var (service, workspace, document, project) = Workspace(source);
         var use = source.LastIndexOf("value", StringComparison.Ordinal);
-        var request = new DefinitionRequest
-        {
+        var request = new DefinitionRequest {
             WorkspaceId = workspace.Id,
             WorkspaceVersion = workspace.Version,
             ProjectId = project.Id,
@@ -79,8 +78,7 @@ public sealed class Phase14GenericLanguageServicesTests
     {
         const string source = "struct Box<T> { let value: T }";
         var (service, workspace, document, project) = Workspace(source);
-        var request = new ClassificationRequest
-        {
+        var request = new ClassificationRequest {
             WorkspaceId = workspace.Id,
             WorkspaceVersion = workspace.Version,
             ProjectId = project.Id,
@@ -96,7 +94,7 @@ public sealed class Phase14GenericLanguageServicesTests
     }
 
     private static (MartinLanguageService Service, LanguageWorkspaceSnapshot Workspace,
-        LanguageDocumentSnapshot Document, LanguageProjectSnapshot Project) Workspace(string text)
+                    LanguageDocumentSnapshot Document, LanguageProjectSnapshot Project) Workspace(string text)
     {
         var document = new LanguageDocumentSnapshot(DocumentId.CreateNew(), "main.martin", text, new(0));
         var project = new LanguageProjectSnapshot(ProjectId.CreateNew(), "test", ".", new(0), [document]);

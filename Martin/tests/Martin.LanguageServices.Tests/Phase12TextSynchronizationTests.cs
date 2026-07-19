@@ -28,10 +28,9 @@ public sealed class Phase12TextSynchronizationTests
         await using var workspace = new LanguageWorkspace();
         var projectId = await workspace.OpenProjectAsync(project.Load());
         var id = await workspace.OpenDocumentAsync(projectId, project.Main,
-            SourceText.From("alpha beta gamma\r\n", project.Main), new(4), true);
+                                                   SourceText.From("alpha beta gamma\r\n", project.Main), new(4), true);
 
-        var applied = await workspace.ApplyDocumentChangesAsync(new()
-        {
+        var applied = await workspace.ApplyDocumentChangesAsync(new() {
             DocumentId = id,
             PreviousVersion = new(4),
             NewVersion = new(5),
@@ -40,8 +39,7 @@ public sealed class Phase12TextSynchronizationTests
         Assert.True(applied.IsApplied);
         Assert.Equal("A beta G\r\n", workspace.CurrentSnapshot.FindDocument(id)!.Text);
 
-        var stale = await workspace.ApplyDocumentChangesAsync(new()
-        {
+        var stale = await workspace.ApplyDocumentChangesAsync(new() {
             DocumentId = id,
             PreviousVersion = new(4),
             NewVersion = new(6),
@@ -62,8 +60,7 @@ public sealed class Phase12TextSynchronizationTests
         var projectId = await workspace.OpenProjectAsync(project.Load());
         var id = workspace.CurrentSnapshot.FindProject(projectId)!.Documents.Single().Id;
 
-        var overlap = await workspace.ApplyDocumentChangesAsync(new()
-        {
+        var overlap = await workspace.ApplyDocumentChangesAsync(new() {
             DocumentId = id,
             PreviousVersion = new(0),
             NewVersion = new(1),
@@ -72,8 +69,7 @@ public sealed class Phase12TextSynchronizationTests
         Assert.Equal(DocumentChangeStatus.Rejected, overlap.Status);
         Assert.Equal("MRTLS1006", overlap.DiagnosticCode);
 
-        var oversized = await workspace.ApplyDocumentChangesAsync(new()
-        {
+        var oversized = await workspace.ApplyDocumentChangesAsync(new() {
             DocumentId = id,
             PreviousVersion = new(0),
             NewVersion = new(1),
@@ -94,6 +90,10 @@ public sealed class Phase12TextSynchronizationTests
             File.WriteAllText(Main, text);
         }
         public MartinProject Load() => Assert.IsType<MartinProject>(MartinProjectLoader.Load(new ProjectLoadOptions { ProjectPath = Root }).Project);
-        public void Dispose() { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
+        public void Dispose()
+        {
+            if (Directory.Exists(Root))
+                Directory.Delete(Root, true);
+        }
     }
 }

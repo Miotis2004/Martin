@@ -83,15 +83,13 @@ public sealed class RuntimeDiscoveryTests : IDisposable
         Assert.Contains(result.Diagnostics, d => d.Code == "MRT3221" && d.Message.Contains(corrupt, StringComparison.Ordinal));
     }
 
-    RuntimeDiscoveryResult Discover(string? explicitRuntimePath = null, string? toolDirectory = null, string? configuredRuntimeDirectory = null, string? knownRuntimeDirectory = null)
-        => new RuntimeDiscovery().Discover(new RuntimeDiscoveryOptions
-        {
-            ExplicitRuntimePath = explicitRuntimePath,
-            ToolDirectory = toolDirectory ?? Path.Combine(root, "empty-tool"),
-            ConfiguredRuntimeDirectory = configuredRuntimeDirectory,
-            KnownRuntimeDirectory = knownRuntimeDirectory,
-            StagingRoot = root
-        });
+    RuntimeDiscoveryResult Discover(string? explicitRuntimePath = null, string? toolDirectory = null, string? configuredRuntimeDirectory = null, string? knownRuntimeDirectory = null) => new RuntimeDiscovery().Discover(new RuntimeDiscoveryOptions {
+        ExplicitRuntimePath = explicitRuntimePath,
+        ToolDirectory = toolDirectory ?? Path.Combine(root, "empty-tool"),
+        ConfiguredRuntimeDirectory = configuredRuntimeDirectory,
+        KnownRuntimeDirectory = knownRuntimeDirectory,
+        StagingRoot = root
+    });
 
     static string CopyRuntime(string path)
     {
