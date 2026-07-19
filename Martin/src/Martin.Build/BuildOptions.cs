@@ -23,7 +23,7 @@ public sealed record BuildOptions
     public bool UseAppHost { get; init; } = true;
     public bool EmitPortablePdb { get; init; } = true;
     public bool Deterministic { get; init; } = true;
-    public string? RuntimePath { get; init; }
-    public string? RuntimeDirectory { get; init; }
-    public ProjectBuildStateInputs? BuildStateInputs { get; init; }
+    public string                  ? RuntimePath { get; init; }
+    public string                  ? RuntimeDirectory { get; init; }
+    public ProjectBuildStateInputs ? BuildStateInputs { get; init; }
 }

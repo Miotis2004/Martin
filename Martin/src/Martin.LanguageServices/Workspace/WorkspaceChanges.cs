@@ -2,8 +2,16 @@ namespace Martin.LanguageServices;
 
 public enum LanguageWorkspaceChangeKind
 {
-    ProjectOpened, ProjectClosed, ProjectRefreshed, DocumentAdded, DocumentRemoved,
-    DocumentRenamed, DocumentOpened, DocumentChanged, DocumentSaved, DocumentClosed
+    ProjectOpened,
+    ProjectClosed,
+    ProjectRefreshed,
+    DocumentAdded,
+    DocumentRemoved,
+    DocumentRenamed,
+    DocumentOpened,
+    DocumentChanged,
+    DocumentSaved,
+    DocumentClosed
 }
 
 public sealed record LanguageWorkspaceChange(

@@ -81,13 +81,12 @@ public sealed class BuildArtifactValidatorTests : IDisposable
         Assert.Contains(result.Diagnostics, d => d.Code == "MRT3201");
     }
 
-
     [Fact]
     public void Validate_reports_runtime_compatibility_mismatch()
     {
         var expected = RuntimeDescriptor.FromPath(RuntimePath(), root) with { CompatibilityMajor = RuntimeCompatibility.CompilerCompatibilityMajor + 1 };
 
-        var result = new BuildArtifactValidator().Validate(Options(), expected, [.. CompleteArtifacts()]);
+        var result = new BuildArtifactValidator().Validate(Options(), expected, [..CompleteArtifacts()]);
 
         Assert.False(result.Success);
         Assert.Contains(result.Diagnostics, d => d.Code == "MRT3225");
@@ -142,17 +141,15 @@ public sealed class BuildArtifactValidatorTests : IDisposable
     }
 
     BuildArtifact[] CompleteArtifacts() =>
-    [
-        new(BuildArtifactKind.AppHost, Write("Demo")),
-        new(BuildArtifactKind.ManagedAssembly, Write("Demo.dll")),
-        new(BuildArtifactKind.RuntimeConfiguration, Write("Demo.runtimeconfig.json")),
-        new(BuildArtifactKind.DependencyManifest, Write("Demo.deps.json")),
-        new(BuildArtifactKind.PortablePdb, Write("Demo.pdb")),
-        new(BuildArtifactKind.RuntimeLibrary, RuntimePath()),
+    [new(BuildArtifactKind.AppHost, Write("Demo")),
+     new(BuildArtifactKind.ManagedAssembly, Write("Demo.dll")),
+     new(BuildArtifactKind.RuntimeConfiguration, Write("Demo.runtimeconfig.json")),
+     new(BuildArtifactKind.DependencyManifest, Write("Demo.deps.json")),
+     new(BuildArtifactKind.PortablePdb, Write("Demo.pdb")),
+     new(BuildArtifactKind.RuntimeLibrary, RuntimePath()),
     ];
 
-    ArtifactValidationResult Validate(IEnumerable<BuildArtifact> artifacts, BuildOptions? options = null)
-        => new BuildArtifactValidator().Validate(options ?? Options(), RuntimeDescriptor.FromPath(RuntimePath(), root), [.. artifacts]);
+    ArtifactValidationResult Validate(IEnumerable<BuildArtifact> artifacts, BuildOptions? options = null) => new BuildArtifactValidator().Validate(options ?? Options(), RuntimeDescriptor.FromPath(RuntimePath(), root), [..artifacts]);
 
     string RuntimePath()
     {
@@ -170,8 +167,7 @@ public sealed class BuildArtifactValidatorTests : IDisposable
         return path;
     }
 
-    static BuildOptions Options() => new()
-    {
+    static BuildOptions Options() => new() {
         OutputDirectory = "ignored",
         AssemblyName = "Demo"
     };

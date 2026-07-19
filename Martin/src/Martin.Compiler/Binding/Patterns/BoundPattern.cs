@@ -34,7 +34,8 @@ public abstract class BoundPattern : BoundNode
 }
 
 public sealed class BoundWildcardPattern(TypeSymbol inputType, TextLocation location, bool hasErrors = false)
-    : BoundPattern(inputType, [], location, hasErrors)
+    : BoundPattern
+(inputType, [], location, hasErrors)
 {
     public override BoundNodeKind Kind => BoundNodeKind.WildcardPattern;
     public override bool IsIrrefutable => !HasErrors;
@@ -43,10 +44,11 @@ public sealed class BoundWildcardPattern(TypeSymbol inputType, TextLocation loca
 }
 
 public sealed class BoundLiteralPattern(object? value, TypeSymbol inputType, TextLocation location, bool hasErrors = false)
-    : BoundPattern(inputType, [], location, hasErrors)
+    : BoundPattern
+(inputType, [], location, hasErrors)
 {
     public override BoundNodeKind Kind => BoundNodeKind.LiteralPattern;
-    public object? Value { get; } = value;
+    public object ? Value { get; } = value;
     public override void Accept(BoundPatternVisitor visitor) => visitor.VisitLiteralPattern(this);
     public override TResult Accept<TResult>(BoundPatternVisitor<TResult> visitor) => visitor.VisitLiteralPattern(this);
 }
@@ -57,7 +59,8 @@ public sealed class BoundEnumCasePattern(
     ImmutableArray<BoundPattern> associatedPatterns,
     TextLocation location,
     bool hasErrors = false)
-    : BoundPattern(enumType, CollectVariables(associatedPatterns), location, hasErrors || HasChildErrors(associatedPatterns))
+    : BoundPattern
+(enumType, CollectVariables(associatedPatterns), location, hasErrors || HasChildErrors(associatedPatterns))
 {
     public override BoundNodeKind Kind => BoundNodeKind.EnumCasePattern;
     public TypeSymbol EnumType { get; } = enumType ?? throw new ArgumentNullException(nameof(enumType));
@@ -77,7 +80,8 @@ public sealed class BoundOptionalSomePattern(
     BoundPattern valuePattern,
     TextLocation location,
     bool hasErrors = false)
-    : BoundPattern(optionalType, valuePattern.DeclaredVariables, location, hasErrors || valuePattern.HasErrors)
+    : BoundPattern
+(optionalType, valuePattern.DeclaredVariables, location, hasErrors || valuePattern.HasErrors)
 {
     public override BoundNodeKind Kind => BoundNodeKind.OptionalSomePattern;
     public OptionalTypeSymbol OptionalType { get; } = optionalType;
@@ -87,7 +91,8 @@ public sealed class BoundOptionalSomePattern(
 }
 
 public sealed class BoundNilPattern(OptionalTypeSymbol optionalType, TextLocation location, bool hasErrors = false)
-    : BoundPattern(optionalType, [], location, hasErrors)
+    : BoundPattern
+(optionalType, [], location, hasErrors)
 {
     public override BoundNodeKind Kind => BoundNodeKind.NilPattern;
     public OptionalTypeSymbol OptionalType { get; } = optionalType;
@@ -96,7 +101,8 @@ public sealed class BoundNilPattern(OptionalTypeSymbol optionalType, TextLocatio
 }
 
 public sealed class BoundValueBindingPattern(LocalVariableSymbol variable, TypeSymbol valueType, TextLocation location, bool hasErrors = false)
-    : BoundPattern(valueType, [variable], location, hasErrors)
+    : BoundPattern
+(valueType, [variable], location, hasErrors)
 {
     public override BoundNodeKind Kind => BoundNodeKind.ValueBindingPattern;
     public LocalVariableSymbol Variable { get; } = variable;
@@ -109,10 +115,16 @@ public sealed class BoundValueBindingPattern(LocalVariableSymbol variable, TypeS
 public abstract class BoundPatternVisitor
 {
     public virtual void Visit(BoundPattern pattern) => pattern.Accept(this);
-    protected virtual void DefaultVisit(BoundPattern pattern) { }
+    protected virtual void DefaultVisit(BoundPattern pattern)
+    {
+    }
     public virtual void VisitWildcardPattern(BoundWildcardPattern pattern) => DefaultVisit(pattern);
     public virtual void VisitLiteralPattern(BoundLiteralPattern pattern) => DefaultVisit(pattern);
-    public virtual void VisitEnumCasePattern(BoundEnumCasePattern pattern) { foreach (var child in pattern.AssociatedPatterns) Visit(child); }
+    public virtual void VisitEnumCasePattern(BoundEnumCasePattern pattern)
+    {
+        foreach (var child in pattern.AssociatedPatterns)
+            Visit(child);
+    }
     public virtual void VisitOptionalSomePattern(BoundOptionalSomePattern pattern) => Visit(pattern.ValuePattern);
     public virtual void VisitNilPattern(BoundNilPattern pattern) => DefaultVisit(pattern);
     public virtual void VisitValueBindingPattern(BoundValueBindingPattern pattern) => DefaultVisit(pattern);
@@ -145,28 +157,48 @@ public static class BoundPatternPrinter
     {
         switch (pattern)
         {
-            case BoundWildcardPattern: builder.Append('_'); break;
-            case BoundLiteralPattern literal when literal.Value is string text: builder.Append('"').Append(text.Replace("\\", "\\\\").Replace("\"", "\\\"")).Append('"'); break;
-            case BoundLiteralPattern literal: builder.Append(Convert.ToString(literal.Value, CultureInfo.InvariantCulture)?.ToLowerInvariant() ?? "nil"); break;
-            case BoundEnumCasePattern enumCase:
-                builder.Append('.').Append(enumCase.Case.Name);
-                WriteChildren(enumCase.AssociatedPatterns, builder);
-                break;
-            case BoundOptionalSomePattern some:
-                builder.Append(".some("); Write(some.ValuePattern, builder); builder.Append(')');
-                break;
-            case BoundNilPattern: builder.Append("nil"); break;
-            case BoundValueBindingPattern binding: builder.Append("let ").Append(binding.Variable.Name); break;
-            default: throw new ArgumentOutOfRangeException(nameof(pattern));
+        case BoundWildcardPattern:
+            builder.Append('_');
+            break;
+        case BoundLiteralPattern literal when literal.Value is string text:
+            builder.Append('"').Append(text.Replace("\\", "\\\\").Replace("\"", "\\\"")).Append('"');
+            break;
+        case BoundLiteralPattern literal:
+            builder.Append(Convert.ToString(literal.Value, CultureInfo.InvariantCulture)?.ToLowerInvariant() ?? "nil");
+            break;
+        case BoundEnumCasePattern enumCase:
+            builder.Append('.').Append(enumCase.Case.Name);
+            WriteChildren(enumCase.AssociatedPatterns, builder);
+            break;
+        case BoundOptionalSomePattern some:
+            builder.Append(".some(");
+            Write(some.ValuePattern, builder);
+            builder.Append(')');
+            break;
+        case BoundNilPattern:
+            builder.Append("nil");
+            break;
+        case BoundValueBindingPattern binding:
+            builder.Append("let ").Append(binding.Variable.Name);
+            break;
+        default:
+            throw new ArgumentOutOfRangeException(nameof(pattern));
         }
-        if (pattern.HasErrors) builder.Append(" /* error */");
+        if (pattern.HasErrors)
+            builder.Append(" /* error */");
     }
 
     private static void WriteChildren(ImmutableArray<BoundPattern> children, StringBuilder builder)
     {
-        if (children.IsEmpty) return;
+        if (children.IsEmpty)
+            return;
         builder.Append('(');
-        for (var i = 0; i < children.Length; i++) { if (i > 0) builder.Append(", "); Write(children[i], builder); }
+        for (var i = 0; i < children.Length; i++)
+        {
+            if (i > 0)
+                builder.Append(", ");
+            Write(children[i], builder);
+        }
         builder.Append(')');
     }
 }

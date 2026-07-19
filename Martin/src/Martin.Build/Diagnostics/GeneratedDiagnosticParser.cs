@@ -43,7 +43,7 @@ public sealed class GeneratedDiagnosticParser
     static IEnumerable<string> SplitLines(string text)
     {
         using var reader = new StringReader(text ?? string.Empty);
-        string? line;
+        string ? line;
         while ((line = reader.ReadLine()) is not null)
             yield return line;
     }

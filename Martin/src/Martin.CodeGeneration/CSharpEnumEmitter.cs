@@ -28,7 +28,8 @@ internal sealed class CSharpEnumEmitter(
             }
             writer.WriteLine("}");
         }
-        if (includeSourceDirectives) writer.WriteLine("#line hidden");
+        if (includeSourceDirectives)
+            writer.WriteLine("#line hidden");
         writer.WriteLine();
     }
 
@@ -40,7 +41,7 @@ internal sealed class CSharpEnumEmitter(
             if (hasSemanticEquality)
             {
                 var parameters = string.Join(", ", @case.AssociatedValues.Select((value, index) =>
-                    $"{TypeName(value.Type)} {PayloadMember(index)}"));
+                                                                                     $"{TypeName(value.Type)} {PayloadMember(index)}"));
                 writer.WriteLine($"internal sealed record {names.GetName(@case)}({parameters}) : {OpenTypeName(type)};");
                 return;
             }
@@ -66,8 +67,8 @@ internal sealed class CSharpEnumEmitter(
     }
 
     private string ConstructorParameters(EnumCaseSymbol @case) => string.Join(", ",
-        @case.AssociatedValues.Select((value, index) =>
-            $"{TypeName(value.Type)} {ConstructorParameter(index)}"));
+                                                                              @case.AssociatedValues.Select((value, index) =>
+                                                                                                                $"{TypeName(value.Type)} {ConstructorParameter(index)}"));
 
     private static string ConstructorParameter(int index) => $"value{index}";
 
@@ -83,21 +84,22 @@ internal sealed class CSharpEnumEmitter(
             return false;
 
         var result = enumType.Cases.SelectMany(item => item.AssociatedValues)
-            .All(value => SupportsEquality(value.Type));
+                         .All(value => SupportsEquality(value.Type));
         _equalityStack.Remove(type);
         return result;
     }
 
     private void WriteLineDirective(TextLocation? location)
     {
-        if (!includeSourceDirectives || location is not { } value) return;
+        if (!includeSourceDirectives || location is not {} value)
+            return;
         var path = (value.FilePath ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"");
         writer.WriteLine($"#line {value.StartLinePosition.Line} \"{path}\"");
     }
 
     private static string TypeParameterList(NamedTypeSymbol type) => type.TypeParameters.Length == 0
-        ? string.Empty
-        : "<" + string.Join(", ", type.TypeParameters.Select(parameter => CSharpNameMangler.GetIdentifier(parameter.Name))) + ">";
+                                                                         ? string.Empty
+                                                                         : "<" + string.Join(", ", type.TypeParameters.Select(parameter => CSharpNameMangler.GetIdentifier(parameter.Name))) + ">";
 
     private string TypeName(TypeSymbol type) => CSharpTypeMapper.GetTypeName(type, names.GetName);
 

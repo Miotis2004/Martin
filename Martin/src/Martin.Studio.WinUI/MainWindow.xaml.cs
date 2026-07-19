@@ -79,7 +79,6 @@ public sealed partial class MainWindow : Window
         _editorInitializationTask = InitializeEditorBridgeAsync();
     }
 
-
     private void RegisterShutdownInterception()
     {
         var hwnd = WindowNative.GetWindowHandle(this);
@@ -120,23 +119,40 @@ public sealed partial class MainWindow : Window
 
     private void RegisterKeyboardAccelerators()
     {
-        AddAccelerator(VirtualKey.O, VirtualKeyModifiers.Control, (_, args) => { args.Handled = true; OpenProjectManifest_Click(this, new RoutedEventArgs()); });
-        AddAccelerator(VirtualKey.N, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, (_, args) => { args.Handled = true; NewProject_Click(this, new RoutedEventArgs()); });
-        AddAccelerator(VirtualKey.S, VirtualKeyModifiers.Control, async (_, args) => { args.Handled = true; await ViewModel.SaveCommand.ExecuteAsync(null); });
-        AddAccelerator(VirtualKey.S, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, async (_, args) => { args.Handled = true; await ViewModel.SaveAllCommand.ExecuteAsync(null); });
-        AddAccelerator(VirtualKey.W, VirtualKeyModifiers.Control, (_, args) => { args.Handled = true; ViewModel.CloseActiveDocumentCommand.Execute(null); });
-        AddAccelerator(VirtualKey.B, VirtualKeyModifiers.Control, async (_, args) => { args.Handled = true; await ViewModel.BuildCommand.ExecuteAsync(null); });
-        AddAccelerator(VirtualKey.B, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, (_, args) => { args.Handled = true; ViewModel.CancelBuildCommand.Execute(null); });
-        AddAccelerator(VirtualKey.F5, VirtualKeyModifiers.None, async (_, args) => { args.Handled = true; await ViewModel.RunCommand.ExecuteAsync(null); });
-        AddAccelerator(VirtualKey.F5, VirtualKeyModifiers.Control, async (_, args) => { args.Handled = true; await ViewModel.RunWithoutBuildCommand.ExecuteAsync(null); });
-        AddAccelerator(VirtualKey.F5, VirtualKeyModifiers.Shift, (_, args) => { args.Handled = true; ViewModel.StopCommand.Execute(null); });
-        AddAccelerator(VirtualKey.F8, VirtualKeyModifiers.None, async (_, args) => { args.Handled = true; await NavigateDiagnosticAsync(_diagnosticService.Next(ViewModel.ErrorList.Filter)); });
-        AddAccelerator(VirtualKey.F8, VirtualKeyModifiers.Shift, async (_, args) => { args.Handled = true; await NavigateDiagnosticAsync(_diagnosticService.Previous(ViewModel.ErrorList.Filter)); });
-        AddAccelerator(VirtualKey.Tab, VirtualKeyModifiers.Control, (_, args) => { args.Handled = true; ViewModel.NextDocumentCommand.Execute(null); });
-        AddAccelerator(VirtualKey.Tab, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, (_, args) => { args.Handled = true; ViewModel.PreviousDocumentCommand.Execute(null); });
-        AddAccelerator(VirtualKey.F, VirtualKeyModifiers.Control, (_, args) => { args.Handled = true; ExecuteEditorCommandAndFocus("find"); });
-        AddAccelerator(VirtualKey.H, VirtualKeyModifiers.Control, (_, args) => { args.Handled = true; ExecuteEditorCommandAndFocus("replace"); });
-        AddAccelerator((VirtualKey)0xC0, VirtualKeyModifiers.Control, (_, args) => { args.Handled = true; ToggleOrFocusOutputPanel(); });
+        AddAccelerator(VirtualKey.O, VirtualKeyModifiers.Control, (_, args) =>
+                                                                  { args.Handled = true; OpenProjectManifest_Click(this, new RoutedEventArgs()); });
+        AddAccelerator(VirtualKey.N, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, (_, args) =>
+                                                                                              { args.Handled = true; NewProject_Click(this, new RoutedEventArgs()); });
+        AddAccelerator(VirtualKey.S, VirtualKeyModifiers.Control, async (_, args) =>
+                                                                  { args.Handled = true; await ViewModel.SaveCommand.ExecuteAsync(null); });
+        AddAccelerator(VirtualKey.S, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, async (_, args) =>
+                                                                                              { args.Handled = true; await ViewModel.SaveAllCommand.ExecuteAsync(null); });
+        AddAccelerator(VirtualKey.W, VirtualKeyModifiers.Control, (_, args) =>
+                                                                  { args.Handled = true; ViewModel.CloseActiveDocumentCommand.Execute(null); });
+        AddAccelerator(VirtualKey.B, VirtualKeyModifiers.Control, async (_, args) =>
+                                                                  { args.Handled = true; await ViewModel.BuildCommand.ExecuteAsync(null); });
+        AddAccelerator(VirtualKey.B, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, (_, args) =>
+                                                                                              { args.Handled = true; ViewModel.CancelBuildCommand.Execute(null); });
+        AddAccelerator(VirtualKey.F5, VirtualKeyModifiers.None, async (_, args) =>
+                                                                { args.Handled = true; await ViewModel.RunCommand.ExecuteAsync(null); });
+        AddAccelerator(VirtualKey.F5, VirtualKeyModifiers.Control, async (_, args) =>
+                                                                   { args.Handled = true; await ViewModel.RunWithoutBuildCommand.ExecuteAsync(null); });
+        AddAccelerator(VirtualKey.F5, VirtualKeyModifiers.Shift, (_, args) =>
+                                                                 { args.Handled = true; ViewModel.StopCommand.Execute(null); });
+        AddAccelerator(VirtualKey.F8, VirtualKeyModifiers.None, async (_, args) =>
+                                                                { args.Handled = true; await NavigateDiagnosticAsync(_diagnosticService.Next(ViewModel.ErrorList.Filter)); });
+        AddAccelerator(VirtualKey.F8, VirtualKeyModifiers.Shift, async (_, args) =>
+                                                                 { args.Handled = true; await NavigateDiagnosticAsync(_diagnosticService.Previous(ViewModel.ErrorList.Filter)); });
+        AddAccelerator(VirtualKey.Tab, VirtualKeyModifiers.Control, (_, args) =>
+                                                                    { args.Handled = true; ViewModel.NextDocumentCommand.Execute(null); });
+        AddAccelerator(VirtualKey.Tab, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, (_, args) =>
+                                                                                                { args.Handled = true; ViewModel.PreviousDocumentCommand.Execute(null); });
+        AddAccelerator(VirtualKey.F, VirtualKeyModifiers.Control, (_, args) =>
+                                                                  { args.Handled = true; ExecuteEditorCommandAndFocus("find"); });
+        AddAccelerator(VirtualKey.H, VirtualKeyModifiers.Control, (_, args) =>
+                                                                  { args.Handled = true; ExecuteEditorCommandAndFocus("replace"); });
+        AddAccelerator((VirtualKey)0xC0, VirtualKeyModifiers.Control, (_, args) =>
+                                                                      { args.Handled = true; ToggleOrFocusOutputPanel(); });
     }
 
     private void AddAccelerator(VirtualKey key, VirtualKeyModifiers modifiers, TypedEventHandler<KeyboardAccelerator, KeyboardAcceleratorInvokedEventArgs> handler)
@@ -220,9 +236,9 @@ public sealed partial class MainWindow : Window
         BottomPanelRow.Height = visible ? new GridLength(Math.Clamp(GetBottomPanelHeight(), 120, 420)) : new GridLength(0);
     }
 
-    private double GetProjectExplorerWidth() => ProjectExplorerColumn.ActualWidth > 0 ? ProjectExplorerColumn.ActualWidth : (ProjectExplorerColumn.Width.Value > 0 ? ProjectExplorerColumn.Width.Value : _lastProjectExplorerWidth);
+    private double GetProjectExplorerWidth() => ProjectExplorerColumn.ActualWidth > 0? ProjectExplorerColumn.ActualWidth : (ProjectExplorerColumn.Width.Value > 0 ? ProjectExplorerColumn.Width.Value : _lastProjectExplorerWidth);
 
-    private double GetBottomPanelHeight() => BottomPanelRow.ActualHeight > 0 ? BottomPanelRow.ActualHeight : (BottomPanelRow.Height.Value > 0 ? BottomPanelRow.Height.Value : _lastBottomPanelHeight);
+    private double GetBottomPanelHeight() => BottomPanelRow.ActualHeight > 0? BottomPanelRow.ActualHeight : (BottomPanelRow.Height.Value > 0 ? BottomPanelRow.Height.Value : _lastBottomPanelHeight);
 
     public MainWindowViewModel ViewModel { get; }
 
@@ -308,7 +324,8 @@ public sealed partial class MainWindow : Window
     private async Task ApplyEditorChangesCoreAsync(EditorTextChangedPayload payload)
     {
         var document = _workspaceService.Workspace.OpenDocuments.FirstOrDefault(d => d.Id == payload.DocumentId);
-        if (document is null) return;
+        if (document is null)
+            return;
 
         var updatedText = document.Text;
         foreach (var change in payload.Changes.OrderByDescending(change => change.RangeOffset))
@@ -319,7 +336,8 @@ public sealed partial class MainWindow : Window
         }
 
         var changes = payload.Changes.Select(change => new Martin.LanguageServices.TextChange(
-            new Martin.Compiler.Text.TextSpan(change.RangeOffset, change.RangeLength), change.Text)).ToImmutableArray();
+                                                 new Martin.Compiler.Text.TextSpan(change.RangeOffset, change.RangeLength), change.Text))
+                          .ToImmutableArray();
         var result = await _languageProvider.ApplyEditorChangesAsync(payload.DocumentId, new(payload.PreviousVersion), new(payload.NewVersion), changes);
 
         ViewModel.ApplyEditorTextChange(payload.DocumentId, updatedText);
@@ -374,7 +392,8 @@ public sealed partial class MainWindow : Window
             BottomPanelRow.Height = new GridLength(_lastBottomPanelHeight);
             SetBottomPanelVisible(session.BottomPanelVisible);
             var tabIndex = string.Equals(session.BottomPanelTab, "Error List", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
-            if (BottomPanelTabs.TabItems.Count > tabIndex) BottomPanelTabs.SelectedIndex = tabIndex;
+            if (BottomPanelTabs.TabItems.Count > tabIndex)
+                BottomPanelTabs.SelectedIndex = tabIndex;
 
             var hwnd = WindowNative.GetWindowHandle(this);
             var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
@@ -384,7 +403,8 @@ public sealed partial class MainWindow : Window
             var width = Math.Clamp(session.WindowPlacement.Width, 640, 3840);
             var height = Math.Clamp(session.WindowPlacement.Height, 480, 2160);
             appWindow.Resize(new Windows.Graphics.SizeInt32((int)width, (int)height));
-            if (session.WindowPlacement.IsMaximized && appWindow.Presenter is OverlappedPresenter presenter) presenter.Maximize();
+            if (session.WindowPlacement.IsMaximized && appWindow.Presenter is OverlappedPresenter presenter)
+                presenter.Maximize();
         }
         catch (Exception ex)
         {
@@ -402,8 +422,7 @@ public sealed partial class MainWindow : Window
             var appWindow = AppWindow.GetFromWindowId(windowId);
             var maximized = appWindow.Presenter is OverlappedPresenter presenter && presenter.State == OverlappedPresenterState.Maximized;
             var bottomTab = BottomPanelTabs.SelectedIndex == 1 ? "Error List" : "Output";
-            await _sessionService.SaveAsync(current with
-            {
+            await _sessionService.SaveAsync(current with {
                 BottomPanelTab = bottomTab,
                 BottomPanelVisible = BottomPanel.Visibility == Visibility.Visible && BottomPanelRow.Height.Value > 0,
                 ProjectExplorerWidth = GetProjectExplorerWidth(),
@@ -417,7 +436,6 @@ public sealed partial class MainWindow : Window
             _logService.Log(StudioLogCategory.Session, OutputSeverity.Warning, "SaveWindowAndPanelState", "Window and panel state could not be saved.", ex.Message, ex);
         }
     }
-
 
     private async void NewProject_Click(object sender, RoutedEventArgs e)
     {
@@ -446,8 +464,7 @@ public sealed partial class MainWindow : Window
         panel.Children.Add(openBox);
         panel.Children.Add(validationText);
 
-        var dialog = new ContentDialog
-        {
+        var dialog = new ContentDialog {
             Title = "New Martin Project",
             Content = panel,
             PrimaryButtonText = "Create",
@@ -470,8 +487,7 @@ public sealed partial class MainWindow : Window
         if (response != ContentDialogResult.Primary)
             return;
 
-        var request = new StudioProjectCreationRequest
-        {
+        var request = new StudioProjectCreationRequest {
             ProjectName = nameBox.Text.Trim(),
             BaseDirectory = locationBox.Text.Trim(),
             TargetFramework = "net8.0",
@@ -565,7 +581,7 @@ public sealed partial class MainWindow : Window
         if (_syncingDocumentTabs)
             return;
 
-        if (DocumentTabView.SelectedItem is TabViewItem { Tag: DocumentViewModel document })
+        if (DocumentTabView.SelectedItem is TabViewItem { Tag : DocumentViewModel document })
         {
             ViewModel.ActivateDocumentCommand.Execute(document.Id);
             _ = _editorHost.ActivateDocumentAsync(document.Id);
@@ -574,7 +590,7 @@ public sealed partial class MainWindow : Window
 
     private async void DocumentTabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
     {
-        if (args.Tab is TabViewItem { Tag: DocumentViewModel document } && ViewModel.CloseDocumentCommand.CanExecute(document.Id))
+        if (args.Tab is TabViewItem { Tag : DocumentViewModel document } && ViewModel.CloseDocumentCommand.CanExecute(document.Id))
             await ViewModel.CloseDocumentCommand.ExecuteAsync(document.Id);
     }
 
@@ -598,23 +614,20 @@ public sealed partial class MainWindow : Window
             DocumentTabView.TabItems.Clear();
             foreach (var document in ViewModel.DocumentTabs.Documents)
             {
-                var tab = new TabViewItem
-                {
+                var tab = new TabViewItem {
                     IsClosable = true,
                     Tag = document
                 };
                 tab.SetBinding(
                     TabViewItem.HeaderProperty,
-                    new Microsoft.UI.Xaml.Data.Binding
-                    {
+                    new Microsoft.UI.Xaml.Data.Binding {
                         Source = document,
                         Path = new PropertyPath(nameof(DocumentViewModel.Header)),
                         Mode = Microsoft.UI.Xaml.Data.BindingMode.OneWay
                     });
                 tab.SetBinding(
                     AutomationProperties.NameProperty,
-                    new Microsoft.UI.Xaml.Data.Binding
-                    {
+                    new Microsoft.UI.Xaml.Data.Binding {
                         Source = document,
                         Path = new PropertyPath(nameof(DocumentViewModel.AccessibilityName)),
                         Mode = Microsoft.UI.Xaml.Data.BindingMode.OneWay
@@ -637,8 +650,8 @@ public sealed partial class MainWindow : Window
         {
             var activeId = ViewModel.DocumentTabs.ActiveDocument?.Id;
             DocumentTabView.SelectedItem = DocumentTabView.TabItems
-                .OfType<TabViewItem>()
-                .FirstOrDefault(tab => tab.Tag is DocumentViewModel document && document.Id == activeId);
+                                               .OfType<TabViewItem>()
+                                               .FirstOrDefault(tab => tab.Tag is DocumentViewModel document && document.Id == activeId);
         }
         finally
         {
@@ -679,7 +692,7 @@ public sealed partial class MainWindow : Window
         await _languageProvider.SynchronizeAsync(_workspaceService.Workspace);
         foreach (var document in _workspaceService.Workspace.OpenDocuments.ToArray())
             await _editorHost.OpenDocumentAsync(document);
-        if (_workspaceService.Workspace.ActiveDocument is { } active)
+        if (_workspaceService.Workspace.ActiveDocument is {} active)
             await _editorHost.ActivateDocumentAsync(active.Id);
     }
 
@@ -687,8 +700,14 @@ public sealed partial class MainWindow : Window
     {
         foreach (var document in _workspaceService.Workspace.OpenDocuments.ToArray())
         {
-            try { await _editorHost.SetDiagnosticsAsync(document.Id, _diagnosticService.ToEditor(document.Id)); }
-            catch (Exception ex) { _logService.Log(StudioLogCategory.Diagnostics, OutputSeverity.Warning, "ApplyEditorDiagnostics", "Could not apply editor diagnostics.", ex.Message, ex); }
+            try
+            {
+                await _editorHost.SetDiagnosticsAsync(document.Id, _diagnosticService.ToEditor(document.Id));
+            }
+            catch (Exception ex)
+            {
+                _logService.Log(StudioLogCategory.Diagnostics, OutputSeverity.Warning, "ApplyEditorDiagnostics", "Could not apply editor diagnostics.", ex.Message, ex);
+            }
         }
     }
 
@@ -723,12 +742,12 @@ public sealed partial class MainWindow : Window
 
     private void DiagnosticFilter_Changed(object sender, object e)
     {
-        if (ViewModel is null) return;
+        if (ViewModel is null)
+            return;
         ImmutableHashSet<OutputSeverity>? severities = null;
         if (DiagnosticSeverityFilter?.SelectedItem is ComboBoxItem item && item.Content is string severityText && severityText != "All")
         {
-            severities = severityText switch
-            {
+            severities = severityText switch {
                 "Error" => ImmutableHashSet.Create(OutputSeverity.Error),
                 "Warning" => ImmutableHashSet.Create(OutputSeverity.Warning),
                 "Info" => ImmutableHashSet.Create(OutputSeverity.Info),
@@ -737,8 +756,8 @@ public sealed partial class MainWindow : Window
         }
 
         var sources = string.IsNullOrWhiteSpace(DiagnosticSourceFilter?.Text)
-            ? null
-            : DiagnosticSourceFilter.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
+                          ? null
+                          : DiagnosticSourceFilter.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
         var search = string.IsNullOrWhiteSpace(DiagnosticSearchBox?.Text) ? null : DiagnosticSearchBox.Text;
         ViewModel.ErrorList.SetFilter(new DiagnosticFilter(severities, sources, search));
     }

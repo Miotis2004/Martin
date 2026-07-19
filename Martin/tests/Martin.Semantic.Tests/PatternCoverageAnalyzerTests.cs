@@ -15,9 +15,9 @@ public sealed class PatternCoverageAnalyzerTests
     public void BooleanCoverageIsRecursiveAndFindsDuplicateCases()
     {
         var result = Analyze(TypeSymbol.Bool,
-            Literal(true, TypeSymbol.Bool),
-            Literal(true, TypeSymbol.Bool),
-            Literal(false, TypeSymbol.Bool));
+                             Literal(true, TypeSymbol.Bool),
+                             Literal(true, TypeSymbol.Bool),
+                             Literal(false, TypeSymbol.Bool));
 
         Assert.True(result.IsExhaustive);
         Assert.Equal(1, Assert.Single(result.UnreachableCases).SourceOrdinal);
@@ -30,10 +30,10 @@ public sealed class PatternCoverageAnalyzerTests
         var inner = new OptionalTypeSymbol(TypeSymbol.Bool);
         var outer = new OptionalTypeSymbol(inner);
         var result = Analyze(outer,
-            new BoundNilPattern(outer, Location),
-            new BoundOptionalSomePattern(outer, new BoundNilPattern(inner, Location), Location),
-            new BoundOptionalSomePattern(outer,
-                new BoundOptionalSomePattern(inner, Literal(true, TypeSymbol.Bool), Location), Location));
+                             new BoundNilPattern(outer, Location),
+                             new BoundOptionalSomePattern(outer, new BoundNilPattern(inner, Location), Location),
+                             new BoundOptionalSomePattern(outer,
+                                                          new BoundOptionalSomePattern(inner, Literal(true, TypeSymbol.Bool), Location), Location));
 
         Assert.False(result.IsExhaustive);
         Assert.Equal([".some(.some(false))"], Render(result));
@@ -46,14 +46,14 @@ public sealed class PatternCoverageAnalyzerTests
     {
         var choice = new EnumTypeSymbol("Choice", []);
         var value = new EnumCaseSymbol("value", choice,
-            [new ParameterSymbol("flag", null, 0, TypeSymbol.Bool, [])], []);
+                                       [new ParameterSymbol("flag", null, 0, TypeSymbol.Bool, [])], []);
         var empty = new EnumCaseSymbol("empty", choice, [], []);
         choice.AddMember(value);
         choice.AddMember(empty);
 
         var result = Analyze(choice,
-            new BoundEnumCasePattern(choice, value, [Literal(true, TypeSymbol.Bool)], Location),
-            new BoundEnumCasePattern(choice, empty, [], Location));
+                             new BoundEnumCasePattern(choice, value, [Literal(true, TypeSymbol.Bool)], Location),
+                             new BoundEnumCasePattern(choice, empty, [], Location));
 
         Assert.False(result.IsExhaustive);
         Assert.Equal([".value(false)"], Render(result));
@@ -64,9 +64,9 @@ public sealed class PatternCoverageAnalyzerTests
     {
         var optional = new OptionalTypeSymbol(TypeSymbol.Bool);
         var result = Analyze(optional,
-            new BoundOptionalSomePattern(optional, new BoundWildcardPattern(TypeSymbol.Bool, Location), Location),
-            new BoundOptionalSomePattern(optional, Literal(true, TypeSymbol.Bool), Location),
-            new BoundNilPattern(optional, Location));
+                             new BoundOptionalSomePattern(optional, new BoundWildcardPattern(TypeSymbol.Bool, Location), Location),
+                             new BoundOptionalSomePattern(optional, Literal(true, TypeSymbol.Bool), Location),
+                             new BoundNilPattern(optional, Location));
 
         Assert.True(result.IsExhaustive);
         Assert.Equal(1, Assert.Single(result.UnreachableCases).SourceOrdinal);
@@ -75,8 +75,7 @@ public sealed class PatternCoverageAnalyzerTests
     [Fact]
     public void OpenScalarRequiresWildcardAndWitnessCountIsBounded()
     {
-        var result = new PatternCoverageAnalyzer(maximumWitnesses: 1).Analyze(TypeSymbol.Int,
-            [Literal(1, TypeSymbol.Int), Literal(2, TypeSymbol.Int)]);
+        var result = new PatternCoverageAnalyzer(maximumWitnesses: 1).Analyze(TypeSymbol.Int, [Literal(1, TypeSymbol.Int), Literal(2, TypeSymbol.Int)]);
 
         Assert.False(result.IsExhaustive);
         Assert.Equal(["_"], Render(result));
@@ -89,7 +88,7 @@ public sealed class PatternCoverageAnalyzerTests
     public void ErrorPatternsNeverProveCoverage()
     {
         var result = Analyze(TypeSymbol.Bool,
-            new BoundWildcardPattern(TypeSymbol.Bool, Location, hasErrors: true));
+                             new BoundWildcardPattern(TypeSymbol.Bool, Location, hasErrors: true));
 
         Assert.False(result.IsExhaustive);
         Assert.Equal(["false", "true"], Render(result));
@@ -100,10 +99,11 @@ public sealed class PatternCoverageAnalyzerTests
     public void UnreachableOutputIsBoundedForLargeMalformedSwitches()
     {
         var patterns = Enumerable.Repeat<BoundPattern>(
-            new BoundWildcardPattern(TypeSymbol.Bool, Location), 1_000).ToImmutableArray();
+                                     new BoundWildcardPattern(TypeSymbol.Bool, Location), 1_000)
+                           .ToImmutableArray();
 
         var result = new PatternCoverageAnalyzer(maximumUnreachableCases: 16)
-            .Analyze(TypeSymbol.Bool, patterns);
+                         .Analyze(TypeSymbol.Bool, patterns);
 
         Assert.True(result.IsExhaustive);
         Assert.Equal(16, result.UnreachableCases.Length);

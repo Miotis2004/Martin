@@ -38,14 +38,13 @@ public sealed record BuildFreshnessResult
 {
     public required BuildFreshnessStatus Status { get; init; }
     public string Reason { get; init; } = string.Empty;
-    public string? EntryPointPath { get; init; }
+    public string ? EntryPointPath { get; init; }
     public bool IsFresh => Status == BuildFreshnessStatus.Fresh;
 }
 
 public sealed class BuildFreshnessChecker
 {
-    static readonly JsonSerializerOptions JsonOptions = new()
-    {
+    static readonly JsonSerializerOptions JsonOptions = new() {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
@@ -61,7 +60,7 @@ public sealed class BuildFreshnessChecker
         if (!File.Exists(statePath))
             return Stale(BuildFreshnessStatus.MissingState, "build-state file is missing");
 
-        BuildStateDocument? state;
+        BuildStateDocument ? state;
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -121,8 +120,8 @@ public sealed class BuildFreshnessChecker
             var info = new FileInfo(artifactPath);
             if (info.Length != artifact.Length || Sha256(artifactPath, cancellationToken) != artifact.Sha256)
                 return artifact.Kind == BuildArtifactKind.RuntimeLibrary
-                    ? Stale(BuildFreshnessStatus.RuntimeChanged, "runtime artifact changed")
-                    : Stale(BuildFreshnessStatus.ArtifactMissing, $"artifact '{artifact.RelativePath}' changed");
+                           ? Stale(BuildFreshnessStatus.RuntimeChanged, "runtime artifact changed")
+                           : Stale(BuildFreshnessStatus.ArtifactMissing, $"artifact '{artifact.RelativePath}' changed");
         }
 
         return new BuildFreshnessResult { Status = BuildFreshnessStatus.Fresh, EntryPointPath = entryPoint };

@@ -35,7 +35,6 @@ public sealed class MartinBuildService : IMartinBuildService
         if (program.Diagnostics.Any(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error))
             return new() { Diagnostics = program.Diagnostics };
 
-
         CodeGenerationResult emit;
         try
         {
@@ -84,16 +83,15 @@ public sealed class MartinBuildService : IMartinBuildService
             await File.WriteAllTextAsync(proj, ProjectXml(options, runtime.AssemblyPath), cancellationToken);
 
             var build = await buildRunner.RunAsync(
-                new DotNetBuildRequest
-                {
+                new DotNetBuildRequest {
                     ProjectPath = proj,
                     WorkingDirectory = project,
                     Configuration = options.Configuration,
                     AdditionalArguments =
-                    [
-                        $"-p:OutputPath={EnsureTrailingSeparator(dotnetOutput)}",
-                        "-p:AppendTargetFrameworkToOutputPath=false"
-                    ]
+                        [
+                            $"-p:OutputPath={EnsureTrailingSeparator(dotnetOutput)}",
+                            "-p:AppendTargetFrameworkToOutputPath=false"
+                        ]
                 },
                 cancellationToken);
 
@@ -108,8 +106,7 @@ public sealed class MartinBuildService : IMartinBuildService
 
             if (!build.Started)
             {
-                return new()
-                {
+                return new() {
                     Diagnostics = [Diag("MRT3011", "The .NET build process could not be started. Verify that a supported .NET SDK is installed and that 'dotnet' is available on PATH.")],
                     StandardOutput = stdout,
                     StandardError = stderr,
@@ -125,8 +122,7 @@ public sealed class MartinBuildService : IMartinBuildService
                 if (diagnostics.IsDefaultOrEmpty)
                     diagnostics = [Diag("MRT3007", "The generated .NET project failed to build.")];
 
-                return new()
-                {
+                return new() {
                     Diagnostics = diagnostics,
                     ProcessExitCode = build.ExitCode,
                     StandardOutput = stdout,
@@ -157,10 +153,8 @@ public sealed class MartinBuildService : IMartinBuildService
             if (!validation.Success)
                 return new() { Diagnostics = validation.Diagnostics, StandardOutput = stdout, StandardError = stderr, ProcessExitCode = build.ExitCode };
 
-            var stagedEntryPoint = collector.Artifacts.FirstOrDefault(a => a.Kind == BuildArtifactKind.AppHost)?.Path
-                ?? collector.Artifacts.FirstOrDefault(a => a.Kind == BuildArtifactKind.ManagedAssembly)?.Path;
-            var stagedResult = new BuildResult
-            {
+            var stagedEntryPoint = collector.Artifacts.FirstOrDefault(a => a.Kind == BuildArtifactKind.AppHost)?.Path ?? collector.Artifacts.FirstOrDefault(a => a.Kind == BuildArtifactKind.ManagedAssembly)?.Path;
+            var stagedResult = new BuildResult {
                 Success = true,
                 OutputDirectory = Path.GetFullPath(staging),
                 EntryPointPath = stagedEntryPoint,
@@ -186,15 +180,14 @@ public sealed class MartinBuildService : IMartinBuildService
             ApplyExecutablePermissions(options.OutputDirectory, options);
 
             var outputArtifacts = new BuildArtifactCollector().Collect(
-                options.OutputDirectory,
-                options,
-                options.KeepGeneratedFiles ? Path.Combine(options.OutputDirectory, Path.GetFileName(src)) : null,
-                options.KeepGeneratedFiles ? Path.Combine(options.OutputDirectory, Path.GetFileName(proj)) : null).Artifacts;
-            var entryPoint = outputArtifacts.FirstOrDefault(a => a.Kind == BuildArtifactKind.AppHost)?.Path
-                ?? outputArtifacts.FirstOrDefault(a => a.Kind == BuildArtifactKind.ManagedAssembly)?.Path;
+                                                                  options.OutputDirectory,
+                                                                  options,
+                                                                  options.KeepGeneratedFiles ? Path.Combine(options.OutputDirectory, Path.GetFileName(src)) : null,
+                                                                  options.KeepGeneratedFiles ? Path.Combine(options.OutputDirectory, Path.GetFileName(proj)) : null)
+                                      .Artifacts;
+            var entryPoint = outputArtifacts.FirstOrDefault(a => a.Kind == BuildArtifactKind.AppHost)?.Path ?? outputArtifacts.FirstOrDefault(a => a.Kind == BuildArtifactKind.ManagedAssembly)?.Path;
 
-            return new()
-            {
+            return new() {
                 Success = true,
                 OutputDirectory = Path.GetFullPath(options.OutputDirectory),
                 EntryPointPath = entryPoint,
@@ -220,15 +213,13 @@ public sealed class MartinBuildService : IMartinBuildService
         }
     }
 
-
     static ImmutableArray<Diagnostic> WriteBuildStateToStaging(BuildOptions options, BuildResult stagedResult, string staging, CancellationToken cancellationToken)
     {
         try
         {
             var inputs = options.BuildStateInputs!;
             var store = new BuildStateStore();
-            var document = store.CreateDocument(new BuildStateInputs
-            {
+            var document = store.CreateDocument(new BuildStateInputs {
                 ProjectRoot = inputs.ProjectRoot,
                 ManifestPath = inputs.ManifestPath,
                 SourceFiles = inputs.SourceFiles,
@@ -237,7 +228,8 @@ public sealed class MartinBuildService : IMartinBuildService
                 Configuration = options.Configuration,
                 TargetFramework = options.TargetFramework,
                 AssemblyName = options.AssemblyName
-            }, stagedResult, cancellationToken);
+            },
+                                                stagedResult, cancellationToken);
             var write = store.Write(document, staging, cancellationToken);
             return write.Diagnostics;
         }
@@ -257,15 +249,26 @@ public sealed class MartinBuildService : IMartinBuildService
             File.Copy(file, Path.Combine(staging, Path.GetFileName(file)), overwrite: true);
     }
 
-    static BuildResult Cancelled(string standardOutput = "", string standardError = "") => new()
-    {
+    static BuildResult Cancelled(string standardOutput = "", string standardError = "") => new() {
         Status = BuildStatus.Cancelled,
         Diagnostics = [Diag("MRT3010", "The .NET build process was cancelled.")],
         StandardOutput = standardOutput,
         StandardError = standardError
     };
 
-    static ImmutableArray<Diagnostic> Validate(BuildOptions o) { var b = ImmutableArray.CreateBuilder<Diagnostic>(); if (string.IsNullOrWhiteSpace(o.OutputDirectory)) b.Add(Diag("MRT3008", "The output directory '' could not be created.")); if (string.IsNullOrWhiteSpace(o.AssemblyName) || !Regex.IsMatch(o.AssemblyName, "^[A-Za-z_][A-Za-z0-9_.-]*$")) b.Add(Diag("MRT3016", "Invalid assembly name.")); if (o.OutputKind != OutputKind.ConsoleApplication) b.Add(Diag("MRT3014", $"Unsupported output kind '{o.OutputKind}'.")); if (!Regex.IsMatch(o.TargetFramework, "^net(8|9|10)\\.0$")) b.Add(Diag("MRT3015", $"Target framework '{o.TargetFramework}' is not supported.")); return b.ToImmutable(); }
+    static ImmutableArray<Diagnostic> Validate(BuildOptions o)
+    {
+        var b = ImmutableArray.CreateBuilder<Diagnostic>();
+        if (string.IsNullOrWhiteSpace(o.OutputDirectory))
+            b.Add(Diag("MRT3008", "The output directory '' could not be created."));
+        if (string.IsNullOrWhiteSpace(o.AssemblyName) || !Regex.IsMatch(o.AssemblyName, "^[A-Za-z_][A-Za-z0-9_.-]*$"))
+            b.Add(Diag("MRT3016", "Invalid assembly name."));
+        if (o.OutputKind != OutputKind.ConsoleApplication)
+            b.Add(Diag("MRT3014", $"Unsupported output kind '{o.OutputKind}'."));
+        if (!Regex.IsMatch(o.TargetFramework, "^net(8|9|10)\\.0$"))
+            b.Add(Diag("MRT3015", $"Target framework '{o.TargetFramework}' is not supported."));
+        return b.ToImmutable();
+    }
     static string ProjectXml(BuildOptions o, string runtime) => new XDocument(new XElement("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"), new XElement("PropertyGroup", new XElement("OutputType", "Exe"), new XElement("TargetFramework", o.TargetFramework), new XElement("AssemblyName", o.AssemblyName), new XElement("RootNamespace", "Martin.Generated"), new XElement("ImplicitUsings", "disable"), new XElement("Nullable", "enable"), new XElement("Deterministic", o.Deterministic.ToString().ToLowerInvariant()), new XElement("DebugType", o.EmitPortablePdb ? "portable" : "none"), new XElement("UseAppHost", o.UseAppHost.ToString().ToLowerInvariant()), new XElement("LangVersion", "latest")), new XElement("ItemGroup", new XElement("Compile", new XAttribute("Include", Path.Combine("..", "generated", "Program.g.cs"))), new XElement("Reference", new XAttribute("Include", "Martin.Runtime"), new XElement("HintPath", runtime), new XElement("Private", "true"))))).ToString();
     static ImmutableArray<Diagnostic> PublishStaging(string staging, string outputDirectory)
     {

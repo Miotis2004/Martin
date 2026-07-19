@@ -26,7 +26,8 @@ public sealed class CSharpLowerer
 
         foreach (var function in functions)
         {
-            if (function.IsBuiltIn) continue;
+            if (function.IsBuiltIn)
+                continue;
             var body = program.FunctionBodies[function];
             loweredFunctions.Add(LowerFunction(function, body));
         }
@@ -53,8 +54,7 @@ public sealed class CSharpLowerer
             loweredMethods.ToImmutable(),
             loweredInitializers.ToImmutable(),
             program.Conformances,
-            FindEntry(functions)
-        );
+            FindEntry(functions));
 
         return loweredProgram;
     }
@@ -104,72 +104,72 @@ public sealed class CSharpLowerer
 
         switch (statement.Kind)
         {
-            case BoundNodeKind.BlockStatement:
-                statements.Add(LowerBlockStatement((BoundBlockStatement)statement, returnType));
-                break;
-            case BoundNodeKind.VariableDeclaration:
-                var decl = (BoundVariableDeclaration)statement;
-                statements.Add(new BoundVariableDeclaration(decl.Variable, LowerExpression(decl.Initializer)) { Location = statement.Location });
-                break;
-            case BoundNodeKind.ExpressionStatement:
-                var exprStmt = (BoundExpressionStatement)statement;
-                statements.Add(new BoundExpressionStatement(LowerExpression(exprStmt.Expression)) { Location = statement.Location });
-                break;
-            case BoundNodeKind.IfStatement:
-                var ifStmt = (BoundIfStatement)statement;
-                var thenStatements = ImmutableArray.CreateBuilder<BoundStatement>();
-                LowerStatement(ifStmt.ThenStatement, thenStatements, returnType);
-                var thenBlock = thenStatements.Count == 1 ? thenStatements[0] : new BoundBlockStatement(thenStatements.ToImmutable());
+        case BoundNodeKind.BlockStatement:
+            statements.Add(LowerBlockStatement((BoundBlockStatement)statement, returnType));
+            break;
+        case BoundNodeKind.VariableDeclaration:
+            var decl = (BoundVariableDeclaration)statement;
+            statements.Add(new BoundVariableDeclaration(decl.Variable, LowerExpression(decl.Initializer)) { Location = statement.Location });
+            break;
+        case BoundNodeKind.ExpressionStatement:
+            var exprStmt = (BoundExpressionStatement)statement;
+            statements.Add(new BoundExpressionStatement(LowerExpression(exprStmt.Expression)) { Location = statement.Location });
+            break;
+        case BoundNodeKind.IfStatement:
+            var ifStmt = (BoundIfStatement)statement;
+            var thenStatements = ImmutableArray.CreateBuilder<BoundStatement>();
+            LowerStatement(ifStmt.ThenStatement, thenStatements, returnType);
+            var thenBlock = thenStatements.Count == 1 ? thenStatements[0] : new BoundBlockStatement(thenStatements.ToImmutable());
 
-                BoundStatement? elseBlock = null;
-                if (ifStmt.ElseStatement != null)
-                {
-                    var elseStatements = ImmutableArray.CreateBuilder<BoundStatement>();
-                    LowerStatement(ifStmt.ElseStatement, elseStatements, returnType);
-                    elseBlock = elseStatements.Count == 1 ? elseStatements[0] : new BoundBlockStatement(elseStatements.ToImmutable());
-                }
+            BoundStatement? elseBlock = null;
+            if (ifStmt.ElseStatement != null)
+            {
+                var elseStatements = ImmutableArray.CreateBuilder<BoundStatement>();
+                LowerStatement(ifStmt.ElseStatement, elseStatements, returnType);
+                elseBlock = elseStatements.Count == 1 ? elseStatements[0] : new BoundBlockStatement(elseStatements.ToImmutable());
+            }
 
-                statements.Add(new BoundIfStatement(LowerExpression(ifStmt.Condition), thenBlock, elseBlock) { Location = statement.Location });
-                break;
-            case BoundNodeKind.WhileStatement:
-                var whileStmt = (BoundWhileStatement)statement;
-                var bodyStatements = ImmutableArray.CreateBuilder<BoundStatement>();
-                LowerStatement(whileStmt.Body, bodyStatements, returnType);
-                var bodyBlock = bodyStatements.Count == 1 ? bodyStatements[0] : new BoundBlockStatement(bodyStatements.ToImmutable());
-                statements.Add(new BoundWhileStatement(LowerExpression(whileStmt.Condition), bodyBlock) { Location = statement.Location });
-                break;
-            case BoundNodeKind.ReturnStatement:
-                var retStmt = (BoundReturnStatement)statement;
-                statements.Add(new BoundReturnStatement(retStmt.Expression != null ? LowerExpression(retStmt.Expression) : null) { Location = statement.Location });
-                break;
-            case BoundNodeKind.ThrowStatement:
-                var throwStmt = (BoundThrowStatement)statement;
-                statements.Add(new BoundThrowStatement(LowerExpression(throwStmt.Expression), throwStmt.ErrorType) { Location = statement.Location });
-                break;
-            case BoundNodeKind.DoCatchStatement:
-                var doCatch = (BoundDoCatchStatement)statement;
-                var tryStmts = ImmutableArray.CreateBuilder<BoundStatement>();
-                LowerStatement(doCatch.Body, tryStmts, returnType);
-                var tryBlock = tryStmts.Count == 1 ? tryStmts[0] : new BoundBlockStatement(tryStmts.ToImmutable());
+            statements.Add(new BoundIfStatement(LowerExpression(ifStmt.Condition), thenBlock, elseBlock) { Location = statement.Location });
+            break;
+        case BoundNodeKind.WhileStatement:
+            var whileStmt = (BoundWhileStatement)statement;
+            var bodyStatements = ImmutableArray.CreateBuilder<BoundStatement>();
+            LowerStatement(whileStmt.Body, bodyStatements, returnType);
+            var bodyBlock = bodyStatements.Count == 1 ? bodyStatements[0] : new BoundBlockStatement(bodyStatements.ToImmutable());
+            statements.Add(new BoundWhileStatement(LowerExpression(whileStmt.Condition), bodyBlock) { Location = statement.Location });
+            break;
+        case BoundNodeKind.ReturnStatement:
+            var retStmt = (BoundReturnStatement)statement;
+            statements.Add(new BoundReturnStatement(retStmt.Expression != null ? LowerExpression(retStmt.Expression) : null) { Location = statement.Location });
+            break;
+        case BoundNodeKind.ThrowStatement:
+            var throwStmt = (BoundThrowStatement)statement;
+            statements.Add(new BoundThrowStatement(LowerExpression(throwStmt.Expression), throwStmt.ErrorType) { Location = statement.Location });
+            break;
+        case BoundNodeKind.DoCatchStatement:
+            var doCatch = (BoundDoCatchStatement)statement;
+            var tryStmts = ImmutableArray.CreateBuilder<BoundStatement>();
+            LowerStatement(doCatch.Body, tryStmts, returnType);
+            var tryBlock = tryStmts.Count == 1 ? tryStmts[0] : new BoundBlockStatement(tryStmts.ToImmutable());
 
-                var clauses = ImmutableArray.CreateBuilder<BoundCatchClause>();
-                foreach (var c in doCatch.CatchClauses)
-                {
-                    var catchStmts = ImmutableArray.CreateBuilder<BoundStatement>();
-                    LowerStatement(c.Body, catchStmts, returnType);
-                    var catchBlock = catchStmts.Count == 1 ? catchStmts[0] : new BoundBlockStatement(catchStmts.ToImmutable());
-                    clauses.Add(new BoundCatchClause(c.Pattern, catchBlock, c.Location));
-                }
-                statements.Add(new BoundDoCatchStatement(tryBlock, doCatch.ErrorType, clauses.ToImmutable(), doCatch.Analysis, doCatch.DecisionGraph) { Location = statement.Location });
-                break;
-            case BoundNodeKind.IfLetStatement:
-                LowerIfLetStatement((BoundIfLetStatement)statement, statements, returnType);
-                break;
-            case BoundNodeKind.SwitchStatement:
-                LowerSwitchStatement((BoundSwitchStatement)statement, statements, returnType);
-                break;
-            default:
-                throw new CodeGenerationException($"Unsupported bound node '{statement.Kind}'", statement);
+            var clauses = ImmutableArray.CreateBuilder<BoundCatchClause>();
+            foreach (var c in doCatch.CatchClauses)
+            {
+                var catchStmts = ImmutableArray.CreateBuilder<BoundStatement>();
+                LowerStatement(c.Body, catchStmts, returnType);
+                var catchBlock = catchStmts.Count == 1 ? catchStmts[0] : new BoundBlockStatement(catchStmts.ToImmutable());
+                clauses.Add(new BoundCatchClause(c.Pattern, catchBlock, c.Location));
+            }
+            statements.Add(new BoundDoCatchStatement(tryBlock, doCatch.ErrorType, clauses.ToImmutable(), doCatch.Analysis, doCatch.DecisionGraph) { Location = statement.Location });
+            break;
+        case BoundNodeKind.IfLetStatement:
+            LowerIfLetStatement((BoundIfLetStatement)statement, statements, returnType);
+            break;
+        case BoundNodeKind.SwitchStatement:
+            LowerSwitchStatement((BoundSwitchStatement)statement, statements, returnType);
+            break;
+        default:
+            throw new CodeGenerationException($"Unsupported bound node '{statement.Kind}'", statement);
         }
     }
 
@@ -201,7 +201,7 @@ public sealed class CSharpLowerer
 
     private void LowerSwitchStatement(BoundSwitchStatement switchStmt, ImmutableArray<BoundStatement>.Builder statements, TypeSymbol returnType)
     {
-        if (switchStmt.DecisionGraph is { } graph)
+        if (switchStmt.DecisionGraph is {} graph)
         {
             LowerDecisionGraph(graph, statements, returnType, switchStmt.Location);
             return;
@@ -239,7 +239,7 @@ public sealed class CSharpLowerer
     }
 
     private void LowerDecisionGraph(PatternDecisionGraph graph, ImmutableArray<BoundStatement>.Builder statements,
-        TypeSymbol returnType, TextLocation? switchLocation)
+                                    TypeSymbol returnType, TextLocation? switchLocation)
     {
         var validationErrors = graph.Validate(_cancellationToken);
         if (!validationErrors.IsEmpty)
@@ -251,7 +251,8 @@ public sealed class CSharpLowerer
         var endLabel = prefix + "end";
         var flow = ImmutableArray.CreateBuilder<BoundStatement>();
         flow.Add(Generated(new BoundVariableDeclaration(graph.InputTemporary,
-            LowerExpression(graph.InputExpression)), switchLocation));
+                                                        LowerExpression(graph.InputExpression)),
+                           switchLocation));
 
         var pending = new Stack<PatternDecisionNode>();
         var visited = new HashSet<PatternDecisionNode>(ReferenceEqualityComparer.Instance);
@@ -260,7 +261,8 @@ public sealed class CSharpLowerer
         {
             _cancellationToken.ThrowIfCancellationRequested();
             var node = pending.Pop();
-            if (!visited.Add(node)) continue;
+            if (!visited.Add(node))
+                continue;
             flow.Add(Generated(new BoundLabelStatement(NodeLabel(node)), node.Location));
             LowerDecisionNode(node, flow, NodeLabel, TargetLabel);
             for (var i = node.Successors.Length - 1; i >= 0; i--)
@@ -279,44 +281,47 @@ public sealed class CSharpLowerer
     }
 
     private void LowerDecisionNode(PatternDecisionNode node, ImmutableArray<BoundStatement>.Builder statements,
-        Func<PatternDecisionNode, string> nodeLabel, Func<PatternCaseTarget, string> targetLabel)
+                                   Func<PatternDecisionNode, string> nodeLabel, Func<PatternCaseTarget, string> targetLabel)
     {
         switch (node)
         {
-            case TestEnumCaseDecision test:
-                Branch(new BoundEnumCaseTestExpression(new BoundVariableExpression(test.Input), test.Case), test.WhenMatched, test.WhenNotMatched);
-                break;
-            case TestLiteralDecision test:
-                Branch(LiteralEquality(test.Input, test.Value), test.WhenMatched, test.WhenNotMatched);
-                break;
-            case TestOptionalHasValueDecision test:
-                Branch(new BoundHasValueExpression(new BoundVariableExpression(test.Input)), test.WhenHasValue, test.WhenNil);
-                break;
-            case ExtractEnumPayloadDecision extract:
-                statements.Add(Generated(new BoundVariableDeclaration(extract.Destination,
-                    new BoundEnumPayloadAccessExpression(new BoundVariableExpression(extract.Input),
-                        extract.Case, extract.PayloadIndex)), extract.Location));
-                GoTo(extract.Next);
-                break;
-            case ExtractOptionalValueDecision extract:
-                statements.Add(OptionalValueDeclaration(extract.Destination, extract.Input, extract.Location));
-                GoTo(extract.Next);
-                break;
-            case BindPatternValueDecision bind:
-                statements.Add(Generated(new BoundVariableDeclaration(bind.Variable,
-                    new BoundVariableExpression(bind.Value)), bind.Location));
-                GoTo(bind.Next);
-                break;
-            case GotoCaseDecision branch:
-                statements.Add(Generated(new BoundGotoStatement(targetLabel(branch.Target)), branch.Location));
-                break;
-            case FailureDecision failure:
-                statements.Add(Generated(new BoundThrowStatement(
-                    new BoundLiteralExpression("Pattern decision graph reached its defensive failure continuation.", TypeSymbol.String),
-                    TypeSymbol.Error), failure.Location));
-                break;
-            default:
-                throw new CodeGenerationException($"Unsupported pattern decision node '{node.GetType().Name}'.");
+        case TestEnumCaseDecision test:
+            Branch(new BoundEnumCaseTestExpression(new BoundVariableExpression(test.Input), test.Case), test.WhenMatched, test.WhenNotMatched);
+            break;
+        case TestLiteralDecision test:
+            Branch(LiteralEquality(test.Input, test.Value), test.WhenMatched, test.WhenNotMatched);
+            break;
+        case TestOptionalHasValueDecision test:
+            Branch(new BoundHasValueExpression(new BoundVariableExpression(test.Input)), test.WhenHasValue, test.WhenNil);
+            break;
+        case ExtractEnumPayloadDecision extract:
+            statements.Add(Generated(new BoundVariableDeclaration(extract.Destination,
+                                                                  new BoundEnumPayloadAccessExpression(new BoundVariableExpression(extract.Input),
+                                                                                                       extract.Case, extract.PayloadIndex)),
+                                     extract.Location));
+            GoTo(extract.Next);
+            break;
+        case ExtractOptionalValueDecision extract:
+            statements.Add(OptionalValueDeclaration(extract.Destination, extract.Input, extract.Location));
+            GoTo(extract.Next);
+            break;
+        case BindPatternValueDecision bind:
+            statements.Add(Generated(new BoundVariableDeclaration(bind.Variable,
+                                                                  new BoundVariableExpression(bind.Value)),
+                                     bind.Location));
+            GoTo(bind.Next);
+            break;
+        case GotoCaseDecision branch:
+            statements.Add(Generated(new BoundGotoStatement(targetLabel(branch.Target)), branch.Location));
+            break;
+        case FailureDecision failure:
+            statements.Add(Generated(new BoundThrowStatement(
+                                         new BoundLiteralExpression("Pattern decision graph reached its defensive failure continuation.", TypeSymbol.String),
+                                         TypeSymbol.Error),
+                                     failure.Location));
+            break;
+        default:
+            throw new CodeGenerationException($"Unsupported pattern decision node '{node.GetType().Name}'.");
         }
 
         void Branch(BoundExpression condition, PatternDecisionNode matched, PatternDecisionNode notMatched)
@@ -333,17 +338,18 @@ public sealed class CSharpLowerer
     {
         var left = new BoundVariableExpression(input);
         var right = new BoundLiteralExpression(value, input.Type);
-        var op = BoundBinaryOperator.Bind(Martin.Compiler.Syntax.SyntaxKind.EqualEqualToken, input.Type, input.Type)
-            ?? throw new CodeGenerationException($"Pattern literal type '{input.Type.Name}' does not support equality.");
+        var op = BoundBinaryOperator.Bind(Martin.Compiler.Syntax.SyntaxKind.EqualEqualToken, input.Type, input.Type) ?? throw new CodeGenerationException($"Pattern literal type '{input.Type.Name}' does not support equality.");
         return new BoundBinaryExpression(left, op, right);
     }
 
     private static BoundVariableDeclaration OptionalValueDeclaration(VariableSymbol destination,
-        CompilerGeneratedLocalVariableSymbol optional, TextLocation? location) =>
+                                                                     CompilerGeneratedLocalVariableSymbol optional, TextLocation? location) =>
         Generated(new BoundVariableDeclaration(destination,
-            new BoundGetValueExpression(new BoundVariableExpression(optional), destination.Type)), location);
+                                               new BoundGetValueExpression(new BoundVariableExpression(optional), destination.Type)),
+                  location);
 
-    private static T Generated<T>(T statement, TextLocation? location) where T : BoundStatement
+    private static T Generated<T>(T statement, TextLocation? location)
+        where T : BoundStatement
     {
         statement.Location = location;
         statement.IsCompilerGenerated = true;
@@ -354,75 +360,74 @@ public sealed class CSharpLowerer
     {
         switch (expression.Kind)
         {
-            case BoundNodeKind.LiteralExpression:
-            case BoundNodeKind.VariableExpression:
-            case BoundNodeKind.ErrorExpression:
-            case BoundNodeKind.NilExpression:
-                return expression;
-            case BoundNodeKind.AssignmentExpression:
-                var assign = (BoundAssignmentExpression)expression;
-                return new BoundAssignmentExpression(assign.Variable, LowerExpression(assign.Expression));
-            case BoundNodeKind.UnaryExpression:
-                var unary = (BoundUnaryExpression)expression;
-                return new BoundUnaryExpression(unary.Operator, LowerExpression(unary.Operand));
-            case BoundNodeKind.BinaryExpression:
-                var binary = (BoundBinaryExpression)expression;
-                return new BoundBinaryExpression(LowerExpression(binary.Left), binary.Operator, LowerExpression(binary.Right));
-            case BoundNodeKind.CallExpression:
-                var call = (BoundCallExpression)expression;
-                var loweredArgs = call.Arguments.Select(LowerExpression).ToImmutableArray();
-                if (call.Function.IsBuiltIn)
-                {
-                    return call.Function.Name switch
-                    {
-                        "print" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.Print", loweredArgs, TypeSymbol.Void),
-                        "argumentCount" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.ArgumentCount", loweredArgs, TypeSymbol.Int),
-                        "argument" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.Argument", loweredArgs, TypeSymbol.String),
-                        "readLine" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.ReadLine", loweredArgs, TypeSymbol.String),
-                        "writeError" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.WriteError", loweredArgs, TypeSymbol.Void),
-                        "exit" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.Exit", loweredArgs, TypeSymbol.Void),
-                        _ => throw new CodeGenerationException($"Unsupported built-in function '{call.Function.Name}'", call)
-                    };
-                }
-                return new BoundCallExpression(call.Function, loweredArgs, call.TypeArguments);
-            case BoundNodeKind.ConversionExpression:
-                var conv = (BoundConversionExpression)expression;
-                return new BoundConversionExpression(conv.TargetType, LowerExpression(conv.Expression));
-            case BoundNodeKind.MemberAccessExpression:
-                var member = (BoundMemberAccessExpression)expression;
-                return new BoundMemberAccessExpression(LowerExpression(member.Receiver), member.Property);
-            case BoundNodeKind.AssociatedValueAccessExpression:
-                var associatedValue = (BoundAssociatedValueAccessExpression)expression;
-                return new BoundAssociatedValueAccessExpression(LowerExpression(associatedValue.Receiver), associatedValue.AssociatedValue);
-            case BoundNodeKind.EnumCaseTestExpression:
-                var enumTest = (BoundEnumCaseTestExpression)expression;
-                return new BoundEnumCaseTestExpression(LowerExpression(enumTest.Receiver), enumTest.Case);
-            case BoundNodeKind.EnumPayloadAccessExpression:
-                var payload = (BoundEnumPayloadAccessExpression)expression;
-                return new BoundEnumPayloadAccessExpression(LowerExpression(payload.Receiver), payload.Case, payload.PayloadIndex);
-            case BoundNodeKind.PropertyAssignmentExpression:
-                var propAssign = (BoundPropertyAssignmentExpression)expression;
-                return new BoundPropertyAssignmentExpression(LowerExpression(propAssign.Receiver), propAssign.Property, LowerExpression(propAssign.Value));
-            case BoundNodeKind.MethodCallExpression:
-                var methodCall = (BoundMethodCallExpression)expression;
-                return new BoundMethodCallExpression(LowerExpression(methodCall.Receiver), methodCall.Method, methodCall.Arguments.Select(LowerExpression).ToImmutableArray(), methodCall.TypeArguments);
-            case BoundNodeKind.ProtocolRequirementCallExpression:
-                var requirementCall = (BoundProtocolRequirementCallExpression)expression;
-                return new BoundProtocolRequirementCallExpression(LowerExpression(requirementCall.Receiver), requirementCall.Requirement, requirementCall.Arguments.Select(LowerExpression).ToImmutableArray());
-            case BoundNodeKind.ObjectCreationExpression:
-                var objCreate = (BoundObjectCreationExpression)expression;
-                return new BoundObjectCreationExpression(objCreate.Initializer, objCreate.Arguments.Select(LowerExpression).ToImmutableArray());
-            case BoundNodeKind.OptionalInjectionExpression:
-                var optInj = (BoundOptionalInjectionExpression)expression;
-                return new BoundOptionalInjectionExpression(LowerExpression(optInj.Expression), optInj.OptionalType);
-            case BoundNodeKind.TryExpression:
-                var tryExpr = (BoundTryExpression)expression;
-                return new BoundTryExpression(LowerExpression(tryExpr.Expression), tryExpr.ThrownErrorType);
-            case BoundNodeKind.EnumCaseCreationExpression:
-                var enumCase = (BoundEnumCaseCreationExpression)expression;
-                return new BoundEnumCaseCreationExpression(enumCase.Case, enumCase.Arguments.Select(LowerExpression).ToImmutableArray());
-            default:
-                throw new CodeGenerationException($"Unsupported bound node '{expression.Kind}' in expression lowering", expression);
+        case BoundNodeKind.LiteralExpression:
+        case BoundNodeKind.VariableExpression:
+        case BoundNodeKind.ErrorExpression:
+        case BoundNodeKind.NilExpression:
+            return expression;
+        case BoundNodeKind.AssignmentExpression:
+            var assign = (BoundAssignmentExpression)expression;
+            return new BoundAssignmentExpression(assign.Variable, LowerExpression(assign.Expression));
+        case BoundNodeKind.UnaryExpression:
+            var unary = (BoundUnaryExpression)expression;
+            return new BoundUnaryExpression(unary.Operator, LowerExpression(unary.Operand));
+        case BoundNodeKind.BinaryExpression:
+            var binary = (BoundBinaryExpression)expression;
+            return new BoundBinaryExpression(LowerExpression(binary.Left), binary.Operator, LowerExpression(binary.Right));
+        case BoundNodeKind.CallExpression:
+            var call = (BoundCallExpression)expression;
+            var loweredArgs = call.Arguments.Select(LowerExpression).ToImmutableArray();
+            if (call.Function.IsBuiltIn)
+            {
+                return call.Function.Name switch {
+                    "print" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.Print", loweredArgs, TypeSymbol.Void),
+                    "argumentCount" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.ArgumentCount", loweredArgs, TypeSymbol.Int),
+                    "argument" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.Argument", loweredArgs, TypeSymbol.String),
+                    "readLine" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.ReadLine", loweredArgs, TypeSymbol.String),
+                    "writeError" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.WriteError", loweredArgs, TypeSymbol.Void),
+                    "exit" => new BoundRuntimeCallExpression("Martin.Runtime.MartinConsole.Exit", loweredArgs, TypeSymbol.Void),
+                    _ => throw new CodeGenerationException($"Unsupported built-in function '{call.Function.Name}'", call)
+                };
+            }
+            return new BoundCallExpression(call.Function, loweredArgs, call.TypeArguments);
+        case BoundNodeKind.ConversionExpression:
+            var conv = (BoundConversionExpression)expression;
+            return new BoundConversionExpression(conv.TargetType, LowerExpression(conv.Expression));
+        case BoundNodeKind.MemberAccessExpression:
+            var member = (BoundMemberAccessExpression)expression;
+            return new BoundMemberAccessExpression(LowerExpression(member.Receiver), member.Property);
+        case BoundNodeKind.AssociatedValueAccessExpression:
+            var associatedValue = (BoundAssociatedValueAccessExpression)expression;
+            return new BoundAssociatedValueAccessExpression(LowerExpression(associatedValue.Receiver), associatedValue.AssociatedValue);
+        case BoundNodeKind.EnumCaseTestExpression:
+            var enumTest = (BoundEnumCaseTestExpression)expression;
+            return new BoundEnumCaseTestExpression(LowerExpression(enumTest.Receiver), enumTest.Case);
+        case BoundNodeKind.EnumPayloadAccessExpression:
+            var payload = (BoundEnumPayloadAccessExpression)expression;
+            return new BoundEnumPayloadAccessExpression(LowerExpression(payload.Receiver), payload.Case, payload.PayloadIndex);
+        case BoundNodeKind.PropertyAssignmentExpression:
+            var propAssign = (BoundPropertyAssignmentExpression)expression;
+            return new BoundPropertyAssignmentExpression(LowerExpression(propAssign.Receiver), propAssign.Property, LowerExpression(propAssign.Value));
+        case BoundNodeKind.MethodCallExpression:
+            var methodCall = (BoundMethodCallExpression)expression;
+            return new BoundMethodCallExpression(LowerExpression(methodCall.Receiver), methodCall.Method, methodCall.Arguments.Select(LowerExpression).ToImmutableArray(), methodCall.TypeArguments);
+        case BoundNodeKind.ProtocolRequirementCallExpression:
+            var requirementCall = (BoundProtocolRequirementCallExpression)expression;
+            return new BoundProtocolRequirementCallExpression(LowerExpression(requirementCall.Receiver), requirementCall.Requirement, requirementCall.Arguments.Select(LowerExpression).ToImmutableArray());
+        case BoundNodeKind.ObjectCreationExpression:
+            var objCreate = (BoundObjectCreationExpression)expression;
+            return new BoundObjectCreationExpression(objCreate.Initializer, objCreate.Arguments.Select(LowerExpression).ToImmutableArray());
+        case BoundNodeKind.OptionalInjectionExpression:
+            var optInj = (BoundOptionalInjectionExpression)expression;
+            return new BoundOptionalInjectionExpression(LowerExpression(optInj.Expression), optInj.OptionalType);
+        case BoundNodeKind.TryExpression:
+            var tryExpr = (BoundTryExpression)expression;
+            return new BoundTryExpression(LowerExpression(tryExpr.Expression), tryExpr.ThrownErrorType);
+        case BoundNodeKind.EnumCaseCreationExpression:
+            var enumCase = (BoundEnumCaseCreationExpression)expression;
+            return new BoundEnumCaseCreationExpression(enumCase.Case, enumCase.Arguments.Select(LowerExpression).ToImmutableArray());
+        default:
+            throw new CodeGenerationException($"Unsupported bound node '{expression.Kind}' in expression lowering", expression);
         }
     }
 
@@ -450,5 +455,4 @@ public sealed record LoweredProgram(
     ImmutableDictionary<MethodSymbol, BoundBlockStatement> MethodBodies,
     ImmutableDictionary<InitializerSymbol, BoundBlockStatement> InitializerBodies,
     ImmutableArray<ProtocolConformance> Conformances,
-    FunctionSymbol? EntryPoint
-);
+    FunctionSymbol? EntryPoint);

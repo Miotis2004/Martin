@@ -3,7 +3,12 @@ using Martin.Compiler.Text;
 using Martin.Compiler.Syntax;
 namespace Martin.Compiler.Diagnostics;
 
-public enum DiagnosticSeverity { Info, Warning, Error }
+public enum DiagnosticSeverity
+{
+    Info,
+    Warning,
+    Error
+}
 public sealed record Diagnostic(string Code, DiagnosticSeverity Severity, string Message, TextLocation Location);
 public sealed class DiagnosticBag : List<Diagnostic>
 {

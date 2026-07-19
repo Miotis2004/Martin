@@ -126,8 +126,7 @@ public sealed class ExecutionServiceTests : IDisposable
         var launcher = new CapturingTerminalLauncher();
         var build = new BuildResult { Success = true, EntryPointPath = appHost, OutputDirectory = _temp };
 
-        var result = await new MartinExecutionService(launcher).RunAsync(build, new ExecutionOptions
-        {
+        var result = await new MartinExecutionService(launcher).RunAsync(build, new ExecutionOptions {
             Arguments = ["arg"],
             UseExternalTerminal = true
         });
@@ -141,9 +140,16 @@ public sealed class ExecutionServiceTests : IDisposable
 
     public void Dispose()
     {
-        try { Directory.Delete(_temp, recursive: true); }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
+        try
+        {
+            Directory.Delete(_temp, recursive: true);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     string CreateExecutable(string name, string unixBody, string windowsBody)

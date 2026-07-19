@@ -57,8 +57,8 @@ public sealed class TypeSubstitution
         if (type is ConstructedTypeSymbol constructed)
         {
             var arguments = constructed.TypeArguments
-                .Select(argument => Substitute(argument, activeMappings, depth + 1))
-                .ToImmutableArray();
+                                .Select(argument => Substitute(argument, activeMappings, depth + 1))
+                                .ToImmutableArray();
             if (arguments.Any(argument => ReferenceEquals(argument, TypeSymbol.Error)))
                 return TypeSymbol.Error;
             if (Enumerable.SequenceEqual<TypeSymbol>(
@@ -72,8 +72,7 @@ public sealed class TypeSubstitution
         return type;
     }
 
-    public GenericConstraint Substitute(GenericConstraint constraint) => constraint switch
-    {
+    public GenericConstraint Substitute(GenericConstraint constraint) => constraint switch {
         // Protocol constraints currently contain no substitutable type positions.
         ProtocolConstraint protocol => protocol,
         _ => constraint

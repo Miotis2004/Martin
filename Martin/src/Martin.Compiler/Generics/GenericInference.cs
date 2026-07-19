@@ -50,9 +50,9 @@ public sealed class GenericInferenceResult
     /// <summary>Produces stable, actionable descriptions suitable for binder diagnostics.</summary>
     public ImmutableArray<string> FailureMessages =>
         Conflicts.Select(conflict =>
-                $"Conflicting types were inferred for '{conflict.Parameter.Name}': {string.Join(", ", conflict.Candidates.Select(type => type.Name))}.")
+                             $"Conflicting types were inferred for '{conflict.Parameter.Name}': {string.Join(", ", conflict.Candidates.Select(type => type.Name))}.")
             .Concat(UnresolvedParameters.Select(parameter =>
-                $"Type parameter '{parameter.Name}' could not be inferred; specify explicit type arguments."))
+                                                    $"Type parameter '{parameter.Name}' could not be inferred; specify explicit type arguments."))
             .ToImmutableArray();
 }
 
@@ -106,10 +106,10 @@ public sealed class GenericInferenceEngine
 
         var successful = conflicts.Count == 0 && unresolved.Count == 0;
         var arguments = successful
-            ? ordered.Select(parameter => substitutions[parameter]).ToImmutableArray()
-            : ImmutableArray<TypeSymbol>.Empty;
+                            ? ordered.Select(parameter => substitutions[parameter]).ToImmutableArray()
+                            : ImmutableArray<TypeSymbol>.Empty;
         return new GenericInferenceResult(ordered, arguments, substitutions.ToImmutable(),
-            conflicts.ToImmutable(), unresolved.ToImmutable());
+                                          conflicts.ToImmutable(), unresolved.ToImmutable());
     }
 
     private static void Collect(
@@ -141,7 +141,7 @@ public sealed class GenericInferenceEngine
         {
             for (var index = 0; index < patternConstructed.TypeArguments.Length; index++)
                 Collect(patternConstructed.TypeArguments[index], observedConstructed.TypeArguments[index],
-                    candidates, cancellationToken);
+                        candidates, cancellationToken);
         }
     }
 }

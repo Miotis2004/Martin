@@ -28,7 +28,12 @@ public sealed record TextSynchronizationOptions
     public int MaximumChanges { get; init; } = DefaultMaximumChanges;
 }
 
-public enum DocumentChangeStatus { Applied, RequiresFullTextResynchronization, Rejected }
+public enum DocumentChangeStatus
+{
+    Applied,
+    RequiresFullTextResynchronization,
+    Rejected
+}
 
 /// <summary>A non-throwing, log-safe description of an editor synchronization attempt.</summary>
 public sealed record DocumentChangeResult(DocumentChangeStatus Status, string? DiagnosticCode = null, string? Message = null)
@@ -78,7 +83,8 @@ public sealed class PositionConverter : IPositionConverter
     {
         var start = ToOffset(text, range.Start);
         var end = ToOffset(text, range.End);
-        if (end < start) throw new ArgumentException("Range end must not precede its start.", nameof(range));
+        if (end < start)
+            throw new ArgumentException("Range end must not precede its start.", nameof(range));
         return TextSpan.FromBounds(start, end);
     }
 

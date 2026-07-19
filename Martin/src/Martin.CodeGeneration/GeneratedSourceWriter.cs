@@ -45,12 +45,23 @@ internal sealed class GeneratedSourceWriter
     }
 
     public void WriteLine() => Write("\n");
-    public void WriteLine(string text) { Write(text); WriteLine(); }
-    public IDisposable Indent() { _indent++; return new IndentScope(this); }
+    public void WriteLine(string text)
+    {
+        Write(text);
+        WriteLine();
+    }
+    public IDisposable Indent()
+    {
+        _indent++;
+        return new IndentScope(this);
+    }
     public IDisposable MapTo(TextLocation? location) => new MapScope(this, location);
     public override string ToString() => _b.ToString().TrimEnd() + "\n";
 
-    sealed class IndentScope(GeneratedSourceWriter writer) : IDisposable { public void Dispose() => writer._indent--; }
+    sealed class IndentScope(GeneratedSourceWriter writer) : IDisposable
+    {
+        public void Dispose() => writer._indent--;
+    }
 
     sealed class MapScope : IDisposable
     {
@@ -67,7 +78,7 @@ internal sealed class GeneratedSourceWriter
 
         public void Dispose()
         {
-            if (_location is not { } location)
+            if (_location is not {} location)
                 return;
 
             var length = _writer.Position - _start;

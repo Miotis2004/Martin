@@ -38,9 +38,9 @@ public sealed class Phase14ConstructedMemberLookupTests
         var methodParameter = new TypeParameterSymbol("U", 0, container, []);
         var declaration = SyntaxTree.Parse(string.Empty).Root;
         var definition = new MethodSymbol("convert", container,
-            [new ParameterSymbol("value", null, 0, methodParameter, [])],
-            new ConstructedTypeSymbol(pair, [outer, methodParameter], []), declaration, false, [],
-            typeParameters: [methodParameter]);
+                                          [new ParameterSymbol("value", null, 0, methodParameter, [])],
+                                          new ConstructedTypeSymbol(pair, [outer, methodParameter], []), declaration, false, [],
+                                          typeParameters: [methodParameter]);
         methodParameter.SetContainingSymbol(definition);
         container.AddMember(definition);
         var factory = new GenericTypeFactory();
@@ -48,8 +48,9 @@ public sealed class Phase14ConstructedMemberLookupTests
         var constructedType = factory.Construct(container, [TypeSymbol.Int]);
         var openMethod = Assert.Single(constructedType.Methods);
         var closedMethod = new TypeSubstitution(
-            ImmutableDictionary<TypeParameterSymbol, TypeSymbol>.Empty.Add(methodParameter, TypeSymbol.String),
-            factory).Substitute(openMethod, constructedType);
+                               ImmutableDictionary<TypeParameterSymbol, TypeSymbol>.Empty.Add(methodParameter, TypeSymbol.String),
+                               factory)
+                               .Substitute(openMethod, constructedType);
 
         Assert.Same(methodParameter, Assert.Single(openMethod.TypeParameters));
         Assert.Same(TypeSymbol.String, Assert.Single(closedMethod.Parameters).Type);
@@ -65,23 +66,23 @@ public sealed class Phase14ConstructedMemberLookupTests
         var definition = GenericDefinition("Result", 1);
         var parameter = definition.TypeParameters[0];
         definition.AddMember(new InitializerSymbol(definition,
-            [new ParameterSymbol("value", "value", 0, parameter, [])], null, false, []));
+                                                   [new ParameterSymbol("value", "value", 0, parameter, [])], null, false, []));
         definition.AddMember(new EnumCaseSymbol("success", definition,
-            [new ParameterSymbol("value", null, 0, new OptionalTypeSymbol(parameter), [])], []));
+                                                [new ParameterSymbol("value", null, 0, new OptionalTypeSymbol(parameter), [])], []));
 
         var constructed = new GenericTypeFactory().Construct(definition, [TypeSymbol.String]);
 
         Assert.Same(TypeSymbol.String, Assert.Single(constructed.Initializers).Parameters[0].Type);
         Assert.Same(TypeSymbol.String,
-            Assert.IsType<OptionalTypeSymbol>(Assert.Single(constructed.Cases).AssociatedValues[0].Type).ElementType);
+                    Assert.IsType<OptionalTypeSymbol>(Assert.Single(constructed.Cases).AssociatedValues[0].Type).ElementType);
     }
 
     private static StructTypeSymbol GenericDefinition(string name, int arity)
     {
         var owner = new StructTypeSymbol(name, [], []);
         var parameters = Enumerable.Range(0, arity)
-            .Select(index => new TypeParameterSymbol($"T{index}", index, owner, []))
-            .ToImmutableArray();
+                             .Select(index => new TypeParameterSymbol($"T{index}", index, owner, []))
+                             .ToImmutableArray();
         var definition = new StructTypeSymbol(name, [], parameters);
         foreach (var parameter in parameters)
             parameter.SetContainingSymbol(definition);

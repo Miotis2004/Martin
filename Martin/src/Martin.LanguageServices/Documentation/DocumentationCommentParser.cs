@@ -19,19 +19,22 @@ public sealed class DocumentationCommentParser
             if (TrySection(line, "- Parameter ", out var parameter))
             {
                 var colon = parameter.IndexOf(':');
-                if (colon > 0) parameters[parameter[..colon].Trim()] = parameter[(colon + 1)..].Trim();
+                if (colon > 0)
+                    parameters[parameter[..colon].Trim()] = parameter[(colon + 1)..].Trim();
             }
-            else if (TrySection(line, "- Returns:", out var returnText)) returns = returnText.Trim();
-            else if (TrySection(line, "- Throws:", out var throwsText)) throws = throwsText.Trim();
+            else if (TrySection(line, "- Returns:", out var returnText))
+                returns = returnText.Trim();
+            else if (TrySection(line, "- Throws:", out var throwsText))
+                throws = throwsText.Trim();
             else
             {
-                if (summary.Length > 0) summary.AppendLine();
+                if (summary.Length > 0)
+                    summary.AppendLine();
                 summary.Append(line);
             }
         }
 
-        return new DocumentationComment
-        {
+        return new DocumentationComment {
             SummaryMarkdown = EmptyToNull(summary.ToString().Trim()),
             Parameters = parameters.ToImmutable(),
             ReturnsMarkdown = EmptyToNull(returns),
@@ -47,8 +50,13 @@ public sealed class DocumentationCommentParser
 
     static bool TrySection(string line, string prefix, out string value)
     {
-        if (line.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) { value = line[prefix.Length..]; return true; }
-        value = string.Empty; return false;
+        if (line.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            value = line[prefix.Length..];
+            return true;
+        }
+        value = string.Empty;
+        return false;
     }
 
     static string? EmptyToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;

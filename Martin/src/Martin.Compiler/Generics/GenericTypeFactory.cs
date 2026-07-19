@@ -13,7 +13,7 @@ public sealed class GenericTypeFactory
     public int ConstructionCount => _constructions.Count;
 
     public ConstructedTypeSymbol Construct(NamedTypeSymbol genericDefinition, ImmutableArray<TypeSymbol> typeArguments,
-        CancellationToken cancellationToken = default)
+                                           CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(genericDefinition);
@@ -25,7 +25,8 @@ public sealed class GenericTypeFactory
             throw new ArgumentException("Type arguments must be valid types.", nameof(typeArguments));
 
         var key = new ConstructedTypeKey(genericDefinition, typeArguments);
-        var construction = _constructions.GetOrAdd(key, _ => new Construction(genericDefinition, typeArguments));
+        var construction = _constructions.GetOrAdd(key,
+                                                   _ => new Construction(genericDefinition, typeArguments));
         return Complete(key, construction, cancellationToken);
     }
 
@@ -54,17 +55,17 @@ public sealed class GenericTypeFactory
                         .ToImmutableDictionary(pair => pair.First, pair => pair.Second),
                     this, cancellationToken);
                 var members = definition.Members.Select(member =>
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    return (MemberSymbol)(member switch
-                    {
-                        PropertySymbol property => substitution.Substitute(property, construction.Symbol),
-                        MethodSymbol method => substitution.Substitute(method, construction.Symbol),
-                        InitializerSymbol initializer => substitution.Substitute(initializer, construction.Symbol),
-                        EnumCaseSymbol enumCase => substitution.Substitute(enumCase, construction.Symbol),
-                        _ => member
-                    });
-                }).ToImmutableArray();
+                                                        {
+                                                            cancellationToken.ThrowIfCancellationRequested();
+                                                            return (MemberSymbol)(member switch {
+                                                                PropertySymbol property => substitution.Substitute(property, construction.Symbol),
+                                                                MethodSymbol method => substitution.Substitute(method, construction.Symbol),
+                                                                InitializerSymbol initializer => substitution.Substitute(initializer, construction.Symbol),
+                                                                EnumCaseSymbol enumCase => substitution.Substitute(enumCase, construction.Symbol),
+                                                                _ => member
+                                                            });
+                                                        })
+                                  .ToImmutableArray();
                 construction.Symbol.CompleteMembers(members);
                 construction.IsComplete = true;
                 return construction.Symbol;

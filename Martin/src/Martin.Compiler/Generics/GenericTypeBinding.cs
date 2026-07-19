@@ -34,21 +34,21 @@ internal static class GenericTypeBinding
         if (definition is not NamedTypeSymbol named || !named.IsGeneric)
         {
             diagnostics.Report(new Diagnostic("MRT2185", DiagnosticSeverity.Error,
-                $"Type '{identifier.Text}' is not generic.", identifier.Location(text)));
+                                              $"Type '{identifier.Text}' is not generic.", identifier.Location(text)));
             return TypeSymbol.Error;
         }
 
         var argumentList = syntax.Children.OfType<GenericSyntaxNode>()
-            .First(node => node.Kind == SyntaxKind.TypeArgumentList);
+                               .First(node => node.Kind == SyntaxKind.TypeArgumentList);
         var arguments = argumentList.Children
-            .Where(IsTypeSyntax)
-            .Select(bindArgument)
-            .ToImmutableArray();
+                            .Where(IsTypeSyntax)
+                            .Select(bindArgument)
+                            .ToImmutableArray();
         if (arguments.Length != named.TypeParameters.Length)
         {
             diagnostics.Report(new Diagnostic("MRT2180", DiagnosticSeverity.Error,
-                $"Generic type '{named.Name}' expects {named.TypeParameters.Length} type arguments, but {arguments.Length} were provided.",
-                identifier.Location(text)));
+                                              $"Generic type '{named.Name}' expects {named.TypeParameters.Length} type arguments, but {arguments.Length} were provided.",
+                                              identifier.Location(text)));
             return TypeSymbol.Error;
         }
 
@@ -62,5 +62,5 @@ internal static class GenericTypeBinding
     }
 
     private static bool IsTypeSyntax(SyntaxNode node) => node.Kind is
-        SyntaxKind.TypeClause or SyntaxKind.OptionalType or SyntaxKind.GenericName;
+                                                         SyntaxKind.TypeClause or SyntaxKind.OptionalType or SyntaxKind.GenericName;
 }

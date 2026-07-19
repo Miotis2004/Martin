@@ -41,8 +41,7 @@ public sealed record SignatureHelp
 
     // Kept for clients of the original Phase 6 contract.
     public string Name => Signatures.IsDefaultOrEmpty ? string.Empty : Signatures[ActiveSignature].Name;
-    public ImmutableArray<string> Parameters => Signatures.IsDefaultOrEmpty ? [] :
-        Signatures[ActiveSignature].Parameters.Select(p => p.Label).ToImmutableArray();
+    public ImmutableArray<string> Parameters => Signatures.IsDefaultOrEmpty ? [] : Signatures[ActiveSignature].Parameters.Select(p => p.Label).ToImmutableArray();
     public string ReturnType => Signatures.IsDefaultOrEmpty ? string.Empty : Signatures[ActiveSignature].ReturnType;
 }
 
@@ -51,15 +50,15 @@ public sealed record SignatureInformation
     public required string Name { get; init; }
     public required string Label { get; init; }
     public string ReturnType { get; init; } = "Void";
-    public string? DocumentationMarkdown { get; init; }
+    public string ? DocumentationMarkdown { get; init; }
     public ImmutableArray<ParameterInformation> Parameters { get; init; } = [];
-    public SymbolId? SymbolId { get; init; }
+    public SymbolId ? SymbolId { get; init; }
 }
 
 public sealed record ParameterInformation(string Label, string Type, string? DocumentationMarkdown = null);
 
 public sealed record SignatureHelpRequest : PositionLanguageRequest
 {
-    public char? TriggerCharacter { get; init; }
+    public char ? TriggerCharacter { get; init; }
     public bool IsRetrigger { get; init; }
 }

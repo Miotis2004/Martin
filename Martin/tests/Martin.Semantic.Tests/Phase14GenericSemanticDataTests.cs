@@ -94,7 +94,7 @@ public sealed class Phase14GenericSemanticDataTests
 
         var info = Assert.IsType<GenericSemanticInfo>(model.GetGenericInfo(call));
         Assert.Same(Assert.IsAssignableFrom<NamedTypeSymbol>(model.GetDeclaredSymbols().Single(symbol => symbol.Name == "S")),
-            Assert.Single(info.TypeArguments));
+                    Assert.Single(info.TypeArguments));
         var result = Assert.Single(info.ConstraintResults);
         Assert.True(result.Succeeded);
         Assert.Single(result.Proofs);
@@ -118,6 +118,7 @@ public sealed class Phase14GenericSemanticDataTests
     {
         yield return node;
         foreach (var child in node.GetChildren())
-            foreach (var descendant in Descendants(child)) yield return descendant;
+            foreach (var descendant in Descendants(child))
+                yield return descendant;
     }
 }

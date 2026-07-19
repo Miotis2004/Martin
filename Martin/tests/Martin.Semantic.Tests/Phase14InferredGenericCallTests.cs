@@ -55,7 +55,8 @@ public sealed class Phase14InferredGenericCallTests
         Assert.Contains(compilation.Diagnostics, diagnostic => diagnostic.Code == code);
     }
 
-    private static T GetReturnCall<T>(Compilation compilation, string functionName) where T : BoundExpression
+    private static T GetReturnCall<T>(Compilation compilation, string functionName)
+        where T : BoundExpression
     {
         var program = compilation.BindProgram();
         var function = program.Functions.Single(candidate => candidate.Name == functionName);

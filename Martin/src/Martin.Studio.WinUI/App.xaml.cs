@@ -81,31 +81,36 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        services.AddSingleton<IStudioLogService>(_ => new FileStudioLogService(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Martin", "Studio", "Logs")));
+        services.AddSingleton<IStudioLogService>(
+            _ => new FileStudioLogService(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Martin", "Studio", "Logs")));
         services.AddSingleton<IStudioRecoveryService, StudioRecoveryService>();
         services.AddSingleton<WorkspaceService>();
         services.AddSingleton<IWorkspaceService>(provider => provider.GetRequiredService<WorkspaceService>());
         services.AddSingleton(provider => provider.GetRequiredService<WorkspaceService>().Workspace);
-        services.AddSingleton<IRecentProjectService>(_ => new RecentProjectService());
-        services.AddSingleton<IOutputService>(_ => new OutputService());
+        services.AddSingleton<IRecentProjectService>(
+            _ => new RecentProjectService());
+        services.AddSingleton<IOutputService>(
+            _ => new OutputService());
         services.AddSingleton<ISettingsService>(provider => new JsonSettingsService(
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Martin", "Studio", "settings.json"),
-            provider.GetRequiredService<IStudioRecoveryService>()));
+                                                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Martin", "Studio", "settings.json"),
+                                                    provider.GetRequiredService<IStudioRecoveryService>()));
         services.AddSingleton<ISessionService>(provider => new JsonSessionService(
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Martin", "Studio", "session.json"),
-            provider.GetRequiredService<IStudioRecoveryService>()));
+                                                   Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Martin", "Studio", "session.json"),
+                                                   provider.GetRequiredService<IStudioRecoveryService>()));
         services.AddSingleton<IProjectOpeningService>(provider => new ProjectOpeningService(
-            provider.GetRequiredService<IWorkspaceService>(),
-            provider.GetRequiredService<IRecentProjectService>(),
-            provider.GetRequiredService<ISettingsService>(),
-            provider.GetRequiredService<IOutputService>(),
-            provider.GetService<IDirtyProjectTransitionPolicy>(),
-            provider.GetService<ISessionService>(),
-            provider.GetRequiredService<IStudioLogService>()));
+                                                          provider.GetRequiredService<IWorkspaceService>(),
+                                                          provider.GetRequiredService<IRecentProjectService>(),
+                                                          provider.GetRequiredService<ISettingsService>(),
+                                                          provider.GetRequiredService<IOutputService>(),
+                                                          provider.GetService<IDirtyProjectTransitionPolicy>(),
+                                                          provider.GetService<ISessionService>(),
+                                                          provider.GetRequiredService<IStudioLogService>()));
         services.AddSingleton<IProjectCreationService>(provider => new ProjectCreationService(provider.GetRequiredService<IStudioLogService>()));
-        services.AddSingleton<IFileDialogService>(_ => new WinUIFileDialogService(IntPtr.Zero));
+        services.AddSingleton<IFileDialogService>(
+            _ => new WinUIFileDialogService(IntPtr.Zero));
         services.AddSingleton<IMessageDialogService, WinUIMessageDialogService>();
-        services.AddSingleton<IUiDispatcher>(_ => new WinUIUiDispatcher(DispatcherQueue.GetForCurrentThread()));
+        services.AddSingleton<IUiDispatcher>(
+            _ => new WinUIUiDispatcher(DispatcherQueue.GetForCurrentThread()));
         services.AddSingleton<IClipboardService, WinUIClipboardService>();
         services.AddSingleton<IFileRevealService, WindowsFileRevealService>();
         services.AddSingleton<EditorHostProxy>();
@@ -113,24 +118,25 @@ public partial class App : Application
         services.AddSingleton<IDirtyProjectTransitionPolicy, WinUIDirtyProjectTransitionPolicy>();
         services.AddSingleton<IExternalChangePolicy, WinUIExternalChangePolicy>();
         services.AddSingleton<IDiagnosticService>(provider => new DiagnosticService(
-            provider.GetRequiredService<IWorkspaceService>().Workspace));
+                                                      provider.GetRequiredService<IWorkspaceService>().Workspace));
         services.AddSingleton<IBuildCoordinator>(provider => new BuildCoordinator(
-            provider.GetRequiredService<IWorkspaceService>().Workspace,
-            (OutputService)provider.GetRequiredService<IOutputService>(),
-            provider.GetRequiredService<IMartinBuildService>(),
-            provider.GetRequiredService<IStudioLogService>()));
+                                                     provider.GetRequiredService<IWorkspaceService>().Workspace,
+                                                     (OutputService)provider.GetRequiredService<IOutputService>(),
+                                                     provider.GetRequiredService<IMartinBuildService>(),
+                                                     provider.GetRequiredService<IStudioLogService>()));
         services.AddSingleton<IExecutionCoordinator>(provider => new ExecutionCoordinator(
-            provider.GetRequiredService<IWorkspaceService>().Workspace,
-            (OutputService)provider.GetRequiredService<IOutputService>(),
-            provider.GetRequiredService<IMartinExecutionService>(),
-            provider.GetRequiredService<IStudioLogService>()));
+                                                         provider.GetRequiredService<IWorkspaceService>().Workspace,
+                                                         (OutputService)provider.GetRequiredService<IOutputService>(),
+                                                         provider.GetRequiredService<IMartinExecutionService>(),
+                                                         provider.GetRequiredService<IStudioLogService>()));
 
         services.AddSingleton<IMartinBuildService, MartinBuildService>();
         services.AddSingleton<IExternalTerminalLauncher, WindowsExternalTerminalLauncher>();
         services.AddSingleton<IMartinExecutionService>(provider => new MartinExecutionService(
-            provider.GetRequiredService<IExternalTerminalLauncher>()));
+                                                           provider.GetRequiredService<IExternalTerminalLauncher>()));
         services.AddSingleton<Martin.LanguageServices.MartinLanguageService>();
-        services.AddSingleton(_ => EditorAssetValidator.Validate(Path.Combine(AppContext.BaseDirectory, "Assets", "Editor")));
+        services.AddSingleton(
+            _ => EditorAssetValidator.Validate(Path.Combine(AppContext.BaseDirectory, "Assets", "Editor")));
         services.AddSingleton<StudioLanguageProvider>();
 
         services.AddSingleton<ProjectExplorerViewModel>();
@@ -161,7 +167,8 @@ public partial class App : Application
         _mainViewModel = viewModel;
         await viewModel.LoadSettingsAsync();
         ApplyTheme(viewModel.CurrentTheme);
-        viewModel.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(MainWindowViewModel.CurrentTheme)) ApplyTheme(viewModel.CurrentTheme); };
+        viewModel.PropertyChanged += (_, e) =>
+        { if (e.PropertyName == nameof(MainWindowViewModel.CurrentTheme)) ApplyTheme(viewModel.CurrentTheme); };
         await opener.ReopenLastProjectAsync();
         viewModel.RefreshCommandState();
         await _window.SynchronizeEditorDocumentsAsync();
@@ -170,20 +177,21 @@ public partial class App : Application
 
     private void NotifySystemThemeChanged()
     {
-        if (_mainViewModel?.CurrentTheme != StudioTheme.System) return;
+        if (_mainViewModel?.CurrentTheme != StudioTheme.System)
+            return;
         _window?.DispatcherQueue.TryEnqueue(() =>
-        {
-            ApplyTheme(StudioTheme.System);
-            if (_window is MainWindow mainWindow)
-                mainWindow.ApplyCurrentThemeToEditor();
-        });
+                                            {
+                                                ApplyTheme(StudioTheme.System);
+                                                if (_window is MainWindow mainWindow)
+                                                    mainWindow.ApplyCurrentThemeToEditor();
+                                            });
     }
 
     private static void ApplyTheme(StudioTheme theme)
     {
-        if (Current is not App app || app._window?.Content is not FrameworkElement root) return;
-        root.RequestedTheme = theme switch
-        {
+        if (Current is not App app || app._window?.Content is not FrameworkElement root)
+            return;
+        root.RequestedTheme = theme switch {
             StudioTheme.Light => ElementTheme.Light,
             StudioTheme.Dark => ElementTheme.Dark,
             _ => ElementTheme.Default

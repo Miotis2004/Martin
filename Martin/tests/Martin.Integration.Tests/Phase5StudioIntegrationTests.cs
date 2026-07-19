@@ -16,10 +16,22 @@ public sealed class Phase5StudioIntegrationTests
         File.WriteAllText(source, "func main() { return 1 }");
         try
         {
-            var ws = new WorkspaceService(); Assert.True(ws.OpenProject(root).Success); var doc = ws.OpenDocument(source); ws.ApplyEditorChange(doc.Id, "func main() { return 42 }");
+            var ws = new WorkspaceService();
+            Assert.True(ws.OpenProject(root).Success);
+            var doc = ws.OpenDocument(source);
+            ws.ApplyEditorChange(doc.Id, "func main() { return 42 }");
             Assert.Contains(ws.CreateSnapshot().Sources, s => s.FilePath == source && s.Text.Contains("42"));
-            await ws.SaveAllAsync(); Assert.False(doc.IsDirty); Assert.Contains("42", File.ReadAllText(source)); Assert.True(ws.CloseDocument(doc.Id)); ws.CloseProject(); Assert.Null(ws.Workspace.Project);
+            await ws.SaveAllAsync();
+            Assert.False(doc.IsDirty);
+            Assert.Contains("42", File.ReadAllText(source));
+            Assert.True(ws.CloseDocument(doc.Id));
+            ws.CloseProject();
+            Assert.Null(ws.Workspace.Project);
         }
-        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+        finally
+        {
+            if (Directory.Exists(root))
+                Directory.Delete(root, true);
+        }
     }
 }

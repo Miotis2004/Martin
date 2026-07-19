@@ -11,8 +11,7 @@ public sealed class Phase12LiveDiagnosticTests
     public async Task Syntax_and_semantic_snapshots_preserve_exact_document_versions()
     {
         var (workspace, projectId, documentId) = await CreateWorkspaceAsync("func main( {");
-        await using var scheduler = new AnalysisScheduler(workspace, new AnalysisSchedulerOptions
-        {
+        await using var scheduler = new AnalysisScheduler(workspace, new AnalysisSchedulerOptions {
             SyntaxDiagnosticsDebounce = TimeSpan.Zero,
             ProjectAnalysisDebounce = TimeSpan.Zero
         });
@@ -35,16 +34,14 @@ public sealed class Phase12LiveDiagnosticTests
     public async Task Fixed_diagnostics_are_replaced_and_stale_work_cannot_reappear()
     {
         var (workspace, projectId, documentId) = await CreateWorkspaceAsync("func main( {");
-        await using var scheduler = new AnalysisScheduler(workspace, new AnalysisSchedulerOptions
-        {
+        await using var scheduler = new AnalysisScheduler(workspace, new AnalysisSchedulerOptions {
             SyntaxDiagnosticsDebounce = TimeSpan.FromMilliseconds(10),
             ProjectAnalysisDebounce = TimeSpan.FromMilliseconds(10)
         });
         await using var publisher = new LiveDiagnosticPublisher(workspace, scheduler, new MartinLanguageService());
         publisher.ScheduleProject(projectId);
         var oldProjectVersion = workspace.CurrentSnapshot.FindProject(projectId)!.Version;
-        var replacement = WaitForSnapshot(publisher, LanguageDiagnosticSource.LiveSyntax, s =>
-            s.Documents.TryGetValue(documentId, out var set) && set.DocumentVersion == new DocumentVersion(1));
+        var replacement = WaitForSnapshot(publisher, LanguageDiagnosticSource.LiveSyntax, s => s.Documents.TryGetValue(documentId, out var set) && set.DocumentVersion == new DocumentVersion(1));
 
         await workspace.ReplaceDocumentTextAsync(documentId, new(0), new(1), SourceText.From("func main() { return }", "main.martin"), true);
 
@@ -71,14 +68,15 @@ public sealed class Phase12LiveDiagnosticTests
     }
 
     static Task<DiagnosticSnapshot> WaitForSnapshot(LiveDiagnosticPublisher publisher, LanguageDiagnosticSource source,
-        Func<DiagnosticSnapshot, bool>? predicate = null)
+                                                    Func<DiagnosticSnapshot, bool>? predicate = null)
     {
         var completion = new TaskCompletionSource<DiagnosticSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
         publisher.SnapshotPublished += Handler;
         return completion.Task;
         void Handler(object? sender, DiagnosticSnapshotEventArgs args)
         {
-            if (args.Snapshot.Source != source || !(predicate?.Invoke(args.Snapshot) ?? true)) return;
+            if (args.Snapshot.Source != source || !(predicate?.Invoke(args.Snapshot) ?? true))
+                return;
             publisher.SnapshotPublished -= Handler;
             completion.TrySetResult(args.Snapshot);
         }
@@ -90,12 +88,10 @@ public sealed class Phase12LiveDiagnosticTests
         Directory.CreateDirectory(root);
         var source = Path.Combine(root, "main.martin");
         await File.WriteAllTextAsync(source, text);
-        var project = new MartinProject
-        {
+        var project = new MartinProject {
             ManifestPath = Path.Combine(root, "martin.json"),
             RootDirectory = root,
-            Manifest = new MartinManifest
-            {
+            Manifest = new MartinManifest {
                 ManifestVersion = 1,
                 Package = new PackageSection("LiveDiagnostics", "1.0.0"),
                 Target = new TargetSection("executable", "net8.0", "main.martin")

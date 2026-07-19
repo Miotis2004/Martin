@@ -20,35 +20,23 @@ public sealed class Phase13BenchmarkTests(ITestOutputHelper output)
     {
         var results = new List<Phase13BenchmarkResult>();
         Measure(results, "large-enum-switch-bind-exhaustiveness-decision", 100,
-            () => Compilation.Create(SyntaxTree.Parse(Phase13Data.EnumSwitch(100))).BindProgram());
+                () => Compilation.Create(SyntaxTree.Parse(Phase13Data.EnumSwitch(100))).BindProgram());
         Measure(results, "nested-pattern-analysis", 10,
-            () => Compilation.Create(SyntaxTree.Parse(Phase13Data.NestedOptionalSwitch(10))).BindProgram());
+                () => Compilation.Create(SyntaxTree.Parse(Phase13Data.NestedOptionalSwitch(10))).BindProgram());
         Measure(results, "large-protocol-witness-matching", 100,
-            () => Compilation.Create(SyntaxTree.Parse(Phase13Data.Protocol(100, 1))).BindProgram());
+                () => Compilation.Create(SyntaxTree.Parse(Phase13Data.Protocol(100, 1))).BindProgram());
         Measure(results, "many-conformances", 100,
-            () => Compilation.Create(SyntaxTree.Parse(Phase13Data.Protocol(10, 100))).BindProgram());
+                () => Compilation.Create(SyntaxTree.Parse(Phase13Data.Protocol(10, 100))).BindProgram());
 
         var data = Phase13Data.Workspace(100);
-        using var cache = new LanguageAnalysisCache(new()
-        {
+        using var cache = new LanguageAnalysisCache(new() {
             MaximumDocumentVersions = 4,
             MaximumProjectVersions = 2,
             ApproximateMemoryLimitBytes = 16 * 1024 * 1024
         });
         var service = new MartinLanguageService(cache);
-        await MeasureAsync(results, "pattern-completion", 1, () => service.CompleteAsync(data.Workspace,
-            Phase13Data.Request(data.Workspace, data.Project, data.Document, data.CompletionPosition)));
-        await MeasureAsync(results, "witness-navigation", 1, () => service.GetDefinitionsAsync(data.Workspace,
-            new DefinitionRequest
-            {
-                WorkspaceId = data.Workspace.Id,
-                WorkspaceVersion = data.Workspace.Version,
-                ProjectId = data.Project.Id,
-                ProjectVersion = data.Project.Version,
-                DocumentId = data.Document.Id,
-                DocumentVersion = data.Document.Version,
-                Position = data.NavigationPosition
-            }));
+        await MeasureAsync(results, "pattern-completion", 1, () => service.CompleteAsync(data.Workspace, Phase13Data.Request(data.Workspace, data.Project, data.Document, data.CompletionPosition)));
+        await MeasureAsync(results, "witness-navigation", 1, () => service.GetDefinitionsAsync(data.Workspace, new DefinitionRequest { WorkspaceId = data.Workspace.Id, WorkspaceVersion = data.Workspace.Version, ProjectId = data.Project.Id, ProjectVersion = data.Project.Version, DocumentId = data.Document.Id, DocumentVersion = data.Document.Version, Position = data.NavigationPosition }));
 
         var report = new Phase13BenchmarkReport(1, results, cache.Metrics);
         output.WriteLine(JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
@@ -69,8 +57,8 @@ public sealed class Phase13BenchmarkTests(ITestOutputHelper output)
         cancellation.Cancel();
         var timer = Stopwatch.StartNew();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            service.CompleteAsync(data.Workspace,
-                Phase13Data.Request(data.Workspace, data.Project, data.Document, data.CompletionPosition), cancellation.Token));
+                                                                    service.CompleteAsync(data.Workspace,
+                                                                                          Phase13Data.Request(data.Workspace, data.Project, data.Document, data.CompletionPosition), cancellation.Token));
         Assert.True(timer.Elapsed < TimeSpan.FromSeconds(1));
 
         service.CloseProject(data.Project.Id);
@@ -86,7 +74,7 @@ public sealed class Phase13BenchmarkTests(ITestOutputHelper output)
         action();
         timer.Stop();
         results.Add(new(name, scale, timer.Elapsed.TotalMilliseconds,
-            GC.GetAllocatedBytesForCurrentThread() - allocated));
+                        GC.GetAllocatedBytesForCurrentThread() - allocated));
     }
 
     private static async Task MeasureAsync<T>(List<Phase13BenchmarkResult> results, string name, int scale, Func<Task<T>> action)
@@ -97,7 +85,7 @@ public sealed class Phase13BenchmarkTests(ITestOutputHelper output)
         await action();
         timer.Stop();
         results.Add(new(name, scale, timer.Elapsed.TotalMilliseconds,
-            GC.GetTotalAllocatedBytes(false) - allocated));
+                        GC.GetTotalAllocatedBytes(false) - allocated));
     }
 }
 
@@ -117,7 +105,8 @@ internal static class Phase13Data
     {
         var type = "Bool" + string.Concat(Enumerable.Repeat("?", depth));
         var pattern = "true";
-        for (var i = 0; i < depth; i++) pattern = $".some({pattern})";
+        for (var i = 0; i < depth; i++)
+            pattern = $".some({pattern})";
         return $"func run(_ value: {type}) -> Int {{ switch value {{ case {pattern}: return 1 default: return 0 }} }}";
     }
 
@@ -130,7 +119,7 @@ internal static class Phase13Data
     }
 
     public static (LanguageWorkspaceSnapshot Workspace, LanguageProjectSnapshot Project,
-        LanguageDocumentSnapshot Document, int CompletionPosition, int NavigationPosition) Workspace(int cases)
+                   LanguageDocumentSnapshot Document, int CompletionPosition, int NavigationPosition) Workspace(int cases)
     {
         var source = EnumSwitch(cases) + "\nfunc completion(_ value: E) -> Int { switch value { case  } }";
         var completion = source.IndexOf("case  }", StringComparison.Ordinal) + 5;
@@ -142,14 +131,13 @@ internal static class Phase13Data
     }
 
     public static CompletionRequest Request(LanguageWorkspaceSnapshot workspace, LanguageProjectSnapshot project,
-        LanguageDocumentSnapshot document, int position) => new()
-        {
-            WorkspaceId = workspace.Id,
-            WorkspaceVersion = workspace.Version,
-            ProjectId = project.Id,
-            ProjectVersion = project.Version,
-            DocumentId = document.Id,
-            DocumentVersion = document.Version,
-            Position = position
-        };
+                                            LanguageDocumentSnapshot document, int position) => new() {
+        WorkspaceId = workspace.Id,
+        WorkspaceVersion = workspace.Version,
+        ProjectId = project.Id,
+        ProjectVersion = project.Version,
+        DocumentId = document.Id,
+        DocumentVersion = document.Version,
+        Position = position
+    };
 }

@@ -138,11 +138,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         var project = _workspaceService.Workspace.Project;
         ActiveProjectSummary = project is null
-            ? "No project open"
-            : $"Project: {project.Manifest.Package.Name}";
+                                   ? "No project open"
+                                   : $"Project: {project.Manifest.Package.Name}";
         ApplicationTitle = project is null
-            ? "Martin Studio"
-            : $"{project.Manifest.Package.Name} - Martin Studio";
+                               ? "Martin Studio"
+                               : $"{project.Manifest.Package.Name} - Martin Studio";
         OnPropertyChanged(nameof(ActiveBuildConfiguration));
 
         ProjectExplorer.Refresh(_workspaceService.Workspace.ProjectTree);
@@ -175,7 +175,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
         PreviousDiagnosticCommand.NotifyCanExecuteChanged();
     }
 
-
     private bool CanBuild() => _buildCoordinator is not null && _workspaceService.Workspace.Project is not null && _workspaceService.Workspace.BuildState == BuildState.Idle;
     private bool CanCancelBuild() => _buildCoordinator is not null && _workspaceService.Workspace.BuildState is BuildState.Building;
     private bool CanClean() => _buildCoordinator is not null && _workspaceService.Workspace.Project is not null && _workspaceService.Workspace.BuildState == BuildState.Idle;
@@ -192,7 +191,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task BuildAsync()
     {
-        if (_buildCoordinator is null) return;
+        if (_buildCoordinator is null)
+            return;
         await _buildCoordinator.BuildAsync();
         await ApplyDiagnosticsToEditorAsync();
         RefreshCommandState();
@@ -206,16 +206,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task CleanAsync()
     {
-        if (_buildCoordinator is null) return;
+        if (_buildCoordinator is null)
+            return;
         await _buildCoordinator.CleanAsync();
         await ApplyDiagnosticsToEditorAsync();
         RefreshCommandState();
     }
 
-
     private async Task RunAsync()
     {
-        if (_buildCoordinator is null || _executionCoordinator is null) return;
+        if (_buildCoordinator is null || _executionCoordinator is null)
+            return;
         var build = await _buildCoordinator.BuildAsync();
         await ApplyDiagnosticsToEditorAsync();
         if (build.Success)
@@ -229,7 +230,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task RunInExternalTerminalAsync()
     {
-        if (_buildCoordinator is null || _executionCoordinator is null) return;
+        if (_buildCoordinator is null || _executionCoordinator is null)
+            return;
         var build = await _buildCoordinator.BuildAsync();
         await ApplyDiagnosticsToEditorAsync();
         if (build.Success)
@@ -243,7 +245,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task RunWithoutBuildAsync()
     {
-        if (_executionCoordinator is null) return;
+        if (_executionCoordinator is null)
+            return;
         var freshness = _executionCoordinator.CreateFreshNoBuildResult();
         if (freshness.Completed && !string.IsNullOrWhiteSpace(freshness.StandardOutput))
         {
@@ -277,7 +280,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
             await _projectOpeningService.OpenProjectAsync(path);
         RefreshCommandState();
     }
-
 
     private async Task CreateProjectAsync(StudioProjectCreationRequest? request)
     {
@@ -352,7 +354,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task SaveActiveDocumentAsync()
     {
-        if (_workspaceService.Workspace.ActiveDocument is { } document)
+        if (_workspaceService.Workspace.ActiveDocument is {} document)
         {
             await PullEditorTextAsync(document);
             await _workspaceService.SaveAsync(document);
@@ -364,7 +366,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task SaveActiveDocumentAsAsync()
     {
-        if (_workspaceService.Workspace.ActiveDocument is not { } document || _fileDialogService is null)
+        if (_workspaceService.Workspace.ActiveDocument is not {} document || _fileDialogService is null)
             return;
         await PullEditorTextAsync(document);
         var destination = await _fileDialogService.PickSaveFileAsync(document.DisplayName, Path.GetDirectoryName(document.FilePath));
@@ -391,7 +393,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         var failures = result.Results.Where(r => !r.Success).ToArray();
         if (failures.Length > 0)
         {
-            if (failures.FirstOrDefault() is { } first && _workspaceService.Workspace.OpenDocuments.FirstOrDefault(d => string.Equals(d.FilePath, first.FilePath, StringComparison.OrdinalIgnoreCase)) is { } failedDocument)
+            if (failures.FirstOrDefault() is {} first && _workspaceService.Workspace.OpenDocuments.FirstOrDefault(d => string.Equals(d.FilePath, first.FilePath, StringComparison.OrdinalIgnoreCase)) is {} failedDocument)
                 _workspaceService.ActivateDocument(failedDocument.Id);
             if (_messageDialogService is not null)
                 await _messageDialogService.ShowErrorAsync("Save All completed with errors", string.Join(Environment.NewLine, failures.Select(f => $"{f.FilePath}: {f.Error}")));
@@ -403,14 +405,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task PullEditorTextAsync(DocumentModel document)
     {
-        if (_editorHost is null) return;
+        if (_editorHost is null)
+            return;
         var text = await _editorHost.GetDocumentTextAsync(document.Id);
         _workspaceService.ApplyEditorChange(document.Id, text);
     }
 
     private void CloseActiveDocument()
     {
-        if (_workspaceService.Workspace.ActiveDocument is { } document)
+        if (_workspaceService.Workspace.ActiveDocument is {} document)
             _ = CloseDocumentAsync(document.Id);
     }
 
@@ -420,12 +423,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private void ActivateDocumentByOffset(int offset)
     {
         var documents = _workspaceService.Workspace.OpenDocuments;
-        if (documents.Count == 0) return;
+        if (documents.Count == 0)
+            return;
         var active = _workspaceService.Workspace.ActiveDocument;
         var index = active is null ? 0 : documents.IndexOf(active);
-        if (index < 0) index = 0;
+        if (index < 0)
+            index = 0;
         var next = (index + offset) % documents.Count;
-        if (next < 0) next += documents.Count;
+        if (next < 0)
+            next += documents.Count;
         ActivateDocument(documents[next].Id);
     }
 
@@ -438,7 +444,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private void ScheduleDebouncedSessionSave()
     {
-        if (_sessionPersistence is null) return;
+        if (_sessionPersistence is null)
+            return;
         _viewStateSaveDebounce?.Cancel();
         var source = new CancellationTokenSource();
         _viewStateSaveDebounce = source;
@@ -452,7 +459,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
             await Task.Delay(ViewStateSaveDelay, source.Token);
             await _sessionPersistence!.SaveSessionAsync(source.Token);
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException)
+        {
+        }
         finally
         {
             if (ReferenceEquals(_viewStateSaveDebounce, source))
@@ -549,14 +558,18 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task<bool> ConfirmCloseDocumentsAsync(IReadOnlyList<DocumentModel> documents, UnsavedChangesContext context, CancellationToken cancellationToken = default)
     {
-        if (documents.Count == 0) return true;
+        if (documents.Count == 0)
+            return true;
         foreach (var document in documents)
             await PullEditorTextAsync(document);
         var dirty = documents.Where(d => d.IsDirty).ToArray();
-        if (dirty.Length == 0) return true;
+        if (dirty.Length == 0)
+            return true;
         var decision = _messageDialogService is null ? UnsavedChangesDecision.Cancel : await _messageDialogService.ConfirmUnsavedChangesAsync(dirty, context, cancellationToken);
-        if (decision == UnsavedChangesDecision.Cancel) return false;
-        if (decision == UnsavedChangesDecision.Discard) return true;
+        if (decision == UnsavedChangesDecision.Cancel)
+            return false;
+        if (decision == UnsavedChangesDecision.Discard)
+            return true;
         foreach (var document in dirty)
         {
             var result = await _workspaceService.SaveAsAsync(document, document.FilePath, cancellationToken);
@@ -573,8 +586,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private async Task NavigateToDiagnosticAsync(StudioDiagnostic? diagnostic)
     {
-        if (diagnostic?.FilePath is null || diagnostic.Range is null) return;
-        if (!_workspaceService.TryNavigateToDocument(diagnostic.FilePath, diagnostic.Range, out var document) || document is null) return;
+        if (diagnostic?.FilePath is null || diagnostic.Range is null)
+            return;
+        if (!_workspaceService.TryNavigateToDocument(diagnostic.FilePath, diagnostic.Range, out var document) || document is null)
+            return;
         RefreshCommandState();
         if (_editorHost is not null)
         {
@@ -592,7 +607,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public async Task ApplyDiagnosticsToEditorAsync(CancellationToken cancellationToken = default)
     {
-        if (_editorHost is null || _diagnosticService is null) return;
+        if (_editorHost is null || _diagnosticService is null)
+            return;
         foreach (var document in _workspaceService.Workspace.OpenDocuments)
             await _editorHost.SetDiagnosticsAsync(document.Id, _diagnosticService.ToEditor(document.Id), cancellationToken);
     }
@@ -611,7 +627,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public async Task LoadSettingsAsync()
     {
-        if (_settingsService is null) return;
+        if (_settingsService is null)
+            return;
         CurrentTheme = (await _settingsService.LoadAsync()).Theme;
     }
 
@@ -706,13 +723,15 @@ public sealed partial class ProjectTreeNodeViewModel : ObservableObject
     private async Task CopyPathAsync()
     {
         CopiedPath = _workspaceService?.CopyProjectTreeNodePath(_node) ?? FullPath;
-        if (_clipboardService is not null) await _clipboardService.SetTextAsync(CopiedPath);
+        if (_clipboardService is not null)
+            await _clipboardService.SetTextAsync(CopiedPath);
     }
 
     private async Task RevealAsync()
     {
         WasRevealRequested = _workspaceService?.RevealProjectTreeNode(_node) == true;
-        if (WasRevealRequested && _fileRevealService is not null) await _fileRevealService.RevealAsync(FullPath);
+        if (WasRevealRequested && _fileRevealService is not null)
+            await _fileRevealService.RevealAsync(FullPath);
     }
 
     private void RefreshFromNode()
@@ -794,9 +813,17 @@ public sealed partial class OutputPaneViewModel(IOutputService outputService) : 
     public OutputFilter Filter { get; private set; } = new();
     public bool AutoScroll { get; private set; } = true;
 
-    public void SetFilter(OutputFilter filter) { Filter = filter; Refresh(); }
+    public void SetFilter(OutputFilter filter)
+    {
+        Filter = filter;
+        Refresh();
+    }
     public void SetAutoScroll(bool autoScroll) => AutoScroll = autoScroll;
-    public void Clear() { outputService.Clear(); Refresh(); }
+    public void Clear()
+    {
+        outputService.Clear();
+        Refresh();
+    }
     public string CopyAll() => outputService.CopyAll(Filter);
     public Task SaveLogAsync(string path, CancellationToken cancellationToken = default) => outputService.SaveLogAsync(path, Filter, cancellationToken);
 
@@ -815,7 +842,11 @@ public sealed partial class ErrorListViewModel : ObservableObject
     public ObservableCollection<StudioDiagnosticViewModel> Diagnostics { get; } = [];
     public DiagnosticFilter Filter { get; private set; } = new();
 
-    public void SetFilter(DiagnosticFilter filter) { Filter = filter; ApplyFilter(); }
+    public void SetFilter(DiagnosticFilter filter)
+    {
+        Filter = filter;
+        ApplyFilter();
+    }
     public string CopyAll() => string.Join(Environment.NewLine, Diagnostics.Select(d => d.AccessibleText));
     public StudioDiagnostic? Next() => Navigate(1)?.Diagnostic;
     public StudioDiagnostic? Previous() => Navigate(-1)?.Diagnostic;
@@ -831,10 +862,19 @@ public sealed partial class ErrorListViewModel : ObservableObject
         Diagnostics.Clear();
         foreach (var diagnostic in _allDiagnostics.Where(Matches).OrderByDescending(d => d.Severity).ThenBy(d => d.FilePath ?? string.Empty, StringComparer.OrdinalIgnoreCase).ThenBy(d => d.Range?.StartLine ?? 0).ThenBy(d => d.Range?.StartColumn ?? 0).ThenBy(d => d.Code, StringComparer.OrdinalIgnoreCase))
             Diagnostics.Add(new StudioDiagnosticViewModel(diagnostic));
-        if (_navigationIndex >= Diagnostics.Count) _navigationIndex = Diagnostics.Count - 1;
+        if (_navigationIndex >= Diagnostics.Count)
+            _navigationIndex = Diagnostics.Count - 1;
     }
 
-    private StudioDiagnosticViewModel? Navigate(int delta) { if (Diagnostics.Count == 0) return null; _navigationIndex = (_navigationIndex + delta) % Diagnostics.Count; if (_navigationIndex < 0) _navigationIndex += Diagnostics.Count; return Diagnostics[_navigationIndex]; }
+    private StudioDiagnosticViewModel? Navigate(int delta)
+    {
+        if (Diagnostics.Count == 0)
+            return null;
+        _navigationIndex = (_navigationIndex + delta) % Diagnostics.Count;
+        if (_navigationIndex < 0)
+            _navigationIndex += Diagnostics.Count;
+        return Diagnostics[_navigationIndex];
+    }
     private bool Matches(StudioDiagnostic d) => (Filter.Severities is null || Filter.Severities.Contains(d.Severity)) && (Filter.Sources is null || Filter.Sources.Contains(d.Source)) && (string.IsNullOrWhiteSpace(Filter.Text) || d.Message.Contains(Filter.Text, StringComparison.OrdinalIgnoreCase) || d.Code.Contains(Filter.Text, StringComparison.OrdinalIgnoreCase) || (d.FilePath?.Contains(Filter.Text, StringComparison.OrdinalIgnoreCase) ?? false) || d.Source.Contains(Filter.Text, StringComparison.OrdinalIgnoreCase));
 }
 
@@ -873,7 +913,7 @@ public sealed partial class StatusBarViewModel : ObservableObject
     public void Refresh(StudioWorkspace workspace)
     {
         Text = workspace.Project is null
-            ? "Ready"
-            : $"{workspace.OpenDocuments.Count} document(s), build {workspace.BuildState}, run {workspace.ExecutionState}";
+                   ? "Ready"
+                   : $"{workspace.OpenDocuments.Count} document(s), build {workspace.BuildState}, run {workspace.ExecutionState}";
     }
 }

@@ -53,14 +53,19 @@ public sealed class LanguageAnalysisCache : IDisposable
     public LanguageAnalysisCache(AnalysisCacheOptions? options = null)
     {
         _options = options ?? new();
-        if (_options.MaximumDocumentVersions <= 0) throw new ArgumentOutOfRangeException(nameof(options), "Document cache capacity must be positive.");
-        if (_options.MaximumProjectVersions <= 0) throw new ArgumentOutOfRangeException(nameof(options), "Project cache capacity must be positive.");
-        if (_options.ApproximateMemoryLimitBytes <= 0) throw new ArgumentOutOfRangeException(nameof(options), "Memory limit must be positive.");
+        if (_options.MaximumDocumentVersions <= 0)
+            throw new ArgumentOutOfRangeException(nameof(options), "Document cache capacity must be positive.");
+        if (_options.MaximumProjectVersions <= 0)
+            throw new ArgumentOutOfRangeException(nameof(options), "Project cache capacity must be positive.");
+        if (_options.ApproximateMemoryLimitBytes <= 0)
+            throw new ArgumentOutOfRangeException(nameof(options), "Memory limit must be positive.");
     }
 
     public AnalysisCacheMetrics Metrics
     {
-        get { lock (_gate) return new(_hits, _misses, _evictions, _documents.Count, _projects.Count, _memory); }
+        get {
+            lock (_gate) return new(_hits, _misses, _evictions, _documents.Count, _projects.Count, _memory);
+        }
     }
 
     public void RetainCurrent(LanguageWorkspaceSnapshot workspace)
@@ -131,7 +136,11 @@ public sealed class LanguageAnalysisCache : IDisposable
         if (_documents.TryGetValue(key, out var lazy) && lazy.IsValueCreated && lazy.Value.IsCompletedSuccessfully)
         {
             analysis = lazy.Value.Result.Value;
-            lock (_gate) { _hits++; TouchDocument(key); }
+            lock (_gate)
+            {
+                _hits++;
+                TouchDocument(key);
+            }
             return true;
         }
         analysis = null!;
@@ -154,13 +163,15 @@ public sealed class LanguageAnalysisCache : IDisposable
         {
             ThrowIfDisposed();
             _currentProjects.Remove(projectId);
-            foreach (var key in _projects.Keys.Where(k => k.ProjectId == projectId).ToArray()) RemoveProject(key);
+            foreach (var key in _projects.Keys.Where(k => k.ProjectId == projectId).ToArray())
+                RemoveProject(key);
             var ids = _documentProjects.Where(p => p.Value == projectId).Select(p => p.Key).ToArray();
             foreach (var id in ids)
             {
                 _currentDocuments.Remove(id);
                 _documentProjects.Remove(id);
-                foreach (var key in _documents.Keys.Where(k => k.DocumentId == id).ToArray()) RemoveDocument(key);
+                foreach (var key in _documents.Keys.Where(k => k.DocumentId == id).ToArray())
+                    RemoveDocument(key);
             }
         }
     }
@@ -169,14 +180,20 @@ public sealed class LanguageAnalysisCache : IDisposable
     {
         lock (_gate)
         {
-            if (_disposed) return;
+            if (_disposed)
+                return;
             _disposed = true;
             CancelAll(_documentPopulations);
             CancelAll(_projectPopulations);
-            _documents.Clear(); _projects.Clear();
-            _documentLru.Clear(); _projectLru.Clear();
-            _documentNodes.Clear(); _projectNodes.Clear();
-            _documentProjects.Clear(); _currentDocuments.Clear(); _currentProjects.Clear();
+            _documents.Clear();
+            _projects.Clear();
+            _documentLru.Clear();
+            _projectLru.Clear();
+            _documentNodes.Clear();
+            _projectNodes.Clear();
+            _documentProjects.Clear();
+            _currentDocuments.Clear();
+            _currentProjects.Clear();
             _memory = 0;
         }
     }
@@ -184,25 +201,37 @@ public sealed class LanguageAnalysisCache : IDisposable
     private async Task<IAnalysisLease<TValue>> GetOrCreateAsync<TKey, TValue>(
         TKey key, Func<CancellationToken, Task<TValue>> factory, long size,
         ConcurrentDictionary<TKey, Lazy<Task<Entry<TKey, TValue>>>> cache, bool document,
-        CancellationToken cancellationToken) where TKey : notnull where TValue : class
+        CancellationToken cancellationToken)
+        where TKey : notnull
+        where TValue : class
     {
         ArgumentNullException.ThrowIfNull(factory);
         ThrowIfDisposed();
         var populationCancellation = new CancellationTokenSource();
         var candidate = new Lazy<Task<Entry<TKey, TValue>>>(async () =>
-        {
-            // Shared population must not be cancelled by one waiter.
-            var value = await factory(populationCancellation.Token).ConfigureAwait(false);
-            return new(key, value, size == 0 ? Estimate(value) : size);
-        }, LazyThreadSafetyMode.ExecutionAndPublication);
+                                                            {
+                                                                // Shared population must not be cancelled by one waiter.
+                                                                var value = await factory(populationCancellation.Token).ConfigureAwait(false);
+                                                                return new(key, value, size == 0 ? Estimate(value) : size);
+                                                            },
+                                                            LazyThreadSafetyMode.ExecutionAndPublication);
         var lazy = cache.GetOrAdd(key, candidate);
         if (ReferenceEquals(lazy, candidate))
             AddPopulationCancellation(key, populationCancellation, document);
         else
             populationCancellation.Dispose();
-        lock (_gate) { if (ReferenceEquals(lazy, candidate)) _misses++; else _hits++; }
+        lock (_gate)
+        {
+            if (ReferenceEquals(lazy, candidate))
+                _misses++;
+            else
+                _hits++;
+        }
         Entry<TKey, TValue> entry;
-        try { entry = await lazy.Value.WaitAsync(cancellationToken).ConfigureAwait(false); }
+        try
+        {
+            entry = await lazy.Value.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
         catch
         {
             if (lazy.IsValueCreated && (lazy.Value.IsFaulted || lazy.Value.IsCanceled))
@@ -226,13 +255,19 @@ public sealed class LanguageAnalysisCache : IDisposable
         return new Lease<TValue>(entry.Value, () => Release(entry));
     }
 
-    private void AddedDynamic<TKey, TValue>(Entry<TKey, TValue> entry, bool document) where TKey : notnull where TValue : class
+    private void AddedDynamic<TKey, TValue>(Entry<TKey, TValue> entry, bool document)
+        where TKey : notnull
+        where TValue : class
     {
-        if (document) Added((Entry<DocumentAnalysisKey, DocumentAnalysis>)(object)entry, true);
-        else Added((Entry<ProjectAnalysisKey, ProjectAnalysis>)(object)entry, false);
+        if (document)
+            Added((Entry<DocumentAnalysisKey, DocumentAnalysis>)(object)entry, true);
+        else
+            Added((Entry<ProjectAnalysisKey, ProjectAnalysis>)(object)entry, false);
     }
 
-    private void Added<TKey, TValue>(Entry<TKey, TValue> entry, bool document) where TKey : notnull where TValue : class
+    private void Added<TKey, TValue>(Entry<TKey, TValue> entry, bool document)
+        where TKey : notnull
+        where TValue : class
     {
         lock (_gate)
         {
@@ -251,27 +286,48 @@ public sealed class LanguageAnalysisCache : IDisposable
         }
     }
 
-    private void Release<TKey, TValue>(Entry<TKey, TValue> entry) where TKey : notnull where TValue : class
+    private void Release<TKey, TValue>(Entry<TKey, TValue> entry)
+        where TKey : notnull
+        where TValue : class
     {
         lock (_gate)
         {
             entry.Leases--;
             if (entry.Leases == 0 && entry.RemoveWhenReleased)
             {
-                if (entry.Key is DocumentAnalysisKey documentKey) RemoveDocument(documentKey);
-                else if (entry.Key is ProjectAnalysisKey projectKey) RemoveProject(projectKey);
+                if (entry.Key is DocumentAnalysisKey documentKey)
+                    RemoveDocument(documentKey);
+                else if (entry.Key is ProjectAnalysisKey projectKey)
+                    RemoveProject(projectKey);
             }
             EvictUnderLock();
         }
     }
 
-    private void TouchDynamic<TKey>(TKey key, bool document) where TKey : notnull
+    private void TouchDynamic<TKey>(TKey key, bool document)
+        where TKey : notnull
     {
-        if (document) TouchDocument((DocumentAnalysisKey)(object)key);
-        else TouchProject((ProjectAnalysisKey)(object)key);
+        if (document)
+            TouchDocument((DocumentAnalysisKey)(object)key);
+        else
+            TouchProject((ProjectAnalysisKey)(object)key);
     }
-    private void TouchDocument(DocumentAnalysisKey key) { if (_documentNodes.Remove(key, out var n)) { _documentLru.Remove(n); _documentNodes[key] = _documentLru.AddFirst(key); } }
-    private void TouchProject(ProjectAnalysisKey key) { if (_projectNodes.Remove(key, out var n)) { _projectLru.Remove(n); _projectNodes[key] = _projectLru.AddFirst(key); } }
+    private void TouchDocument(DocumentAnalysisKey key)
+    {
+        if (_documentNodes.Remove(key, out var n))
+        {
+            _documentLru.Remove(n);
+            _documentNodes[key] = _documentLru.AddFirst(key);
+        }
+    }
+    private void TouchProject(ProjectAnalysisKey key)
+    {
+        if (_projectNodes.Remove(key, out var n))
+        {
+            _projectLru.Remove(n);
+            _projectNodes[key] = _projectLru.AddFirst(key);
+        }
+    }
 
     private void EvictUnderLock()
     {
@@ -280,64 +336,129 @@ public sealed class LanguageAnalysisCache : IDisposable
             var removed = false;
             if (_documents.Count > _options.MaximumDocumentVersions || (_memory > _options.ApproximateMemoryLimitBytes && _documents.Count > 0))
                 for (var node = _documentLru.Last; node is not null; node = node.Previous)
-                    if (!IsCurrent(node.Value) && LeaseCount(_documents, node.Value) == 0) { RemoveDocument(node.Value); removed = true; break; }
+                    if (!IsCurrent(node.Value) && LeaseCount(_documents, node.Value) == 0)
+                    {
+                        RemoveDocument(node.Value);
+                        removed = true;
+                        break;
+                    }
             if (!removed && (_projects.Count > _options.MaximumProjectVersions || _memory > _options.ApproximateMemoryLimitBytes))
                 for (var node = _projectLru.Last; node is not null; node = node.Previous)
-                    if (!IsCurrent(node.Value) && LeaseCount(_projects, node.Value) == 0) { RemoveProject(node.Value); removed = true; break; }
-            if (!removed) break;
+                    if (!IsCurrent(node.Value) && LeaseCount(_projects, node.Value) == 0)
+                    {
+                        RemoveProject(node.Value);
+                        removed = true;
+                        break;
+                    }
+            if (!removed)
+                break;
         }
     }
 
     private bool IsCurrent(DocumentAnalysisKey key) => _currentDocuments.TryGetValue(key.DocumentId, out var v) && v == key.DocumentVersion;
     private bool IsCurrent(ProjectAnalysisKey key) => _currentProjects.TryGetValue(key.ProjectId, out var v) && v == key.ProjectVersion;
-    private static int LeaseCount<TKey, TValue>(ConcurrentDictionary<TKey, Lazy<Task<Entry<TKey, TValue>>>> cache, TKey key) where TKey : notnull where TValue : class =>
-        cache.TryGetValue(key, out var l) && l.IsValueCreated && l.Value.IsCompletedSuccessfully ? l.Value.Result.Leases : 0;
-    private void RemoveDocument(DocumentAnalysisKey key)
+    private static int LeaseCount<TKey, TValue>(ConcurrentDictionary<TKey, Lazy<Task<Entry<TKey, TValue>>>> cache, TKey key)
+        where TKey : notnull
+        where TValue : class => cache.TryGetValue(key, out var l) && l.IsValueCreated && l.Value.IsCompletedSuccessfully ? l.Value.Result.Leases : 0; private void RemoveDocument(DocumentAnalysisKey key)
     {
-        if (!_documents.TryGetValue(key, out var l)) return;
-        if (l.IsValueCreated && l.Value.IsCompletedSuccessfully && l.Value.Result.Leases > 0) { l.Value.Result.RemoveWhenReleased = true; return; }
-        if (!_documents.TryRemove(key, out l)) return;
+        if (!_documents.TryGetValue(key, out var l))
+            return;
+        if (l.IsValueCreated && l.Value.IsCompletedSuccessfully && l.Value.Result.Leases > 0)
+        {
+            l.Value.Result.RemoveWhenReleased = true;
+            return;
+        }
+        if (!_documents.TryRemove(key, out l))
+            return;
         CancelPopulation(key, true);
-        RemoveNode(key); if (l.IsValueCreated && l.Value.IsCompletedSuccessfully) _memory -= l.Value.Result.Size; _evictions++;
+        RemoveNode(key);
+        if (l.IsValueCreated && l.Value.IsCompletedSuccessfully)
+            _memory -= l.Value.Result.Size;
+        _evictions++;
     }
     private void RemoveProject(ProjectAnalysisKey key)
     {
-        if (!_projects.TryGetValue(key, out var l)) return;
-        if (l.IsValueCreated && l.Value.IsCompletedSuccessfully && l.Value.Result.Leases > 0) { l.Value.Result.RemoveWhenReleased = true; return; }
-        if (!_projects.TryRemove(key, out l)) return;
+        if (!_projects.TryGetValue(key, out var l))
+            return;
+        if (l.IsValueCreated && l.Value.IsCompletedSuccessfully && l.Value.Result.Leases > 0)
+        {
+            l.Value.Result.RemoveWhenReleased = true;
+            return;
+        }
+        if (!_projects.TryRemove(key, out l))
+            return;
         CancelPopulation(key, false);
-        RemoveNode(key); if (l.IsValueCreated && l.Value.IsCompletedSuccessfully) _memory -= l.Value.Result.Size; _evictions++;
+        RemoveNode(key);
+        if (l.IsValueCreated && l.Value.IsCompletedSuccessfully)
+            _memory -= l.Value.Result.Size;
+        _evictions++;
     }
-    private void RemoveNode(DocumentAnalysisKey key) { if (_documentNodes.Remove(key, out var n)) _documentLru.Remove(n); }
-    private void RemoveNode(ProjectAnalysisKey key) { if (_projectNodes.Remove(key, out var n)) _projectLru.Remove(n); }
-    private static long Estimate<T>(T value) => value switch { DocumentAnalysis d => Math.Max(1, d.SyntaxTree.Text.Length * 2L), ProjectAnalysis p => Math.Max(1, p.Compilation.SyntaxTrees.Sum(t => t.Text.Length) * 2L), _ => 1 };
-    private void ThrowIfDisposed() { if (_disposed) throw new ObjectDisposedException(nameof(LanguageAnalysisCache)); }
-
-    private void AddPopulationCancellation<TKey>(TKey key, CancellationTokenSource source, bool document) where TKey : notnull
+    private void RemoveNode(DocumentAnalysisKey key)
     {
-        if (document) _documentPopulations[(DocumentAnalysisKey)(object)key] = source;
-        else _projectPopulations[(ProjectAnalysisKey)(object)key] = source;
+        if (_documentNodes.Remove(key, out var n))
+            _documentLru.Remove(n);
+    }
+    private void RemoveNode(ProjectAnalysisKey key)
+    {
+        if (_projectNodes.Remove(key, out var n))
+            _projectLru.Remove(n);
+    }
+    private static long Estimate<T>(T value) => value switch { DocumentAnalysis d => Math.Max(1, d.SyntaxTree.Text.Length * 2L), ProjectAnalysis p => Math.Max(1, p.Compilation.SyntaxTrees.Sum(t => t.Text.Length) * 2L),
+                                                               _ => 1 };
+    private void ThrowIfDisposed()
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(nameof(LanguageAnalysisCache));
     }
 
-    private void CancelPopulation<TKey>(TKey key, bool document) where TKey : notnull
+    private void AddPopulationCancellation<TKey>(TKey key, CancellationTokenSource source, bool document)
+        where TKey : notnull
     {
-        CancellationTokenSource? source;
+        if (document)
+            _documentPopulations[(DocumentAnalysisKey)(object)key] = source;
+        else
+            _projectPopulations[(ProjectAnalysisKey)(object)key] = source;
+    }
+
+    private void CancelPopulation<TKey>(TKey key, bool document)
+        where TKey : notnull
+    {
+        CancellationTokenSource ? source;
         var removed = document
-            ? _documentPopulations.TryRemove((DocumentAnalysisKey)(object)key, out source)
-            : _projectPopulations.TryRemove((ProjectAnalysisKey)(object)key, out source);
-        if (!removed) return;
+                          ? _documentPopulations.TryRemove((DocumentAnalysisKey)(object)key, out source)
+                          : _projectPopulations.TryRemove((ProjectAnalysisKey)(object)key, out source);
+        if (!removed)
+            return;
         source!.Cancel();
         source.Dispose();
     }
 
-    private static void CancelAll<TKey>(ConcurrentDictionary<TKey, CancellationTokenSource> populations) where TKey : notnull
+    private static void CancelAll<TKey>(ConcurrentDictionary<TKey, CancellationTokenSource> populations)
+        where TKey : notnull
     {
         foreach (var pair in populations.ToArray())
-            if (populations.TryRemove(pair.Key, out var source)) { source.Cancel(); source.Dispose(); }
+            if (populations.TryRemove(pair.Key, out var source))
+            {
+                source.Cancel();
+                source.Dispose();
+            }
     }
 
-    private sealed class Entry<TKey, TValue>(TKey key, TValue value, long size) where TKey : notnull where TValue : class
-    { public TKey Key { get; } = key; public TValue Value { get; } = value; public long Size { get; } = size; public int Leases; public bool Registered; public bool RemoveWhenReleased; }
+    private sealed class Entry<TKey, TValue>(TKey key, TValue value, long size)
+        where TKey : notnull
+        where TValue : class
+    {
+        public TKey Key { get; } = key;
+        public TValue Value { get; } = value;
+        public long Size { get; } = size;
+        public int Leases;
+        public bool Registered;
+        public bool RemoveWhenReleased;
+    }
     private sealed class Lease<T>(T value, Action release) : IAnalysisLease<T>
-    { private Action? _release = release; public T Value { get; } = value; public void Dispose() => Interlocked.Exchange(ref _release, null)?.Invoke(); }
+    {
+        private Action? _release = release;
+        public T Value { get; } = value;
+        public void Dispose() => Interlocked.Exchange(ref _release, null)?.Invoke();
+    }
 }

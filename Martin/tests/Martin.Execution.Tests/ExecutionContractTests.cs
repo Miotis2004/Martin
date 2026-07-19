@@ -20,13 +20,11 @@ public sealed class ExecutionContractTests
     [Fact]
     public void Execution_options_capture_process_contract_inputs()
     {
-        var options = new ExecutionOptions
-        {
+        var options = new ExecutionOptions {
             Arguments = ["--verbose"],
             WorkingDirectory = "/tmp/martin",
             StandardInput = "input",
-            EnvironmentVariables = new Dictionary<string, string?> { ["MARTIN_TEST"] = "1" }
-        };
+            EnvironmentVariables = new Dictionary < string, string ?> { ["MARTIN_TEST"] = "1" } };
 
         Assert.Equal(["--verbose"], options.Arguments);
         Assert.Equal("/tmp/martin", options.WorkingDirectory);

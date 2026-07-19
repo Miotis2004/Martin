@@ -14,12 +14,13 @@ public sealed class ProjectPathPolicy
         var fullCandidate = Path.GetFullPath(candidate);
         var relative = Path.GetRelativePath(fullRoot, fullCandidate);
 
-        if (Path.IsPathRooted(relative)) return false;
-        if (relative == ".") return false;
+        if (Path.IsPathRooted(relative))
+            return false;
+        if (relative == ".")
+            return false;
 
         return relative != ".." &&
                !relative.StartsWith(".." + Path.DirectorySeparatorChar, comparison) &&
                !relative.StartsWith(".." + Path.AltDirectorySeparatorChar, comparison);
     }
 }
-

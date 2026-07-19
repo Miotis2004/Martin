@@ -23,8 +23,7 @@ public sealed class MartinExecutionService : IMartinExecutionService
     {
         return RunAsync(
             build,
-            new ExecutionOptions
-            {
+            new ExecutionOptions {
                 Arguments = arguments
             },
             cancellationToken);
@@ -41,29 +40,27 @@ public sealed class MartinExecutionService : IMartinExecutionService
         if (!build.Success ||
             string.IsNullOrWhiteSpace(build.EntryPointPath))
         {
-            return new ExecutionResult
-            {
+            return new ExecutionResult {
                 Status = ExecutionStatus.Failed,
                 Diagnostics =
-                [
-                    CreateDiagnostic(
-                        "MRT4801",
-                        "The build result does not contain an executable entry point.")
-                ]
+                    [
+                        CreateDiagnostic(
+                            "MRT4801",
+                            "The build result does not contain an executable entry point.")
+                    ]
             };
         }
 
         if (!File.Exists(build.EntryPointPath))
         {
-            return new ExecutionResult
-            {
+            return new ExecutionResult {
                 Status = ExecutionStatus.Failed,
                 Diagnostics =
-                [
-                    CreateDiagnostic(
-                        "MRT4802",
-                        $"The executable entry point '{build.EntryPointPath}' does not exist.")
-                ]
+                    [
+                        CreateDiagnostic(
+                            "MRT4802",
+                            $"The executable entry point '{build.EntryPointPath}' does not exist.")
+                    ]
             };
         }
 
@@ -73,15 +70,14 @@ public sealed class MartinExecutionService : IMartinExecutionService
         {
             if (_externalTerminalLauncher is null)
             {
-                return new ExecutionResult
-                {
+                return new ExecutionResult {
                     Status = ExecutionStatus.Failed,
                     Diagnostics =
-                    [
-                        CreateDiagnostic(
-                            "MRT4806",
-                            "External-terminal execution requires an external-terminal launcher.")
-                    ]
+                        [
+                            CreateDiagnostic(
+                                "MRT4806",
+                                "External-terminal execution requires an external-terminal launcher.")
+                        ]
                 };
             }
 
@@ -111,11 +107,10 @@ public sealed class MartinExecutionService : IMartinExecutionService
 
         arguments.AddRange(options.Arguments);
 
-        return new ProcessExecutionRequest
-        {
+        return new ProcessExecutionRequest {
             FileName = isManagedAssembly
-                ? "dotnet"
-                : entryPointPath,
+                           ? "dotnet"
+                           : entryPointPath,
 
             Arguments = arguments,
 
@@ -134,8 +129,7 @@ public sealed class MartinExecutionService : IMartinExecutionService
         ProcessExecutionRequest request,
         CancellationToken cancellationToken)
     {
-        using var process = new Process
-        {
+        using var process = new Process {
             StartInfo = CreateStartInfo(request)
         };
 
@@ -148,15 +142,14 @@ public sealed class MartinExecutionService : IMartinExecutionService
 
             if (!process.Start())
             {
-                return new ExecutionResult
-                {
+                return new ExecutionResult {
                     Status = ExecutionStatus.Failed,
                     Diagnostics =
-                    [
-                        CreateDiagnostic(
-                            "MRT4811",
-                            $"The process '{request.FileName}' could not be started.")
-                    ]
+                        [
+                            CreateDiagnostic(
+                                "MRT4811",
+                                $"The process '{request.FileName}' could not be started.")
+                        ]
                 };
             }
 
@@ -211,11 +204,10 @@ public sealed class MartinExecutionService : IMartinExecutionService
             var standardError =
                 await CompleteOutputReadAsync(standardErrorTask);
 
-            return new ExecutionResult
-            {
+            return new ExecutionResult {
                 Status = process.ExitCode == 0
-                    ? ExecutionStatus.Completed
-                    : ExecutionStatus.Failed,
+                             ? ExecutionStatus.Completed
+                             : ExecutionStatus.Failed,
 
                 ExitCode = process.ExitCode,
                 StandardOutput = standardOutput,
@@ -231,16 +223,15 @@ public sealed class MartinExecutionService : IMartinExecutionService
         }
         catch (Exception ex) when (
             ex is InvalidOperationException or
-            System.ComponentModel.Win32Exception or
-            IOException or
-            UnauthorizedAccessException or
-            NotSupportedException)
+                System.ComponentModel.Win32Exception or
+                    IOException or
+                        UnauthorizedAccessException or
+                            NotSupportedException)
         {
             KillProcessTree(process);
             await WaitForExitAfterCancellationAsync(process);
 
-            return new ExecutionResult
-            {
+            return new ExecutionResult {
                 Status = ExecutionStatus.Failed,
                 StandardOutput =
                     await CompleteOutputReadAsync(standardOutputTask),
@@ -249,11 +240,11 @@ public sealed class MartinExecutionService : IMartinExecutionService
                     await CompleteOutputReadAsync(standardErrorTask),
 
                 Diagnostics =
-                [
-                    CreateDiagnostic(
-                        "MRT4811",
-                        ex.Message)
-                ]
+                    [
+                        CreateDiagnostic(
+                            "MRT4811",
+                            ex.Message)
+                    ]
             };
         }
     }
@@ -267,24 +258,21 @@ public sealed class MartinExecutionService : IMartinExecutionService
 
         var isWindowsCommandScript =
             OperatingSystem.IsWindows() &&
-            (
-                string.Equals(
-                    Path.GetExtension(fileName),
-                    ".cmd",
-                    StringComparison.OrdinalIgnoreCase) ||
+            (string.Equals(
+                 Path.GetExtension(fileName),
+                 ".cmd",
+                 StringComparison.OrdinalIgnoreCase) ||
 
-                string.Equals(
-                    Path.GetExtension(fileName),
-                    ".bat",
-                    StringComparison.OrdinalIgnoreCase)
-            );
+             string.Equals(
+                 Path.GetExtension(fileName),
+                 ".bat",
+                 StringComparison.OrdinalIgnoreCase));
 
         var processFileName = isWindowsCommandScript
-            ? GetCommandProcessorPath()
-            : fileName;
+                                  ? GetCommandProcessorPath()
+                                  : fileName;
 
-        var startInfo = new ProcessStartInfo(processFileName)
-        {
+        var startInfo = new ProcessStartInfo(processFileName) {
             RedirectStandardInput =
                 request.StandardInput is not null,
 
@@ -342,8 +330,7 @@ public sealed class MartinExecutionService : IMartinExecutionService
          *
          * cmd.exe /d /s /c ""C:\path\script.cmd" "argument one" "argument two""
          */
-        var commandParts = new List<string>
-        {
+        var commandParts = new List<string> {
             QuoteWindowsCommandArgument(scriptPath)
         };
 
@@ -356,8 +343,8 @@ public sealed class MartinExecutionService : IMartinExecutionService
     }
 
     private static string ResolveExecutablePath(
-    string fileName,
-    IReadOnlyDictionary<string, string?> environmentVariables)
+        string fileName,
+        IReadOnlyDictionary<string, string?> environmentVariables)
     {
         if (Path.IsPathFullyQualified(fileName) ||
             !string.IsNullOrEmpty(Path.GetDirectoryName(fileName)))
@@ -381,10 +368,10 @@ public sealed class MartinExecutionService : IMartinExecutionService
         foreach (var directory in path.Split(
                      Path.PathSeparator,
                      StringSplitOptions.RemoveEmptyEntries |
-                     StringSplitOptions.TrimEntries))
+                         StringSplitOptions.TrimEntries))
         {
             foreach (var candidateName in
-                     GetExecutableCandidateNames(fileName))
+                         GetExecutableCandidateNames(fileName))
             {
                 var candidate = Path.Combine(
                     directory,
@@ -399,7 +386,7 @@ public sealed class MartinExecutionService : IMartinExecutionService
     }
 
     private static IEnumerable<string> GetExecutableCandidateNames(
-    string fileName)
+        string fileName)
     {
         yield return fileName;
 
@@ -418,8 +405,8 @@ public sealed class MartinExecutionService : IMartinExecutionService
     }
 
     private static string? GetEnvironmentValue(
-    IReadOnlyDictionary<string, string?> environmentVariables,
-    string name)
+        IReadOnlyDictionary<string, string?> environmentVariables,
+        string name)
     {
         if (environmentVariables.TryGetValue(name, out var value))
             return value;
@@ -445,8 +432,7 @@ public sealed class MartinExecutionService : IMartinExecutionService
 
     private static string GetCommandProcessorPath()
     {
-        return Environment.GetEnvironmentVariable("ComSpec")
-            ?? "cmd.exe";
+        return Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe";
     }
 
     private static string QuoteWindowsCommandArgument(
@@ -462,16 +448,15 @@ public sealed class MartinExecutionService : IMartinExecutionService
     }
 
     private static async Task<ExecutionResult>
-        CreateCancelledResultAsync(
-            Process process,
-            Task<string>? standardOutputTask,
-            Task<string>? standardErrorTask)
+    CreateCancelledResultAsync(
+        Process process,
+        Task<string>? standardOutputTask,
+        Task<string>? standardErrorTask)
     {
         KillProcessTree(process);
         await WaitForExitAfterCancellationAsync(process);
 
-        return new ExecutionResult
-        {
+        return new ExecutionResult {
             Status = ExecutionStatus.Cancelled,
 
             StandardOutput =
@@ -481,11 +466,11 @@ public sealed class MartinExecutionService : IMartinExecutionService
                 await CompleteOutputReadAsync(standardErrorTask),
 
             Diagnostics =
-            [
-                CreateDiagnostic(
-                    "MRT4810",
-                    "Program execution was cancelled.")
-            ]
+                [
+                    CreateDiagnostic(
+                        "MRT4810",
+                        "Program execution was cancelled.")
+                ]
         };
     }
 

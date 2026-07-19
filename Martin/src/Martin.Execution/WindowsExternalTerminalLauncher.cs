@@ -35,38 +35,36 @@ public sealed class WindowsExternalTerminalLauncher : IExternalTerminalLauncher
                     "The external terminal could not be started."));
             }
 
-            return Task.FromResult(new ExecutionResult
-            {
+            return Task.FromResult(new ExecutionResult {
                 Status = ExecutionStatus.Completed,
                 Diagnostics =
-                [
-                    Diagnostic(
-                        "MRT4822",
-                        DiagnosticSeverity.Info,
-                        "The program was launched in a detached external terminal. Stop controls integrated execution only.")
-                ]
+                    [
+                        Diagnostic(
+                            "MRT4822",
+                            DiagnosticSeverity.Info,
+                            "The program was launched in a detached external terminal. Stop controls integrated execution only.")
+                    ]
             });
         }
         catch (OperationCanceledException)
         {
-            return Task.FromResult(new ExecutionResult
-            {
+            return Task.FromResult(new ExecutionResult {
                 Status = ExecutionStatus.Cancelled,
                 Diagnostics =
-                [
-                    Diagnostic(
-                        "MRT4823",
-                        DiagnosticSeverity.Warning,
-                        "External-terminal launch was cancelled before the detached process started.")
-                ]
+                    [
+                        Diagnostic(
+                            "MRT4823",
+                            DiagnosticSeverity.Warning,
+                            "External-terminal launch was cancelled before the detached process started.")
+                    ]
             });
         }
         catch (Exception ex) when (
             ex is InvalidOperationException or
-            System.ComponentModel.Win32Exception or
-            IOException or
-            UnauthorizedAccessException or
-            NotSupportedException)
+                System.ComponentModel.Win32Exception or
+                    IOException or
+                        UnauthorizedAccessException or
+                            NotSupportedException)
         {
             return Task.FromResult(Failure(
                 "MRT4821",
@@ -80,8 +78,8 @@ public sealed class WindowsExternalTerminalLauncher : IExternalTerminalLauncher
         var windowsTerminalPath = FindOnPath(WindowsTerminalExecutable);
 
         return windowsTerminalPath is not null
-            ? CreateWindowsTerminalStartInfo(windowsTerminalPath, request)
-            : CreateCommandPromptStartInfo(request);
+                   ? CreateWindowsTerminalStartInfo(windowsTerminalPath, request)
+                   : CreateCommandPromptStartInfo(request);
     }
 
     private static ProcessStartInfo CreateWindowsTerminalStartInfo(
@@ -119,8 +117,7 @@ public sealed class WindowsExternalTerminalLauncher : IExternalTerminalLauncher
         string fileName,
         ProcessExecutionRequest request)
     {
-        var startInfo = new ProcessStartInfo(fileName)
-        {
+        var startInfo = new ProcessStartInfo(fileName) {
             UseShellExecute = false,
             WorkingDirectory = request.WorkingDirectory,
             CreateNoWindow = false
@@ -157,8 +154,8 @@ public sealed class WindowsExternalTerminalLauncher : IExternalTerminalLauncher
             return null;
 
         foreach (var directory in path.Split(
-            Path.PathSeparator,
-            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                     Path.PathSeparator,
+                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             var candidate = Path.Combine(directory, fileName);
             if (File.Exists(candidate))
@@ -170,8 +167,7 @@ public sealed class WindowsExternalTerminalLauncher : IExternalTerminalLauncher
 
     private static ExecutionResult Failure(string code, string message)
     {
-        return new ExecutionResult
-        {
+        return new ExecutionResult {
             Status = ExecutionStatus.Failed,
             Diagnostics = [Diagnostic(code, DiagnosticSeverity.Error, message)]
         };

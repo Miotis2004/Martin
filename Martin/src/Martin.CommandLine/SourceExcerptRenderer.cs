@@ -6,13 +6,13 @@ public sealed class SourceExcerptRenderer
 
     public void Render(CommandDiagnostic diagnostic, TextWriter writer)
     {
-        if (diagnostic.Location?.FilePath is not { Length: > 0 } filePath || !File.Exists(filePath) || diagnostic.Location.StartLine <= 0)
+        if (diagnostic.Location?.FilePath is not { Length : > 0 } filePath || !File.Exists(filePath) || diagnostic.Location.StartLine <= 0)
             return;
 
         var lines = File.ReadLines(filePath)
-            .Skip(diagnostic.Location.StartLine - 1)
-            .Take(Math.Max(1, diagnostic.Location.EndLine - diagnostic.Location.StartLine + 1))
-            .ToArray();
+                        .Skip(diagnostic.Location.StartLine - 1)
+                        .Take(Math.Max(1, diagnostic.Location.EndLine - diagnostic.Location.StartLine + 1))
+                        .ToArray();
         if (lines.Length == 0)
             return;
 

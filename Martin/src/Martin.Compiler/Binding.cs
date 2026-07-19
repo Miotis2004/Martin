@@ -6,20 +6,124 @@ using Martin.Compiler.Text;
 
 namespace Martin.Compiler.Binding;
 
-public enum BoundNodeKind { BlockStatement, VariableDeclaration, ExpressionStatement, IfStatement, WhileStatement, ReturnStatement, LabelStatement, GotoStatement, ConditionalGotoStatement, LiteralExpression, VariableExpression, AssignmentExpression, UnaryExpression, BinaryExpression, CallExpression, ConversionExpression, MemberAccessExpression, PropertyAssignmentExpression, MethodCallExpression, ProtocolRequirementCallExpression, ObjectCreationExpression, OptionalInjectionExpression, NilExpression, IfLetStatement, SwitchStatement, EnumCaseCreationExpression, ErrorExpression, ThrowStatement, TryExpression, DoCatchStatement, RuntimeCallExpression, HasValueExpression, GetValueExpression, AssociatedValueAccessExpression, EnumCaseTestExpression, EnumPayloadAccessExpression, WildcardPattern, LiteralPattern, EnumCasePattern, OptionalSomePattern, NilPattern, ValueBindingPattern }
-public abstract class BoundNode { public abstract BoundNodeKind Kind { get; } }
-public abstract class BoundStatement : BoundNode { public TextLocation? Location { get; set; } public bool IsCompilerGenerated { get; set; } }
-public abstract class BoundExpression : BoundNode { public abstract TypeSymbol Type { get; } public virtual ErrorEffect ErrorEffect => ErrorEffect.None; public virtual ErrorEffect UnacknowledgedErrorEffect => ErrorEffect; public virtual BoundConstant? ConstantValue => null; }
-public sealed class BoundConstant(object? value) { public object? Value { get; } = value; }
-public sealed class BoundBlockStatement(ImmutableArray<BoundStatement> statements) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.BlockStatement; public ImmutableArray<BoundStatement> Statements { get; } = statements; }
-public sealed class BoundVariableDeclaration(VariableSymbol variable, BoundExpression initializer) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.VariableDeclaration; public VariableSymbol Variable { get; } = variable; public BoundExpression Initializer { get; } = initializer; }
-public sealed class BoundExpressionStatement(BoundExpression expression) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.ExpressionStatement; public BoundExpression Expression { get; } = expression; }
-public sealed class BoundIfLetStatement(BoundExpression optionalExpression, LocalVariableSymbol boundVariable, BoundStatement thenStatement, BoundStatement? elseStatement) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.IfLetStatement; public BoundExpression OptionalExpression { get; } = optionalExpression; public LocalVariableSymbol BoundVariable { get; } = boundVariable; public BoundStatement ThenStatement { get; } = thenStatement; public BoundStatement? ElseStatement { get; } = elseStatement; }
-public sealed class BoundIfStatement(BoundExpression condition, BoundStatement thenStatement, BoundStatement? elseStatement) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.IfStatement; public BoundExpression Condition { get; } = condition; public BoundStatement ThenStatement { get; } = thenStatement; public BoundStatement? ElseStatement { get; } = elseStatement; }
-public sealed class BoundWhileStatement(BoundExpression condition, BoundStatement body) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.WhileStatement; public BoundExpression Condition { get; } = condition; public BoundStatement Body { get; } = body; }
-public sealed class BoundLabelStatement(string label) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.LabelStatement; public string Label { get; } = label; }
-public sealed class BoundGotoStatement(string label) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.GotoStatement; public string Label { get; } = label; }
-public sealed class BoundConditionalGotoStatement(string label, BoundExpression condition) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.ConditionalGotoStatement; public string Label { get; } = label; public BoundExpression Condition { get; } = condition; }
+public enum BoundNodeKind
+{
+    BlockStatement,
+    VariableDeclaration,
+    ExpressionStatement,
+    IfStatement,
+    WhileStatement,
+    ReturnStatement,
+    LabelStatement,
+    GotoStatement,
+    ConditionalGotoStatement,
+    LiteralExpression,
+    VariableExpression,
+    AssignmentExpression,
+    UnaryExpression,
+    BinaryExpression,
+    CallExpression,
+    ConversionExpression,
+    MemberAccessExpression,
+    PropertyAssignmentExpression,
+    MethodCallExpression,
+    ProtocolRequirementCallExpression,
+    ObjectCreationExpression,
+    OptionalInjectionExpression,
+    NilExpression,
+    IfLetStatement,
+    SwitchStatement,
+    EnumCaseCreationExpression,
+    ErrorExpression,
+    ThrowStatement,
+    TryExpression,
+    DoCatchStatement,
+    RuntimeCallExpression,
+    HasValueExpression,
+    GetValueExpression,
+    AssociatedValueAccessExpression,
+    EnumCaseTestExpression,
+    EnumPayloadAccessExpression,
+    WildcardPattern,
+    LiteralPattern,
+    EnumCasePattern,
+    OptionalSomePattern,
+    NilPattern,
+    ValueBindingPattern
+}
+public abstract class BoundNode
+{
+    public abstract BoundNodeKind Kind { get; }
+}
+public abstract class BoundStatement : BoundNode
+{
+    public TextLocation? Location { get; set; }
+    public bool IsCompilerGenerated { get; set; }
+}
+public abstract class BoundExpression : BoundNode
+{
+    public abstract TypeSymbol Type { get; }
+    public virtual ErrorEffect ErrorEffect => ErrorEffect.None;
+    public virtual ErrorEffect UnacknowledgedErrorEffect => ErrorEffect;
+    public virtual BoundConstant? ConstantValue => null;
+}
+public sealed class BoundConstant(object? value)
+{
+    public object? Value { get; } = value;
+}
+public sealed class BoundBlockStatement(ImmutableArray<BoundStatement> statements) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.BlockStatement;
+    public ImmutableArray<BoundStatement> Statements { get; } = statements;
+}
+public sealed class BoundVariableDeclaration(VariableSymbol variable, BoundExpression initializer) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.VariableDeclaration;
+    public VariableSymbol Variable { get; } = variable;
+    public BoundExpression Initializer { get; } = initializer;
+}
+public sealed class BoundExpressionStatement(BoundExpression expression) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.ExpressionStatement;
+    public BoundExpression Expression { get; } = expression;
+}
+public sealed class BoundIfLetStatement(BoundExpression optionalExpression, LocalVariableSymbol boundVariable, BoundStatement thenStatement, BoundStatement? elseStatement) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.IfLetStatement;
+    public BoundExpression OptionalExpression { get; } = optionalExpression;
+    public LocalVariableSymbol BoundVariable { get; } = boundVariable;
+    public BoundStatement ThenStatement { get; } = thenStatement;
+    public BoundStatement? ElseStatement { get; } = elseStatement;
+}
+public sealed class BoundIfStatement(BoundExpression condition, BoundStatement thenStatement, BoundStatement? elseStatement) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.IfStatement;
+    public BoundExpression Condition { get; } = condition;
+    public BoundStatement ThenStatement { get; } = thenStatement;
+    public BoundStatement? ElseStatement { get; } = elseStatement;
+}
+public sealed class BoundWhileStatement(BoundExpression condition, BoundStatement body) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.WhileStatement;
+    public BoundExpression Condition { get; } = condition;
+    public BoundStatement Body { get; } = body;
+}
+public sealed class BoundLabelStatement(string label) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.LabelStatement;
+    public string Label { get; } = label;
+}
+public sealed class BoundGotoStatement(string label) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.GotoStatement;
+    public string Label { get; } = label;
+}
+public sealed class BoundConditionalGotoStatement(string label, BoundExpression condition) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.ConditionalGotoStatement;
+    public string Label { get; } = label;
+    public BoundExpression Condition { get; } = condition;
+}
 public sealed class BoundThrowStatement(
     BoundExpression expression,
     TypeSymbol errorType,
@@ -44,31 +148,227 @@ public sealed class BoundThrowStatement(
 
     public bool SuppressesPropagationDiagnostics => !IsValid;
 }
-public sealed class BoundTryExpression(BoundExpression expression, TypeSymbol thrownErrorType) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.TryExpression; public BoundExpression Expression { get; } = expression; public TypeSymbol ThrownErrorType { get; } = thrownErrorType; public override TypeSymbol Type => Expression.Type; public override ErrorEffect ErrorEffect => Expression.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.None; }
-public sealed class BoundDoCatchStatement(BoundStatement body, TypeSymbol errorType, ImmutableArray<BoundCatchClause> catchClauses, SwitchAnalysisResult? analysis = null, PatternDecisionGraph? decisionGraph = null) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.DoCatchStatement; public BoundStatement Body { get; } = body; public TypeSymbol ErrorType { get; } = errorType; public ImmutableArray<BoundCatchClause> CatchClauses { get; } = catchClauses.IsDefault ? [] : catchClauses; public SwitchAnalysisResult? Analysis { get; } = analysis; public PatternDecisionGraph? DecisionGraph { get; } = decisionGraph; }
-public sealed class BoundCatchClause(BoundPattern pattern, BoundStatement body, TextLocation location) { public BoundPattern Pattern { get; } = pattern; public BoundStatement Body { get; } = body; public TextLocation Location { get; } = location; public string Label => Case?.Name ?? (Pattern is BoundWildcardPattern { HasErrors: false } ? "default" : "<pattern>"); public EnumCaseSymbol? Case => Pattern is BoundEnumCasePattern enumCase ? enumCase.Case : null; public ImmutableArray<LocalVariableSymbol> Variables => Pattern.DeclaredVariables; }
-public sealed class BoundReturnStatement(BoundExpression? expression) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.ReturnStatement; public BoundExpression? Expression { get; } = expression; }
-public sealed class BoundLiteralExpression(object? value, TypeSymbol type) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.LiteralExpression; public object? Value { get; } = value; public override TypeSymbol Type { get; } = type; public override BoundConstant? ConstantValue => new(Value); }
-public sealed class BoundVariableExpression(VariableSymbol variable) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.VariableExpression; public VariableSymbol Variable { get; } = variable; public override TypeSymbol Type => Variable.Type; }
-public sealed class BoundAssignmentExpression(VariableSymbol variable, BoundExpression expression) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.AssignmentExpression; public VariableSymbol Variable { get; } = variable; public BoundExpression Expression { get; } = expression; public override TypeSymbol Type => Expression.Type; public override ErrorEffect ErrorEffect => Expression.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => Expression.UnacknowledgedErrorEffect; }
-public sealed class BoundUnaryExpression(BoundUnaryOperator op, BoundExpression operand) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.UnaryExpression; public BoundUnaryOperator Operator { get; } = op; public BoundExpression Operand { get; } = operand; public override TypeSymbol Type => Operator.ResultType; public override ErrorEffect ErrorEffect => Operand.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => Operand.UnacknowledgedErrorEffect; public override BoundConstant? ConstantValue => ConstantFolder.Unary(Operator, Operand.ConstantValue); }
-public sealed class BoundBinaryExpression(BoundExpression left, BoundBinaryOperator op, BoundExpression right) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.BinaryExpression; public BoundExpression Left { get; } = left; public BoundBinaryOperator Operator { get; } = op; public BoundExpression Right { get; } = right; public override TypeSymbol Type => Operator.ResultType; public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Left.ErrorEffect, Right.ErrorEffect); public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Left.UnacknowledgedErrorEffect, Right.UnacknowledgedErrorEffect); public override BoundConstant? ConstantValue => ConstantFolder.Binary(Left.ConstantValue, Operator, Right.ConstantValue); }
-public sealed class BoundCallExpression(FunctionSymbol function, ImmutableArray<BoundExpression> arguments, ImmutableArray<TypeSymbol> typeArguments = default) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.CallExpression; public FunctionSymbol Function { get; } = function; public FunctionSymbol OriginalDefinition => Function.OriginalDefinition; public ImmutableArray<TypeSymbol> TypeArguments { get; } = typeArguments.IsDefault ? [] : typeArguments; public ImmutableArray<BoundExpression> Arguments { get; } = arguments; public override TypeSymbol Type => Function.ReturnType; public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect).Append(ErrorEffect.FromCallable(Function.IsThrowing, Function.ErrorType))); public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect).Append(ErrorEffect.FromCallable(Function.IsThrowing, Function.ErrorType))); }
-public sealed class BoundRuntimeCallExpression(string methodName, ImmutableArray<BoundExpression> arguments, TypeSymbol returnType) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.RuntimeCallExpression; public string MethodName { get; } = methodName; public ImmutableArray<BoundExpression> Arguments { get; } = arguments; public override TypeSymbol Type => returnType; public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect)); public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect)); }
-public sealed class BoundMemberAccessExpression(BoundExpression receiver, PropertySymbol property) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.MemberAccessExpression; public BoundExpression Receiver { get; } = receiver; public PropertySymbol Property { get; } = property; public override TypeSymbol Type => Property.Type; public override ErrorEffect ErrorEffect => Receiver.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect; }
-public sealed class BoundAssociatedValueAccessExpression(BoundExpression receiver, ParameterSymbol associatedValue) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.AssociatedValueAccessExpression; public BoundExpression Receiver { get; } = receiver; public ParameterSymbol AssociatedValue { get; } = associatedValue; public override TypeSymbol Type => AssociatedValue.Type; public override ErrorEffect ErrorEffect => Receiver.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect; }
-public sealed class BoundEnumCaseTestExpression(BoundExpression receiver, EnumCaseSymbol enumCase) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.EnumCaseTestExpression; public BoundExpression Receiver { get; } = receiver; public EnumCaseSymbol Case { get; } = enumCase; public override TypeSymbol Type => TypeSymbol.Bool; public override ErrorEffect ErrorEffect => Receiver.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect; }
-public sealed class BoundEnumPayloadAccessExpression(BoundExpression receiver, EnumCaseSymbol enumCase, int payloadIndex) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.EnumPayloadAccessExpression; public BoundExpression Receiver { get; } = receiver; public EnumCaseSymbol Case { get; } = enumCase; public int PayloadIndex { get; } = payloadIndex; public override TypeSymbol Type => Case.AssociatedValues[PayloadIndex].Type; public override ErrorEffect ErrorEffect => Receiver.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect; }
-public sealed class BoundHasValueExpression(BoundExpression receiver) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.HasValueExpression; public BoundExpression Receiver { get; } = receiver; public override TypeSymbol Type => TypeSymbol.Bool; public override ErrorEffect ErrorEffect => Receiver.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect; }
-public sealed class BoundGetValueExpression(BoundExpression receiver, TypeSymbol valueType) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.GetValueExpression; public BoundExpression Receiver { get; } = receiver; public override TypeSymbol Type => valueType; public override ErrorEffect ErrorEffect => Receiver.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect; }
-public sealed class BoundPropertyAssignmentExpression(BoundExpression receiver, PropertySymbol property, BoundExpression value) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.PropertyAssignmentExpression; public BoundExpression Receiver { get; } = receiver; public PropertySymbol Property { get; } = property; public BoundExpression Value { get; } = value; public override TypeSymbol Type => Property.Type; public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Receiver.ErrorEffect, Value.ErrorEffect); public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Receiver.UnacknowledgedErrorEffect, Value.UnacknowledgedErrorEffect); }
-public sealed class BoundMethodCallExpression(BoundExpression receiver, MethodSymbol method, ImmutableArray<BoundExpression> arguments, ImmutableArray<TypeSymbol> typeArguments = default) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.MethodCallExpression; public BoundExpression Receiver { get; } = receiver; public MethodSymbol Method { get; } = method; public MethodSymbol OriginalDefinition => Method.OriginalDefinition; public ImmutableArray<TypeSymbol> TypeArguments { get; } = typeArguments.IsDefault ? [] : typeArguments; public ImmutableArray<BoundExpression> Arguments { get; } = arguments; public override TypeSymbol Type => Method.ReturnType; public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Receiver.ErrorEffect, ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect)), ErrorEffect.FromCallable(Method.IsThrowing, Method.ErrorType)); public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Receiver.UnacknowledgedErrorEffect, ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect)), ErrorEffect.FromCallable(Method.IsThrowing, Method.ErrorType)); }
-public sealed class BoundProtocolRequirementCallExpression(BoundExpression receiver, ProtocolMethodRequirementSymbol requirement, ImmutableArray<BoundExpression> arguments) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.ProtocolRequirementCallExpression; public BoundExpression Receiver { get; } = receiver; public ProtocolMethodRequirementSymbol Requirement { get; } = requirement; public ImmutableArray<BoundExpression> Arguments { get; } = arguments; public override TypeSymbol Type => Requirement.ReturnType; public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Receiver.ErrorEffect, ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect)), ErrorEffect.FromCallable(Requirement.IsThrowing, Requirement.ErrorType)); public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Receiver.UnacknowledgedErrorEffect, ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect)), ErrorEffect.FromCallable(Requirement.IsThrowing, Requirement.ErrorType)); }
-public sealed class BoundObjectCreationExpression(InitializerSymbol initializer, ImmutableArray<BoundExpression> arguments) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.ObjectCreationExpression; public InitializerSymbol Initializer { get; } = initializer; public ImmutableArray<BoundExpression> Arguments { get; } = arguments; public override TypeSymbol Type => Initializer.ContainingType; public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect).Append(ErrorEffect.FromCallable(Initializer.IsThrowing, Initializer.ErrorType))); public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect).Append(ErrorEffect.FromCallable(Initializer.IsThrowing, Initializer.ErrorType))); }
-public sealed class BoundEnumCaseCreationExpression(EnumCaseSymbol enumCase, ImmutableArray<BoundExpression> arguments) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.EnumCaseCreationExpression; public EnumCaseSymbol Case { get; } = enumCase; public ImmutableArray<BoundExpression> Arguments { get; } = arguments; public override TypeSymbol Type => Case.ContainingType; public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect)); public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect)); }
-public sealed class BoundOptionalInjectionExpression(BoundExpression expression, OptionalTypeSymbol optionalType) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.OptionalInjectionExpression; public BoundExpression Expression { get; } = expression; public OptionalTypeSymbol OptionalType { get; } = optionalType; public override TypeSymbol Type => OptionalType; public override ErrorEffect ErrorEffect => Expression.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => Expression.UnacknowledgedErrorEffect; }
-public sealed class BoundNilExpression(OptionalTypeSymbol optionalType) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.NilExpression; public OptionalTypeSymbol OptionalType { get; } = optionalType; public override TypeSymbol Type => OptionalType; }
-public sealed class BoundSwitchStatement(BoundExpression expression, ImmutableArray<BoundSwitchCase> cases, SwitchAnalysisResult? analysis = null, PatternDecisionGraph? decisionGraph = null) : BoundStatement { public override BoundNodeKind Kind => BoundNodeKind.SwitchStatement; public BoundExpression Expression { get; } = expression; public ImmutableArray<BoundSwitchCase> Cases { get; } = cases.IsDefault ? [] : cases; public SwitchAnalysisResult? Analysis { get; } = analysis; public PatternDecisionGraph? DecisionGraph { get; } = decisionGraph; }
+public sealed class BoundTryExpression(BoundExpression expression, TypeSymbol thrownErrorType) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.TryExpression;
+    public BoundExpression Expression { get; } = expression;
+    public TypeSymbol ThrownErrorType { get; } = thrownErrorType;
+    public override TypeSymbol Type => Expression.Type;
+    public override ErrorEffect ErrorEffect => Expression.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.None;
+}
+public sealed class BoundDoCatchStatement(BoundStatement body, TypeSymbol errorType, ImmutableArray<BoundCatchClause> catchClauses, SwitchAnalysisResult? analysis = null, PatternDecisionGraph? decisionGraph = null) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.DoCatchStatement;
+    public BoundStatement Body { get; } = body;
+    public TypeSymbol ErrorType { get; } = errorType;
+    public ImmutableArray<BoundCatchClause> CatchClauses { get; } = catchClauses.IsDefault ? [] : catchClauses;
+    public SwitchAnalysisResult? Analysis { get; } = analysis;
+    public PatternDecisionGraph? DecisionGraph { get; } = decisionGraph;
+}
+public sealed class BoundCatchClause(BoundPattern pattern, BoundStatement body, TextLocation location)
+{
+    public BoundPattern Pattern { get; } = pattern;
+    public BoundStatement Body { get; } = body;
+    public TextLocation Location { get; } = location;
+    public string Label => Case?.Name ?? (Pattern is BoundWildcardPattern { HasErrors : false } ? "default" : "<pattern>");
+    public EnumCaseSymbol? Case => Pattern is BoundEnumCasePattern enumCase ? enumCase.Case : null;
+    public ImmutableArray<LocalVariableSymbol> Variables => Pattern.DeclaredVariables;
+}
+public sealed class BoundReturnStatement(BoundExpression? expression) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.ReturnStatement;
+    public BoundExpression? Expression { get; } = expression;
+}
+public sealed class BoundLiteralExpression(object? value, TypeSymbol type) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.LiteralExpression;
+    public object? Value { get; } = value;
+    public override TypeSymbol Type { get; } = type;
+    public override BoundConstant? ConstantValue => new(Value);
+}
+public sealed class BoundVariableExpression(VariableSymbol variable) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.VariableExpression;
+    public VariableSymbol Variable { get; } = variable;
+    public override TypeSymbol Type => Variable.Type;
+}
+public sealed class BoundAssignmentExpression(VariableSymbol variable, BoundExpression expression) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.AssignmentExpression;
+    public VariableSymbol Variable { get; } = variable;
+    public BoundExpression Expression { get; } = expression;
+    public override TypeSymbol Type => Expression.Type;
+    public override ErrorEffect ErrorEffect => Expression.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => Expression.UnacknowledgedErrorEffect;
+}
+public sealed class BoundUnaryExpression(BoundUnaryOperator op, BoundExpression operand) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.UnaryExpression;
+    public BoundUnaryOperator Operator { get; } = op;
+    public BoundExpression Operand { get; } = operand;
+    public override TypeSymbol Type => Operator.ResultType;
+    public override ErrorEffect ErrorEffect => Operand.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => Operand.UnacknowledgedErrorEffect;
+    public override BoundConstant? ConstantValue => ConstantFolder.Unary(Operator, Operand.ConstantValue);
+}
+public sealed class BoundBinaryExpression(BoundExpression left, BoundBinaryOperator op, BoundExpression right) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.BinaryExpression;
+    public BoundExpression Left { get; } = left;
+    public BoundBinaryOperator Operator { get; } = op;
+    public BoundExpression Right { get; } = right;
+    public override TypeSymbol Type => Operator.ResultType;
+    public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Left.ErrorEffect, Right.ErrorEffect);
+    public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Left.UnacknowledgedErrorEffect, Right.UnacknowledgedErrorEffect);
+    public override BoundConstant? ConstantValue => ConstantFolder.Binary(Left.ConstantValue, Operator, Right.ConstantValue);
+}
+public sealed class BoundCallExpression(FunctionSymbol function, ImmutableArray<BoundExpression> arguments, ImmutableArray<TypeSymbol> typeArguments = default) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.CallExpression;
+    public FunctionSymbol Function { get; } = function;
+    public FunctionSymbol OriginalDefinition => Function.OriginalDefinition;
+    public ImmutableArray<TypeSymbol> TypeArguments { get; } = typeArguments.IsDefault ? [] : typeArguments;
+    public ImmutableArray<BoundExpression> Arguments { get; } = arguments;
+    public override TypeSymbol Type => Function.ReturnType;
+    public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect).Append(ErrorEffect.FromCallable(Function.IsThrowing, Function.ErrorType)));
+    public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect).Append(ErrorEffect.FromCallable(Function.IsThrowing, Function.ErrorType)));
+}
+public sealed class BoundRuntimeCallExpression(string methodName, ImmutableArray<BoundExpression> arguments, TypeSymbol returnType) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.RuntimeCallExpression;
+    public string MethodName { get; } = methodName;
+    public ImmutableArray<BoundExpression> Arguments { get; } = arguments;
+    public override TypeSymbol Type => returnType;
+    public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect));
+    public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect));
+}
+public sealed class BoundMemberAccessExpression(BoundExpression receiver, PropertySymbol property) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.MemberAccessExpression;
+    public BoundExpression Receiver { get; } = receiver;
+    public PropertySymbol Property { get; } = property;
+    public override TypeSymbol Type => Property.Type;
+    public override ErrorEffect ErrorEffect => Receiver.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect;
+}
+public sealed class BoundAssociatedValueAccessExpression(BoundExpression receiver, ParameterSymbol associatedValue) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.AssociatedValueAccessExpression;
+    public BoundExpression Receiver { get; } = receiver;
+    public ParameterSymbol AssociatedValue { get; } = associatedValue;
+    public override TypeSymbol Type => AssociatedValue.Type;
+    public override ErrorEffect ErrorEffect => Receiver.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect;
+}
+public sealed class BoundEnumCaseTestExpression(BoundExpression receiver, EnumCaseSymbol enumCase) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.EnumCaseTestExpression;
+    public BoundExpression Receiver { get; } = receiver;
+    public EnumCaseSymbol Case { get; } = enumCase;
+    public override TypeSymbol Type => TypeSymbol.Bool;
+    public override ErrorEffect ErrorEffect => Receiver.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect;
+}
+public sealed class BoundEnumPayloadAccessExpression(BoundExpression receiver, EnumCaseSymbol enumCase, int payloadIndex) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.EnumPayloadAccessExpression;
+    public BoundExpression Receiver { get; } = receiver;
+    public EnumCaseSymbol Case { get; } = enumCase;
+    public int PayloadIndex { get; } = payloadIndex;
+    public override TypeSymbol Type => Case.AssociatedValues[PayloadIndex].Type;
+    public override ErrorEffect ErrorEffect => Receiver.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect;
+}
+public sealed class BoundHasValueExpression(BoundExpression receiver) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.HasValueExpression;
+    public BoundExpression Receiver { get; } = receiver;
+    public override TypeSymbol Type => TypeSymbol.Bool;
+    public override ErrorEffect ErrorEffect => Receiver.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect;
+}
+public sealed class BoundGetValueExpression(BoundExpression receiver, TypeSymbol valueType) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.GetValueExpression;
+    public BoundExpression Receiver { get; } = receiver;
+    public override TypeSymbol Type => valueType;
+    public override ErrorEffect ErrorEffect => Receiver.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => Receiver.UnacknowledgedErrorEffect;
+}
+public sealed class BoundPropertyAssignmentExpression(BoundExpression receiver, PropertySymbol property, BoundExpression value) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.PropertyAssignmentExpression;
+    public BoundExpression Receiver { get; } = receiver;
+    public PropertySymbol Property { get; } = property;
+    public BoundExpression Value { get; } = value;
+    public override TypeSymbol Type => Property.Type;
+    public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Receiver.ErrorEffect, Value.ErrorEffect);
+    public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Receiver.UnacknowledgedErrorEffect, Value.UnacknowledgedErrorEffect);
+}
+public sealed class BoundMethodCallExpression(BoundExpression receiver, MethodSymbol method, ImmutableArray<BoundExpression> arguments, ImmutableArray<TypeSymbol> typeArguments = default) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.MethodCallExpression;
+    public BoundExpression Receiver { get; } = receiver;
+    public MethodSymbol Method { get; } = method;
+    public MethodSymbol OriginalDefinition => Method.OriginalDefinition;
+    public ImmutableArray<TypeSymbol> TypeArguments { get; } = typeArguments.IsDefault ? [] : typeArguments;
+    public ImmutableArray<BoundExpression> Arguments { get; } = arguments;
+    public override TypeSymbol Type => Method.ReturnType;
+    public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Receiver.ErrorEffect, ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect)), ErrorEffect.FromCallable(Method.IsThrowing, Method.ErrorType));
+    public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Receiver.UnacknowledgedErrorEffect, ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect)), ErrorEffect.FromCallable(Method.IsThrowing, Method.ErrorType));
+}
+public sealed class BoundProtocolRequirementCallExpression(BoundExpression receiver, ProtocolMethodRequirementSymbol requirement, ImmutableArray<BoundExpression> arguments) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.ProtocolRequirementCallExpression;
+    public BoundExpression Receiver { get; } = receiver;
+    public ProtocolMethodRequirementSymbol Requirement { get; } = requirement;
+    public ImmutableArray<BoundExpression> Arguments { get; } = arguments;
+    public override TypeSymbol Type => Requirement.ReturnType;
+    public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Receiver.ErrorEffect, ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect)), ErrorEffect.FromCallable(Requirement.IsThrowing, Requirement.ErrorType));
+    public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Receiver.UnacknowledgedErrorEffect, ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect)), ErrorEffect.FromCallable(Requirement.IsThrowing, Requirement.ErrorType));
+}
+public sealed class BoundObjectCreationExpression(InitializerSymbol initializer, ImmutableArray<BoundExpression> arguments) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.ObjectCreationExpression;
+    public InitializerSymbol Initializer { get; } = initializer;
+    public ImmutableArray<BoundExpression> Arguments { get; } = arguments;
+    public override TypeSymbol Type => Initializer.ContainingType;
+    public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect).Append(ErrorEffect.FromCallable(Initializer.IsThrowing, Initializer.ErrorType)));
+    public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect).Append(ErrorEffect.FromCallable(Initializer.IsThrowing, Initializer.ErrorType)));
+}
+public sealed class BoundEnumCaseCreationExpression(EnumCaseSymbol enumCase, ImmutableArray<BoundExpression> arguments) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.EnumCaseCreationExpression;
+    public EnumCaseSymbol Case { get; } = enumCase;
+    public ImmutableArray<BoundExpression> Arguments { get; } = arguments;
+    public override TypeSymbol Type => Case.ContainingType;
+    public override ErrorEffect ErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.ErrorEffect));
+    public override ErrorEffect UnacknowledgedErrorEffect => ErrorEffect.Combine(Arguments.Select(a => a.UnacknowledgedErrorEffect));
+}
+public sealed class BoundOptionalInjectionExpression(BoundExpression expression, OptionalTypeSymbol optionalType) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.OptionalInjectionExpression;
+    public BoundExpression Expression { get; } = expression;
+    public OptionalTypeSymbol OptionalType { get; } = optionalType;
+    public override TypeSymbol Type => OptionalType;
+    public override ErrorEffect ErrorEffect => Expression.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => Expression.UnacknowledgedErrorEffect;
+}
+public sealed class BoundNilExpression(OptionalTypeSymbol optionalType) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.NilExpression;
+    public OptionalTypeSymbol OptionalType { get; } = optionalType;
+    public override TypeSymbol Type => OptionalType;
+}
+public sealed class BoundSwitchStatement(BoundExpression expression, ImmutableArray<BoundSwitchCase> cases, SwitchAnalysisResult? analysis = null, PatternDecisionGraph? decisionGraph = null) : BoundStatement
+{
+    public override BoundNodeKind Kind => BoundNodeKind.SwitchStatement;
+    public BoundExpression Expression { get; } = expression;
+    public ImmutableArray<BoundSwitchCase> Cases { get; } = cases.IsDefault ? [] : cases;
+    public SwitchAnalysisResult? Analysis { get; } = analysis;
+    public PatternDecisionGraph? DecisionGraph { get; } = decisionGraph;
+}
 public sealed class BoundSwitchCase(BoundPattern pattern, BoundStatement body, TextLocation location, LocalVariableSymbol? patternVariable = null)
 {
     public BoundPattern Pattern { get; } = pattern ?? throw new ArgumentNullException(nameof(pattern));
@@ -80,15 +380,200 @@ public sealed class BoundSwitchCase(BoundPattern pattern, BoundStatement body, T
     // lowering consume Pattern directly rather than reconstructing semantics from labels.
     public EnumCaseSymbol? Case => Pattern is BoundEnumCasePattern enumCase ? enumCase.Case : null;
     public ImmutableArray<LocalVariableSymbol> Variables => Pattern.DeclaredVariables;
-    public string Label => Case?.Name ?? (Pattern is BoundWildcardPattern { HasErrors: false } ? "default" : "<pattern>");
+    public string Label => Case?.Name ?? (Pattern is BoundWildcardPattern { HasErrors : false } ? "default" : "<pattern>");
 }
-public sealed class BoundConversionExpression(TypeSymbol targetType, BoundExpression expression) : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.ConversionExpression; public TypeSymbol TargetType { get; } = targetType; public BoundExpression Expression { get; } = expression; public override TypeSymbol Type => TargetType; public override ErrorEffect ErrorEffect => Expression.ErrorEffect; public override ErrorEffect UnacknowledgedErrorEffect => Expression.UnacknowledgedErrorEffect; public override BoundConstant? ConstantValue => Expression.ConstantValue is { } c && TargetType == TypeSymbol.Double && Expression.Type == TypeSymbol.Int ? new(Convert.ToDouble(c.Value)) : Expression.ConstantValue; }
-public sealed class BoundErrorExpression : BoundExpression { public override BoundNodeKind Kind => BoundNodeKind.ErrorExpression; public override TypeSymbol Type => TypeSymbol.Error; }
-public sealed class BoundProgram(ImmutableArray<Diagnostic> diagnostics, ImmutableDictionary<FunctionSymbol, BoundBlockStatement> bodies, ImmutableArray<FunctionSymbol> functions, ImmutableArray<NamedTypeSymbol> namedTypes, ImmutableDictionary<MethodSymbol, BoundBlockStatement> methodBodies, ImmutableDictionary<InitializerSymbol, BoundBlockStatement> initializerBodies, ImmutableArray<ProtocolConformance> conformances, ImmutableArray<ProtocolConformanceAttempt> conformanceAttempts) { public ImmutableArray<Diagnostic> Diagnostics { get; } = diagnostics; public ImmutableDictionary<FunctionSymbol, BoundBlockStatement> FunctionBodies { get; } = bodies; public ImmutableArray<FunctionSymbol> Functions { get; } = functions; public ImmutableArray<NamedTypeSymbol> NamedTypes { get; } = namedTypes; public ImmutableDictionary<MethodSymbol, BoundBlockStatement> MethodBodies { get; } = methodBodies; public ImmutableDictionary<InitializerSymbol, BoundBlockStatement> InitializerBodies { get; } = initializerBodies; public ImmutableArray<ProtocolConformance> Conformances { get; } = conformances; public ImmutableArray<ProtocolConformanceAttempt> ConformanceAttempts { get; } = conformanceAttempts; }
-public enum BoundUnaryOperatorKind { Identity, Negation, LogicalNegation }
-public sealed class BoundUnaryOperator { BoundUnaryOperator(SyntaxKind syntaxKind, BoundUnaryOperatorKind kind, TypeSymbol operandType, TypeSymbol resultType) { SyntaxKind = syntaxKind; Kind = kind; OperandType = operandType; ResultType = resultType; } public SyntaxKind SyntaxKind { get; } public BoundUnaryOperatorKind Kind { get; } public TypeSymbol OperandType { get; } public TypeSymbol ResultType { get; } static readonly BoundUnaryOperator[] Ops = [new(SyntaxKind.PlusToken, BoundUnaryOperatorKind.Identity, TypeSymbol.Int, TypeSymbol.Int), new(SyntaxKind.MinusToken, BoundUnaryOperatorKind.Negation, TypeSymbol.Int, TypeSymbol.Int), new(SyntaxKind.PlusToken, BoundUnaryOperatorKind.Identity, TypeSymbol.Double, TypeSymbol.Double), new(SyntaxKind.MinusToken, BoundUnaryOperatorKind.Negation, TypeSymbol.Double, TypeSymbol.Double), new(SyntaxKind.BangToken, BoundUnaryOperatorKind.LogicalNegation, TypeSymbol.Bool, TypeSymbol.Bool)]; public static BoundUnaryOperator? Bind(SyntaxKind k, TypeSymbol t) => Ops.FirstOrDefault(o => o.SyntaxKind == k && o.OperandType == t); }
-public enum BoundBinaryOperatorKind { Addition, Subtraction, Multiplication, Division, Modulo, LogicalAnd, LogicalOr, Equals, NotEquals, Less, LessOrEquals, Greater, GreaterOrEquals }
-public sealed class BoundBinaryOperator { BoundBinaryOperator(SyntaxKind syntaxKind, BoundBinaryOperatorKind kind, TypeSymbol left, TypeSymbol right, TypeSymbol result) { SyntaxKind = syntaxKind; Kind = kind; LeftType = left; RightType = right; ResultType = result; } public SyntaxKind SyntaxKind { get; } public BoundBinaryOperatorKind Kind { get; } public TypeSymbol LeftType { get; } public TypeSymbol RightType { get; } public TypeSymbol ResultType { get; } static BoundBinaryOperator Op(SyntaxKind s, BoundBinaryOperatorKind k, TypeSymbol t, TypeSymbol r) => new(s, k, t, t, r); static readonly BoundBinaryOperator[] Ops = [Op(SyntaxKind.PlusToken, BoundBinaryOperatorKind.Addition, TypeSymbol.Int, TypeSymbol.Int), Op(SyntaxKind.MinusToken, BoundBinaryOperatorKind.Subtraction, TypeSymbol.Int, TypeSymbol.Int), Op(SyntaxKind.StarToken, BoundBinaryOperatorKind.Multiplication, TypeSymbol.Int, TypeSymbol.Int), Op(SyntaxKind.SlashToken, BoundBinaryOperatorKind.Division, TypeSymbol.Int, TypeSymbol.Int), Op(SyntaxKind.PercentToken, BoundBinaryOperatorKind.Modulo, TypeSymbol.Int, TypeSymbol.Int), Op(SyntaxKind.PlusToken, BoundBinaryOperatorKind.Addition, TypeSymbol.Double, TypeSymbol.Double), Op(SyntaxKind.MinusToken, BoundBinaryOperatorKind.Subtraction, TypeSymbol.Double, TypeSymbol.Double), Op(SyntaxKind.StarToken, BoundBinaryOperatorKind.Multiplication, TypeSymbol.Double, TypeSymbol.Double), Op(SyntaxKind.SlashToken, BoundBinaryOperatorKind.Division, TypeSymbol.Double, TypeSymbol.Double), Op(SyntaxKind.PlusToken, BoundBinaryOperatorKind.Addition, TypeSymbol.String, TypeSymbol.String), Op(SyntaxKind.AmpersandAmpersandToken, BoundBinaryOperatorKind.LogicalAnd, TypeSymbol.Bool, TypeSymbol.Bool), Op(SyntaxKind.PipePipeToken, BoundBinaryOperatorKind.LogicalOr, TypeSymbol.Bool, TypeSymbol.Bool), Op(SyntaxKind.EqualEqualToken, BoundBinaryOperatorKind.Equals, TypeSymbol.Bool, TypeSymbol.Bool), Op(SyntaxKind.BangEqualToken, BoundBinaryOperatorKind.NotEquals, TypeSymbol.Bool, TypeSymbol.Bool)]; static bool SameType(TypeSymbol a, TypeSymbol b) => a == b || (a is OptionalTypeSymbol ao && b is OptionalTypeSymbol bo && SameType(ao.ElementType, bo.ElementType)); public static BoundBinaryOperator? Bind(SyntaxKind k, TypeSymbol l, TypeSymbol r) { if (k is SyntaxKind.EqualEqualToken or SyntaxKind.BangEqualToken && SameType(l, r)) return new(k, k == SyntaxKind.EqualEqualToken ? BoundBinaryOperatorKind.Equals : BoundBinaryOperatorKind.NotEquals, l, r, TypeSymbol.Bool); if (k is SyntaxKind.LessToken or SyntaxKind.LessOrEqualToken or SyntaxKind.GreaterToken or SyntaxKind.GreaterOrEqualToken && l == r && (l == TypeSymbol.Int || l == TypeSymbol.Double)) return new(k, k switch { SyntaxKind.LessToken => BoundBinaryOperatorKind.Less, SyntaxKind.LessOrEqualToken => BoundBinaryOperatorKind.LessOrEquals, SyntaxKind.GreaterToken => BoundBinaryOperatorKind.Greater, _ => BoundBinaryOperatorKind.GreaterOrEquals }, l, r, TypeSymbol.Bool); return Ops.FirstOrDefault(o => o.SyntaxKind == k && o.LeftType == l && o.RightType == r); } }
-public readonly record struct Conversion(bool Exists, bool IsIdentity, bool IsImplicit) { public static Conversion None => new(false, false, false); public static Conversion Identity => new(true, true, true); public static Conversion Implicit => new(true, false, true); static bool SameType(TypeSymbol a, TypeSymbol b) => a == b || (a is OptionalTypeSymbol ao && b is OptionalTypeSymbol bo && SameType(ao.ElementType, bo.ElementType)); public static Conversion Classify(TypeSymbol from, TypeSymbol to) { if (from == TypeSymbol.Error || to == TypeSymbol.Error) return Identity; if (from == to) return Identity; if (from == TypeSymbol.Int && to == TypeSymbol.Double) return Implicit; if (to is OptionalTypeSymbol ot) { if (from == TypeSymbol.Nil) return Implicit; var inner = Classify(from, ot.ElementType); if (inner.Exists && inner.IsImplicit) return Implicit; } if (from is OptionalTypeSymbol fo && to is OptionalTypeSymbol topt && SameType(fo.ElementType, topt.ElementType)) return Identity; return None; } }
-public sealed class BoundScope(BoundScope? parent) { readonly Dictionary<string, TypeSymbol> _types = []; readonly Dictionary<string, VariableSymbol> _vars = []; readonly Dictionary<string, List<FunctionSymbol>> _funcs = []; public BoundScope? Parent { get; } = parent; public bool TryDeclareType(TypeSymbol t) => _types.TryAdd(t.Name, t); public bool TryDeclareVariable(VariableSymbol v) => _vars.TryAdd(v.Name, v); public bool TryDeclareFunction(FunctionSymbol f) { if (!_funcs.TryGetValue(f.Name, out var list)) _funcs[f.Name] = list = []; if (!f.IsBuiltIn && list.Any(x => !x.IsBuiltIn)) return false; if (!f.IsBuiltIn && list.Any(x => x.IsBuiltIn)) return false; list.Add(f); return true; } public bool TryLookupType(string n, out TypeSymbol t) { for (var s = this; s != null; s = s.Parent) if (s._types.TryGetValue(n, out t!)) return true; t = null!; return false; } public bool TryLookupVariable(string n, out VariableSymbol v) { for (var s = this; s != null; s = s.Parent) if (s._vars.TryGetValue(n, out v!)) return true; v = null!; return false; } public ImmutableArray<FunctionSymbol> LookupFunctions(string n) { for (var s = this; s != null; s = s.Parent) if (s._funcs.TryGetValue(n, out var f)) return f.ToImmutableArray(); return []; } }
-public static class BuiltIns { public static readonly ProtocolTypeSymbol ErrorProtocol = new("Error", []); public static readonly EnumTypeSymbol FileError = CreateFileError(); public static ImmutableArray<FunctionSymbol> PrintFunctions => [Fn("print", TypeSymbol.Void, TypeSymbol.String), Fn("print", TypeSymbol.Void, TypeSymbol.Int), Fn("print", TypeSymbol.Void, TypeSymbol.Double), Fn("print", TypeSymbol.Void, TypeSymbol.Bool)]; public static ImmutableArray<FunctionSymbol> ConsoleFunctions => [Fn("argumentCount", TypeSymbol.Int), Fn("argument", TypeSymbol.String, TypeSymbol.Int), Fn("readLine", TypeSymbol.String), Fn("writeError", TypeSymbol.Void, TypeSymbol.String), Fn("exit", TypeSymbol.Void, TypeSymbol.Int)]; public static ImmutableArray<FunctionSymbol> RuntimeBoundaryFunctions => [new("readFile", [new ParameterSymbol("path", null, 0, TypeSymbol.String, [])], TypeSymbol.String, null, true, [], isThrowing: true, errorType: FileError)]; static FunctionSymbol Fn(string name, TypeSymbol returnType, params TypeSymbol[] parameterTypes) => new(name, parameterTypes.Select((t, i) => new ParameterSymbol(i == 0 ? "value" : "value" + i, null, i, t, [])).ToImmutableArray(), returnType, null, true, []); static EnumTypeSymbol CreateFileError() { var type = new EnumTypeSymbol("FileError", []); type.AddMember(new EnumCaseSymbol("notFound", type, [new ParameterSymbol("path", "path", 0, TypeSymbol.String, [])], [])); type.AddMember(new EnumCaseSymbol("accessDenied", type, [new ParameterSymbol("path", "path", 0, TypeSymbol.String, [])], [])); type.AddMember(new EnumCaseSymbol("invalidPath", type, [new ParameterSymbol("path", "path", 0, TypeSymbol.String, [])], [])); type.AddMember(new EnumCaseSymbol("io", type, [new ParameterSymbol("message", "message", 0, TypeSymbol.String, [])], [])); return type; } public static BoundScope CreateRoot() { var s = new BoundScope(null); foreach (var t in TypeSymbol.BuiltIns) s.TryDeclareType(t); s.TryDeclareType(ErrorProtocol); s.TryDeclareType(FileError); foreach (var f in PrintFunctions.Concat(ConsoleFunctions).Concat(RuntimeBoundaryFunctions)) s.TryDeclareFunction(f); return s; } }
+public sealed class BoundConversionExpression(TypeSymbol targetType, BoundExpression expression) : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.ConversionExpression;
+    public TypeSymbol TargetType { get; } = targetType;
+    public BoundExpression Expression { get; } = expression;
+    public override TypeSymbol Type => TargetType;
+    public override ErrorEffect ErrorEffect => Expression.ErrorEffect;
+    public override ErrorEffect UnacknowledgedErrorEffect => Expression.UnacknowledgedErrorEffect;
+    public override BoundConstant? ConstantValue => Expression.ConstantValue is
+    {
+    }
+    c && TargetType == TypeSymbol.Double && Expression.Type == TypeSymbol.Int? new(Convert.ToDouble(c.Value)) : Expression.ConstantValue;
+}
+public sealed class BoundErrorExpression : BoundExpression
+{
+    public override BoundNodeKind Kind => BoundNodeKind.ErrorExpression;
+    public override TypeSymbol Type => TypeSymbol.Error;
+}
+public sealed class BoundProgram(ImmutableArray<Diagnostic> diagnostics, ImmutableDictionary<FunctionSymbol, BoundBlockStatement> bodies, ImmutableArray<FunctionSymbol> functions, ImmutableArray<NamedTypeSymbol> namedTypes, ImmutableDictionary<MethodSymbol, BoundBlockStatement> methodBodies, ImmutableDictionary<InitializerSymbol, BoundBlockStatement> initializerBodies, ImmutableArray<ProtocolConformance> conformances, ImmutableArray<ProtocolConformanceAttempt> conformanceAttempts)
+{
+    public ImmutableArray<Diagnostic> Diagnostics { get; } = diagnostics;
+    public ImmutableDictionary<FunctionSymbol, BoundBlockStatement> FunctionBodies { get; } = bodies;
+    public ImmutableArray<FunctionSymbol> Functions { get; } = functions;
+    public ImmutableArray<NamedTypeSymbol> NamedTypes { get; } = namedTypes;
+    public ImmutableDictionary<MethodSymbol, BoundBlockStatement> MethodBodies { get; } = methodBodies;
+    public ImmutableDictionary<InitializerSymbol, BoundBlockStatement> InitializerBodies { get; } = initializerBodies;
+    public ImmutableArray<ProtocolConformance> Conformances { get; } = conformances;
+    public ImmutableArray<ProtocolConformanceAttempt> ConformanceAttempts { get; } = conformanceAttempts;
+}
+public enum BoundUnaryOperatorKind
+{
+    Identity,
+    Negation,
+    LogicalNegation
+}
+public sealed class BoundUnaryOperator
+{
+    BoundUnaryOperator(SyntaxKind syntaxKind, BoundUnaryOperatorKind kind, TypeSymbol operandType, TypeSymbol resultType)
+    {
+        SyntaxKind = syntaxKind;
+        Kind = kind;
+        OperandType = operandType;
+        ResultType = resultType;
+    }
+    public SyntaxKind SyntaxKind { get; }
+    public BoundUnaryOperatorKind Kind { get; }
+    public TypeSymbol OperandType { get; }
+    public TypeSymbol ResultType { get; }
+    static readonly BoundUnaryOperator[] Ops = [new(SyntaxKind.PlusToken, BoundUnaryOperatorKind.Identity, TypeSymbol.Int, TypeSymbol.Int), new(SyntaxKind.MinusToken, BoundUnaryOperatorKind.Negation, TypeSymbol.Int, TypeSymbol.Int), new(SyntaxKind.PlusToken, BoundUnaryOperatorKind.Identity, TypeSymbol.Double, TypeSymbol.Double), new(SyntaxKind.MinusToken, BoundUnaryOperatorKind.Negation, TypeSymbol.Double, TypeSymbol.Double), new(SyntaxKind.BangToken, BoundUnaryOperatorKind.LogicalNegation, TypeSymbol.Bool, TypeSymbol.Bool)];
+    public static BoundUnaryOperator? Bind(SyntaxKind k, TypeSymbol t) => Ops.FirstOrDefault(o => o.SyntaxKind == k && o.OperandType == t);
+}
+public enum BoundBinaryOperatorKind
+{
+    Addition,
+    Subtraction,
+    Multiplication,
+    Division,
+    Modulo,
+    LogicalAnd,
+    LogicalOr,
+    Equals,
+    NotEquals,
+    Less,
+    LessOrEquals,
+    Greater,
+    GreaterOrEquals
+}
+public sealed class BoundBinaryOperator
+{
+    BoundBinaryOperator(SyntaxKind syntaxKind, BoundBinaryOperatorKind kind, TypeSymbol left, TypeSymbol right, TypeSymbol result)
+    {
+        SyntaxKind = syntaxKind;
+        Kind = kind;
+        LeftType = left;
+        RightType = right;
+        ResultType = result;
+    }
+    public SyntaxKind SyntaxKind { get; }
+    public BoundBinaryOperatorKind Kind { get; }
+    public TypeSymbol LeftType { get; }
+    public TypeSymbol RightType { get; }
+    public TypeSymbol ResultType { get; }
+    static BoundBinaryOperator Op(SyntaxKind s, BoundBinaryOperatorKind k, TypeSymbol t, TypeSymbol r) => new(s, k, t, t, r);
+    static readonly BoundBinaryOperator[] Ops = [Op(SyntaxKind.PlusToken, BoundBinaryOperatorKind.Addition, TypeSymbol.Int, TypeSymbol.Int), Op(SyntaxKind.MinusToken, BoundBinaryOperatorKind.Subtraction, TypeSymbol.Int, TypeSymbol.Int), Op(SyntaxKind.StarToken, BoundBinaryOperatorKind.Multiplication, TypeSymbol.Int, TypeSymbol.Int), Op(SyntaxKind.SlashToken, BoundBinaryOperatorKind.Division, TypeSymbol.Int, TypeSymbol.Int), Op(SyntaxKind.PercentToken, BoundBinaryOperatorKind.Modulo, TypeSymbol.Int, TypeSymbol.Int), Op(SyntaxKind.PlusToken, BoundBinaryOperatorKind.Addition, TypeSymbol.Double, TypeSymbol.Double), Op(SyntaxKind.MinusToken, BoundBinaryOperatorKind.Subtraction, TypeSymbol.Double, TypeSymbol.Double), Op(SyntaxKind.StarToken, BoundBinaryOperatorKind.Multiplication, TypeSymbol.Double, TypeSymbol.Double), Op(SyntaxKind.SlashToken, BoundBinaryOperatorKind.Division, TypeSymbol.Double, TypeSymbol.Double), Op(SyntaxKind.PlusToken, BoundBinaryOperatorKind.Addition, TypeSymbol.String, TypeSymbol.String), Op(SyntaxKind.AmpersandAmpersandToken, BoundBinaryOperatorKind.LogicalAnd, TypeSymbol.Bool, TypeSymbol.Bool), Op(SyntaxKind.PipePipeToken, BoundBinaryOperatorKind.LogicalOr, TypeSymbol.Bool, TypeSymbol.Bool), Op(SyntaxKind.EqualEqualToken, BoundBinaryOperatorKind.Equals, TypeSymbol.Bool, TypeSymbol.Bool), Op(SyntaxKind.BangEqualToken, BoundBinaryOperatorKind.NotEquals, TypeSymbol.Bool, TypeSymbol.Bool)];
+    static bool SameType(TypeSymbol a, TypeSymbol b) => a == b || (a is OptionalTypeSymbol ao && b is OptionalTypeSymbol bo && SameType(ao.ElementType, bo.ElementType));
+    public static BoundBinaryOperator? Bind(SyntaxKind k, TypeSymbol l, TypeSymbol r)
+    {
+        if (k is SyntaxKind.EqualEqualToken or SyntaxKind.BangEqualToken && SameType(l, r))
+            return new(k, k == SyntaxKind.EqualEqualToken ? BoundBinaryOperatorKind.Equals : BoundBinaryOperatorKind.NotEquals, l, r, TypeSymbol.Bool);
+        if (k is SyntaxKind.LessToken or SyntaxKind.LessOrEqualToken or SyntaxKind.GreaterToken or SyntaxKind.GreaterOrEqualToken && l == r && (l == TypeSymbol.Int || l == TypeSymbol.Double))
+            return new(k, k switch { SyntaxKind.LessToken => BoundBinaryOperatorKind.Less, SyntaxKind.LessOrEqualToken => BoundBinaryOperatorKind.LessOrEquals, SyntaxKind.GreaterToken => BoundBinaryOperatorKind.Greater,
+                                     _ => BoundBinaryOperatorKind.GreaterOrEquals },
+                       l, r, TypeSymbol.Bool);
+        return Ops.FirstOrDefault(o => o.SyntaxKind == k && o.LeftType == l && o.RightType == r);
+    }
+}
+public readonly record struct Conversion(bool Exists, bool IsIdentity, bool IsImplicit)
+{
+    public static Conversion None => new(false, false, false);
+    public static Conversion Identity => new(true, true, true);
+    public static Conversion Implicit => new(true, false, true);
+    static bool SameType(TypeSymbol a, TypeSymbol b) => a == b || (a is OptionalTypeSymbol ao && b is OptionalTypeSymbol bo && SameType(ao.ElementType, bo.ElementType));
+    public static Conversion Classify(TypeSymbol from, TypeSymbol to)
+    {
+        if (from == TypeSymbol.Error || to == TypeSymbol.Error)
+            return Identity;
+        if (from == to)
+            return Identity;
+        if (from == TypeSymbol.Int && to == TypeSymbol.Double)
+            return Implicit;
+        if (to is OptionalTypeSymbol ot)
+        {
+            if (from == TypeSymbol.Nil)
+                return Implicit;
+            var inner = Classify(from, ot.ElementType);
+            if (inner.Exists && inner.IsImplicit)
+                return Implicit;
+        }
+        if (from is OptionalTypeSymbol fo && to is OptionalTypeSymbol topt && SameType(fo.ElementType, topt.ElementType))
+            return Identity;
+        return None;
+    }
+}
+public sealed class BoundScope(BoundScope? parent)
+{
+    readonly Dictionary<string, TypeSymbol> _types = [];
+    readonly Dictionary<string, VariableSymbol> _vars = [];
+    readonly Dictionary<string, List<FunctionSymbol>> _funcs = [];
+    public BoundScope? Parent { get; } = parent;
+    public bool TryDeclareType(TypeSymbol t) => _types.TryAdd(t.Name, t);
+    public bool TryDeclareVariable(VariableSymbol v) => _vars.TryAdd(v.Name, v);
+    public bool TryDeclareFunction(FunctionSymbol f)
+    {
+        if (!_funcs.TryGetValue(f.Name, out var list))
+            _funcs[f.Name] = list = [];
+        if (!f.IsBuiltIn && list.Any(x => !x.IsBuiltIn))
+            return false;
+        if (!f.IsBuiltIn && list.Any(x => x.IsBuiltIn))
+            return false;
+        list.Add(f);
+        return true;
+    }
+    public bool TryLookupType(string n, out TypeSymbol t)
+    {
+        for (var s = this; s != null; s = s.Parent)
+            if (s._types.TryGetValue(n, out t!))
+                return true;
+        t = null!;
+        return false;
+    }
+    public bool TryLookupVariable(string n, out VariableSymbol v)
+    {
+        for (var s = this; s != null; s = s.Parent)
+            if (s._vars.TryGetValue(n, out v!))
+                return true;
+        v = null!;
+        return false;
+    }
+    public ImmutableArray<FunctionSymbol> LookupFunctions(string n)
+    {
+        for (var s = this; s != null; s = s.Parent)
+            if (s._funcs.TryGetValue(n, out var f))
+                return f.ToImmutableArray();
+        return [];
+    }
+}
+public static class BuiltIns
+{
+    public static readonly ProtocolTypeSymbol ErrorProtocol = new("Error", []);
+    public static readonly EnumTypeSymbol FileError = CreateFileError();
+    public static ImmutableArray<FunctionSymbol> PrintFunctions => [Fn("print", TypeSymbol.Void, TypeSymbol.String), Fn("print", TypeSymbol.Void, TypeSymbol.Int), Fn("print", TypeSymbol.Void, TypeSymbol.Double), Fn("print", TypeSymbol.Void, TypeSymbol.Bool)];
+    public static ImmutableArray<FunctionSymbol> ConsoleFunctions => [Fn("argumentCount", TypeSymbol.Int), Fn("argument", TypeSymbol.String, TypeSymbol.Int), Fn("readLine", TypeSymbol.String), Fn("writeError", TypeSymbol.Void, TypeSymbol.String), Fn("exit", TypeSymbol.Void, TypeSymbol.Int)];
+    public static ImmutableArray<FunctionSymbol> RuntimeBoundaryFunctions => [new("readFile", [new ParameterSymbol("path", null, 0, TypeSymbol.String, [])], TypeSymbol.String, null, true, [], isThrowing: true, errorType: FileError)];
+    static FunctionSymbol Fn(string name, TypeSymbol returnType, params TypeSymbol[] parameterTypes) => new(name, parameterTypes.Select((t, i) => new ParameterSymbol(i == 0 ? "value" : "value" + i, null, i, t, [])).ToImmutableArray(), returnType, null, true, []);
+    static EnumTypeSymbol CreateFileError()
+    {
+        var type = new EnumTypeSymbol("FileError", []);
+        type.AddMember(new EnumCaseSymbol("notFound", type, [new ParameterSymbol("path", "path", 0, TypeSymbol.String, [])], []));
+        type.AddMember(new EnumCaseSymbol("accessDenied", type, [new ParameterSymbol("path", "path", 0, TypeSymbol.String, [])], []));
+        type.AddMember(new EnumCaseSymbol("invalidPath", type, [new ParameterSymbol("path", "path", 0, TypeSymbol.String, [])], []));
+        type.AddMember(new EnumCaseSymbol("io", type, [new ParameterSymbol("message", "message", 0, TypeSymbol.String, [])], []));
+        return type;
+    }
+    public static BoundScope CreateRoot()
+    {
+        var s = new BoundScope(null);
+        foreach (var t in TypeSymbol.BuiltIns)
+            s.TryDeclareType(t);
+        s.TryDeclareType(ErrorProtocol);
+        s.TryDeclareType(FileError);
+        foreach (var f in PrintFunctions.Concat(ConsoleFunctions).Concat(RuntimeBoundaryFunctions))
+            s.TryDeclareFunction(f);
+        return s;
+    }
+}

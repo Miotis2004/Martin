@@ -62,8 +62,7 @@ public sealed class Phase11MvvmTests
         var output = new OutputService();
         var opener = new TestProjectOpeningService();
         var creation = new RecordingProjectCreationService(
-            new StudioProjectCreationResult
-            {
+            new StudioProjectCreationResult {
                 Success = true,
                 ProjectDirectory = Path.Combine(Path.GetTempPath(), "CreatedProject"),
                 ManifestPath = Path.Combine(Path.GetTempPath(), "CreatedProject", "Martin.toml")
@@ -237,10 +236,8 @@ public sealed class Phase11ProjectOpeningTests
         using var project = new Phase11TempProject();
         var workspace = new WorkspaceService();
         var recent = new RecentProjectService();
-        var settings = new InMemorySettingsService
-        {
-            Settings = new StudioSettings
-            {
+        var settings = new InMemorySettingsService {
+            Settings = new StudioSettings {
                 LastProject = project.Manifest,
                 RecentProjects = [new RecentProjectEntry(project.Manifest, "Saved", DateTimeOffset.UtcNow)]
             }
@@ -254,7 +251,6 @@ public sealed class Phase11ProjectOpeningTests
         Assert.Equal(project.Manifest, workspace.Workspace.Project!.ManifestPath);
         Assert.Single(recent.Items);
     }
-
 
     [Fact]
     public void Project_explorer_loads_children_deterministically_hides_generated_and_opens_files()
@@ -283,7 +279,6 @@ public sealed class Phase11ProjectOpeningTests
         Assert.Equal(readme.FullPath, workspace.CopyProjectTreeNodePath(readme));
         Assert.True(workspace.RevealProjectTreeNode(readme));
     }
-
 
     [Fact]
     public void Multiple_document_lifecycle_prevents_duplicates_tracks_active_state_and_disposes_models()
@@ -329,14 +324,13 @@ public sealed class Phase11ProjectOpeningTests
         Assert.Single(document.ViewState.Selections);
     }
 
-
     [Fact]
     public async Task Document_persistence_preserves_encoding_line_endings_and_save_as_updates_model()
     {
         using var project = new Phase11TempProject();
         var workspace = new WorkspaceService();
         Assert.True(workspace.OpenProject(project.Root).Success);
-        await File.WriteAllBytesAsync(project.Main, [0xEF, 0xBB, 0xBF, .. System.Text.Encoding.UTF8.GetBytes("func main() {\r\n return 1\r\n}")]);
+        await File.WriteAllBytesAsync(project.Main, [0xEF, 0xBB, 0xBF, ..System.Text.Encoding.UTF8.GetBytes("func main() {\r\n return 1\r\n}")]);
 
         var document = workspace.OpenDocument(project.Main);
         workspace.ApplyEditorChange(document.Id, "func main() {\n return 2\n}");
@@ -389,7 +383,6 @@ public sealed class Phase11ProjectOpeningTests
         Assert.False(document.IsDirty);
     }
 
-
     [Fact]
     public async Task Atomic_settings_and_session_services_ignore_corrupt_json_and_persist_versioned_state()
     {
@@ -407,8 +400,7 @@ public sealed class Phase11ProjectOpeningTests
         Assert.Empty((await sessionService.LoadAsync()).OpenDocuments);
 
         await settingsService.SaveAsync(new StudioSettings { Theme = StudioTheme.Dark, MaximumRecentProjects = 3 });
-        await sessionService.SaveAsync(new StudioSession
-        {
+        await sessionService.SaveAsync(new StudioSession {
             ProjectPath = Path.Combine(root, "Martin.toml"),
             OpenDocuments = [new DocumentSessionState(Path.Combine(root, "main.martin"), new EditorViewState { CursorLine = 7, CursorColumn = 2 })],
             ActiveDocument = Path.Combine(root, "main.martin")
@@ -427,25 +419,21 @@ public sealed class Phase11ProjectOpeningTests
         File.WriteAllText(second, "func second() { return 2 }");
         var workspace = new WorkspaceService();
         var recent = new RecentProjectService();
-        var settings = new InMemorySettingsService
-        {
-            Settings = new StudioSettings
-            {
+        var settings = new InMemorySettingsService {
+            Settings = new StudioSettings {
                 LastProject = project.Manifest,
                 RestoreOpenDocuments = true,
                 RecentProjects = [new RecentProjectEntry(project.Manifest, "Saved", DateTimeOffset.UtcNow)]
             }
         };
-        var session = new InMemorySessionService
-        {
-            Session = new StudioSession
-            {
+        var session = new InMemorySessionService {
+            Session = new StudioSession {
                 ProjectPath = project.Manifest,
                 OpenDocuments =
-                [
-                    new DocumentSessionState(project.Main, new EditorViewState { CursorLine = 4, CursorColumn = 5 }),
-                    new DocumentSessionState(second, new EditorViewState { CursorLine = 6, CursorColumn = 7 })
-                ],
+                    [
+                        new DocumentSessionState(project.Main, new EditorViewState { CursorLine = 4, CursorColumn = 5 }),
+                        new DocumentSessionState(second, new EditorViewState { CursorLine = 6, CursorColumn = 7 })
+                    ],
                 ActiveDocument = second
             }
         };
@@ -467,18 +455,14 @@ public sealed class Phase11ProjectOpeningTests
         using var project = new Phase11TempProject();
         var workspace = new WorkspaceService();
         var recent = new RecentProjectService();
-        var settings = new InMemorySettingsService
-        {
-            Settings = new StudioSettings
-            {
+        var settings = new InMemorySettingsService {
+            Settings = new StudioSettings {
                 LastProject = project.Manifest,
                 RestoreOpenDocuments = true
             }
         };
-        var session = new InMemorySessionService
-        {
-            Session = new StudioSession
-            {
+        var session = new InMemorySessionService {
+            Session = new StudioSession {
                 ProjectPath = string.Empty,
                 OpenDocuments = [new DocumentSessionState(string.Empty, new EditorViewState { CursorLine = 4, CursorColumn = 5 })],
                 ActiveDocument = string.Empty
@@ -635,8 +619,7 @@ public sealed class Phase11EditorBridgeTests
     [Fact]
     public void Studio_session_tracks_explorer_visibility_and_window_position()
     {
-        var session = new StudioSession
-        {
+        var session = new StudioSession {
             ProjectExplorerVisible = false,
             WindowPlacement = new WindowPlacementState(1000, 700, true, 125, 250)
         };
@@ -658,7 +641,8 @@ public sealed class Phase11ExternalChangeTests
         Assert.True(workspace.OpenProject(project.Root).Success);
         var document = workspace.OpenDocument(project.Main);
         DocumentModel? reloadedDocument = null;
-        workspace.DocumentReloaded += (reloaded, _) => { reloadedDocument = reloaded; return Task.CompletedTask; };
+        workspace.DocumentReloaded += (reloaded, _) =>
+        { reloadedDocument = reloaded; return Task.CompletedTask; };
 
         File.WriteAllText(project.Main, "func main() { return 99 }");
         await workspace.HandleExternalChangesAsync();
@@ -804,7 +788,6 @@ public sealed class Phase11SnapshotTests
         Assert.Throws<OperationCanceledException>(() => workspace.CreateSnapshot(cts.Token));
     }
 
-
     [Fact]
     public void Snapshot_reports_duplicate_canonical_project_source_paths()
     {
@@ -812,10 +795,8 @@ public sealed class Phase11SnapshotTests
         var workspace = new WorkspaceService();
         Assert.True(workspace.OpenProject(project.Root).Success);
         var loaded = workspace.Workspace.Project!;
-        workspace.CommitProjectCandidate(new ProjectCandidate
-        {
-            Project = new MartinProject
-            {
+        workspace.CommitProjectCandidate(new ProjectCandidate {
+            Project = new MartinProject {
                 RootDirectory = loaded.RootDirectory,
                 ManifestPath = loaded.ManifestPath,
                 Manifest = loaded.Manifest,
@@ -856,7 +837,6 @@ public sealed class Phase11SnapshotTests
     }
 }
 
-
 public sealed class Phase12BuildCommandTests
 {
     [Fact]
@@ -868,8 +848,7 @@ public sealed class Phase12BuildCommandTests
         var document = workspace.OpenDocument(project.Main);
         workspace.ApplyEditorChange(document.Id, "func main() { return 42 }");
         var output = new OutputService();
-        var build = new FakeBuildService(new BuildResult
-        {
+        var build = new FakeBuildService(new BuildResult {
             Success = false,
             Diagnostics = [new Diagnostic("MRT9999", DiagnosticSeverity.Error, "boom", new TextLocation(SourceText.From("func main() {", project.Main), new TextSpan(5, 4)))],
             StandardOutput = "compiler output"
@@ -935,7 +914,6 @@ public sealed class Phase12BuildCommandTests
         Assert.Equal(BuildConfiguration.Release, build.LastOptions!.Configuration);
         Assert.Equal(Path.Combine(project.Root, "bin", "Release", "net8.0"), build.LastOptions.OutputDirectory);
     }
-
 
     [Fact]
     public async Task Run_command_builds_in_memory_dirty_documents_then_executes()
@@ -1050,11 +1028,11 @@ public sealed class Phase14OutputAndErrorListTests
         var document = workspace.OpenDocument(project.Main);
         var service = new DiagnosticService(workspace.Workspace);
         service.Apply(new DocumentDiagnostics(document.Id, document.Version,
-        [
-            new StudioDiagnostic("MRT2000", OutputSeverity.Warning, "later", document.FilePath, new TextRange(4, 2, 4, 6), "Compiler"),
-            new StudioDiagnostic("MRT1000", OutputSeverity.Error, "first", document.FilePath, new TextRange(2, 3, 2, 8), "Compiler"),
-            new StudioDiagnostic("MRT3000", OutputSeverity.Info, "note", null, null, "Build")
-        ]));
+                                              [
+                                                  new StudioDiagnostic("MRT2000", OutputSeverity.Warning, "later", document.FilePath, new TextRange(4, 2, 4, 6), "Compiler"),
+                                                  new StudioDiagnostic("MRT1000", OutputSeverity.Error, "first", document.FilePath, new TextRange(2, 3, 2, 8), "Compiler"),
+                                                  new StudioDiagnostic("MRT3000", OutputSeverity.Info, "note", null, null, "Build")
+                                              ]));
 
         var errors = service.GetDiagnostics(new DiagnosticFilter(Severities: [OutputSeverity.Error]));
         Assert.Single(errors);
@@ -1080,10 +1058,10 @@ public sealed class Phase14OutputAndErrorListTests
         var document = workspace.OpenDocument(project.Main);
         var diagnostics = new DiagnosticService(workspace.Workspace);
         diagnostics.Apply(new DocumentDiagnostics(document.Id, document.Version,
-        [
-            new StudioDiagnostic("MRT1000", OutputSeverity.Error, "first", document.FilePath, new TextRange(2, 3, 2, 8), "Compiler"),
-            new StudioDiagnostic("MRT2000", OutputSeverity.Warning, "second", document.FilePath, new TextRange(5, 1, 5, 4), "Compiler")
-        ]));
+                                                  [
+                                                      new StudioDiagnostic("MRT1000", OutputSeverity.Error, "first", document.FilePath, new TextRange(2, 3, 2, 8), "Compiler"),
+                                                      new StudioDiagnostic("MRT2000", OutputSeverity.Warning, "second", document.FilePath, new TextRange(5, 1, 5, 4), "Compiler")
+                                                  ]));
         var output = new OutputService();
         var viewModel = new MainWindowViewModel(
             workspace,
@@ -1163,7 +1141,11 @@ internal sealed class InMemorySettingsService18 : ISettingsService
 {
     public StudioSettings Settings { get; set; } = new();
     public Task<StudioSettings> LoadAsync(CancellationToken cancellationToken = default) => Task.FromResult(Settings);
-    public Task SaveAsync(StudioSettings settings, CancellationToken cancellationToken = default) { Settings = settings; return Task.CompletedTask; }
+    public Task SaveAsync(StudioSettings settings, CancellationToken cancellationToken = default)
+    {
+        Settings = settings;
+        return Task.CompletedTask;
+    }
 }
 
 public sealed class Phase17LoggingRecoveryTests
@@ -1182,7 +1164,6 @@ public sealed class Phase17LoggingRecoveryTests
         Assert.Equal("request-timeout", entry.Operation);
         Assert.Contains("Editor request timed out", File.ReadAllText(logs.CurrentLogPath));
     }
-
 
     [Fact]
     public async Task Project_opening_and_save_operations_are_logged_without_source_text()
@@ -1335,7 +1316,11 @@ public sealed class Phase16FunctionalVerificationTests
     {
         public StudioSession Session { get; set; } = new();
         public Task<StudioSession> LoadAsync(CancellationToken cancellationToken = default) => Task.FromResult(Session);
-        public Task SaveAsync(StudioSession session, CancellationToken cancellationToken = default) { Session = session; return Task.CompletedTask; }
+        public Task SaveAsync(StudioSession session, CancellationToken cancellationToken = default)
+        {
+            Session = session;
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class RecordingBuildService16(string entryPoint) : IMartinBuildService
@@ -1525,11 +1510,14 @@ public sealed class Phase16FunctionalVerificationTests
     private sealed class InlineUiDispatcher : IUiDispatcher
     {
         public bool HasThreadAccess => true;
-        public Task InvokeAsync(Action action, CancellationToken cancellationToken = default) { action(); return Task.CompletedTask; }
+        public Task InvokeAsync(Action action, CancellationToken cancellationToken = default)
+        {
+            action();
+            return Task.CompletedTask;
+        }
         public Task InvokeAsync(Func<Task> action, CancellationToken cancellationToken = default) => action();
         public Task<T> InvokeAsync<T>(Func<T> action, CancellationToken cancellationToken = default) => Task.FromResult(action());
     }
-
 }
 
 internal sealed class TestProjectOpeningService : IProjectOpeningService

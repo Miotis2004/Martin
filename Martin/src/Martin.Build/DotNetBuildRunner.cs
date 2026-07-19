@@ -16,8 +16,7 @@ public sealed class DotNetBuildRunner : IDotNetBuildRunner
         ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var process = new Process
-        {
+        using var process = new Process {
             StartInfo = CreateStartInfo(request, executablePath)
         };
 
@@ -41,8 +40,7 @@ public sealed class DotNetBuildRunner : IDotNetBuildRunner
         try
         {
             await process.WaitForExitAsync(cancellationToken);
-            return new DotNetBuildResult
-            {
+            return new DotNetBuildResult {
                 Started = true,
                 Completed = true,
                 ExitCode = process.ExitCode,
@@ -54,8 +52,7 @@ public sealed class DotNetBuildRunner : IDotNetBuildRunner
         {
             TryKillProcessTree(process);
             await WaitForExitAfterCancellationAsync(process);
-            return new DotNetBuildResult
-            {
+            return new DotNetBuildResult {
                 Started = true,
                 WasCancelled = true,
                 StandardOutput = await CompleteOutputReadAsync(standardOutput),
@@ -66,8 +63,7 @@ public sealed class DotNetBuildRunner : IDotNetBuildRunner
 
     static ProcessStartInfo CreateStartInfo(DotNetBuildRequest request, string executablePath)
     {
-        var startInfo = new ProcessStartInfo(executablePath)
-        {
+        var startInfo = new ProcessStartInfo(executablePath) {
             WorkingDirectory = request.WorkingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,

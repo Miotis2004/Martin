@@ -75,5 +75,4 @@ public sealed class CommandParserTests
         var options = Assert.IsType<RunCommandOptions>(result.Command);
         Assert.Equal(["--quiet", "--verbose"], options.ProgramArguments);
     }
-
 }

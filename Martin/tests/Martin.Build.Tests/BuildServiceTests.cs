@@ -14,8 +14,7 @@ public sealed class BuildServiceTests
     {
         var compilation = Compilation.Create(SyntaxTree.Parse("func main() { }", "main.martin"));
 
-        var result = await new MartinBuildService().BuildAsync(compilation, new BuildOptions
-        {
+        var result = await new MartinBuildService().BuildAsync(compilation, new BuildOptions {
             AssemblyName = "not valid",
             OutputDirectory = Path.Combine(Path.GetTempPath(), "MartinBuildTests", Guid.NewGuid().ToString("N"))
         });
@@ -30,8 +29,7 @@ public sealed class BuildServiceTests
         var runner = new RecordingBuildRunner(new DotNetBuildResult { Started = true });
         var result = await new MartinBuildService(runner).BuildAsync(
             Compilation.Create(SyntaxTree.Parse("func helper() { }", "library.martin")),
-            new BuildOptions
-            {
+            new BuildOptions {
                 AssemblyName = "DeferredLibrary",
                 OutputDirectory = Path.Combine(Path.GetTempPath(), "MartinBuildTests", Guid.NewGuid().ToString("N")),
                 OutputKind = OutputKind.Library
@@ -39,8 +37,8 @@ public sealed class BuildServiceTests
 
         Assert.False(result.Success);
         Assert.Contains(result.Diagnostics, diagnostic =>
-            diagnostic.Code == "MRT3014" &&
-            diagnostic.Message.Contains("Library", StringComparison.Ordinal));
+                                                diagnostic.Code == "MRT3014" &&
+                                                diagnostic.Message.Contains("Library", StringComparison.Ordinal));
         Assert.Null(runner.Request);
     }
 
@@ -48,14 +46,12 @@ public sealed class BuildServiceTests
     public async Task Build_delegates_dotnet_process_to_runner()
     {
         var compilation = Compilation.Create(SyntaxTree.Parse("func main() { }", "main.martin"));
-        var runner = new RecordingBuildRunner(new DotNetBuildResult
-        {
+        var runner = new RecordingBuildRunner(new DotNetBuildResult {
             Started = false,
             StandardError = "startup failed"
         });
 
-        var result = await new MartinBuildService(runner).BuildAsync(compilation, new BuildOptions
-        {
+        var result = await new MartinBuildService(runner).BuildAsync(compilation, new BuildOptions {
             AssemblyName = "DelegationTest",
             OutputDirectory = Path.Combine(Path.GetTempPath(), "MartinBuildTests", Guid.NewGuid().ToString("N")),
             Configuration = BuildConfiguration.Release,
@@ -69,7 +65,6 @@ public sealed class BuildServiceTests
         Assert.Equal(Path.GetDirectoryName(runner.Request.ProjectPath), runner.Request.WorkingDirectory);
     }
 
-
     [Fact]
     public async Task Build_reports_cancelled_when_cancellation_is_requested_before_source_write()
     {
@@ -77,11 +72,7 @@ public sealed class BuildServiceTests
         using var cancellation = new CancellationTokenSource();
         await cancellation.CancelAsync();
 
-        var result = await new MartinBuildService(new RecordingBuildRunner(new DotNetBuildResult { Started = true })).BuildAsync(compilation, new BuildOptions
-        {
-            AssemblyName = "CancelledBeforeWrite",
-            OutputDirectory = Path.Combine(Path.GetTempPath(), "MartinBuildTests", Guid.NewGuid().ToString("N"))
-        }, cancellation.Token);
+        var result = await new MartinBuildService(new RecordingBuildRunner(new DotNetBuildResult { Started = true })).BuildAsync(compilation, new BuildOptions { AssemblyName = "CancelledBeforeWrite", OutputDirectory = Path.Combine(Path.GetTempPath(), "MartinBuildTests", Guid.NewGuid().ToString("N")) }, cancellation.Token);
 
         Assert.Equal(BuildStatus.Cancelled, result.Status);
         Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MRT3010");
@@ -96,16 +87,14 @@ public sealed class BuildServiceTests
         await File.WriteAllTextAsync(existingOutput, "previous successful output");
 
         var compilation = Compilation.Create(SyntaxTree.Parse("func main() { }", "main.martin"));
-        var runner = new RecordingBuildRunner(new DotNetBuildResult
-        {
+        var runner = new RecordingBuildRunner(new DotNetBuildResult {
             Started = true,
             WasCancelled = true,
             StandardOutput = "partial stdout",
             StandardError = "partial stderr"
         });
 
-        var result = await new MartinBuildService(runner).BuildAsync(compilation, new BuildOptions
-        {
+        var result = await new MartinBuildService(runner).BuildAsync(compilation, new BuildOptions {
             AssemblyName = "CancelledDuringDotNetBuild",
             OutputDirectory = outputDirectory,
             KeepGeneratedFiles = true
@@ -120,15 +109,13 @@ public sealed class BuildServiceTests
         Assert.False(Directory.Exists(runner.Request.WorkingDirectory));
     }
 
-
     [Fact]
     public async Task Build_publishes_valid_staging_output_on_first_successful_build()
     {
         var outputDirectory = Path.Combine(Path.GetTempPath(), "MartinBuildTests", Guid.NewGuid().ToString("N"));
         var runner = new PublishingBuildRunner();
 
-        var result = await new MartinBuildService(runner).BuildAsync(Compilation.Create(SyntaxTree.Parse("func main() { }", "main.martin")), new BuildOptions
-        {
+        var result = await new MartinBuildService(runner).BuildAsync(Compilation.Create(SyntaxTree.Parse("func main() { }", "main.martin")), new BuildOptions {
             AssemblyName = "FirstPublish",
             OutputDirectory = outputDirectory,
             UseAppHost = false
@@ -152,22 +139,7 @@ public sealed class BuildServiceTests
         await File.WriteAllTextAsync(source, "func main() { }\n");
         var outputDirectory = Path.Combine(projectRoot, "bin");
 
-        var result = await new MartinBuildService(new PublishingBuildRunner()).BuildAsync(
-            Compilation.Create(SyntaxTree.Parse(await File.ReadAllTextAsync(source), source)),
-            new BuildOptions
-            {
-                AssemblyName = "StatePublish",
-                OutputDirectory = outputDirectory,
-                UseAppHost = false,
-                BuildStateInputs = new ProjectBuildStateInputs
-                {
-                    ProjectRoot = projectRoot,
-                    ManifestPath = manifest,
-                    SourceFiles = [source],
-                    CompilerVersion = "compiler",
-                    RuntimeVersion = "runtime"
-                }
-            });
+        var result = await new MartinBuildService(new PublishingBuildRunner()).BuildAsync(Compilation.Create(SyntaxTree.Parse(await File.ReadAllTextAsync(source), source)), new BuildOptions { AssemblyName = "StatePublish", OutputDirectory = outputDirectory, UseAppHost = false, BuildStateInputs = new ProjectBuildStateInputs { ProjectRoot = projectRoot, ManifestPath = manifest, SourceFiles = [source], CompilerVersion = "compiler", RuntimeVersion = "runtime" } });
 
         Assert.True(result.Success);
         Assert.True(File.Exists(Path.Combine(outputDirectory, BuildStateStore.FileName)));
@@ -188,22 +160,7 @@ public sealed class BuildServiceTests
         var previous = Path.Combine(outputDirectory, "previous.txt");
         await File.WriteAllTextAsync(previous, "previous successful output");
 
-        var result = await new MartinBuildService(new PublishingBuildRunner()).BuildAsync(
-            Compilation.Create(SyntaxTree.Parse(await File.ReadAllTextAsync(source), source)),
-            new BuildOptions
-            {
-                AssemblyName = "StateFailure",
-                OutputDirectory = outputDirectory,
-                UseAppHost = false,
-                BuildStateInputs = new ProjectBuildStateInputs
-                {
-                    ProjectRoot = projectRoot,
-                    ManifestPath = Path.Combine(projectRoot, "missing-Martin.toml"),
-                    SourceFiles = [source],
-                    CompilerVersion = "compiler",
-                    RuntimeVersion = "runtime"
-                }
-            });
+        var result = await new MartinBuildService(new PublishingBuildRunner()).BuildAsync(Compilation.Create(SyntaxTree.Parse(await File.ReadAllTextAsync(source), source)), new BuildOptions { AssemblyName = "StateFailure", OutputDirectory = outputDirectory, UseAppHost = false, BuildStateInputs = new ProjectBuildStateInputs { ProjectRoot = projectRoot, ManifestPath = Path.Combine(projectRoot, "missing-Martin.toml"), SourceFiles = [source], CompilerVersion = "compiler", RuntimeVersion = "runtime" } });
 
         Assert.False(result.Success);
         Assert.Contains(result.Diagnostics, diagnostic => diagnostic.Code == "MRT4515");
@@ -221,8 +178,7 @@ public sealed class BuildServiceTests
         await File.WriteAllTextAsync(Path.Combine(outputDirectory, "stale.txt"), "old");
         var runner = new PublishingBuildRunner();
 
-        var result = await new MartinBuildService(runner).BuildAsync(Compilation.Create(SyntaxTree.Parse("func main() { }", "main.martin")), new BuildOptions
-        {
+        var result = await new MartinBuildService(runner).BuildAsync(Compilation.Create(SyntaxTree.Parse("func main() { }", "main.martin")), new BuildOptions {
             AssemblyName = "ReplacementPublish",
             OutputDirectory = outputDirectory,
             UseAppHost = false
@@ -242,8 +198,7 @@ public sealed class BuildServiceTests
         await File.WriteAllTextAsync(previous, "previous successful output");
         var runner = new PublishingBuildRunner(omitDependencyManifest: true);
 
-        var result = await new MartinBuildService(runner).BuildAsync(Compilation.Create(SyntaxTree.Parse("func main() { }", "main.martin")), new BuildOptions
-        {
+        var result = await new MartinBuildService(runner).BuildAsync(Compilation.Create(SyntaxTree.Parse("func main() { }", "main.martin")), new BuildOptions {
             AssemblyName = "ValidationFailure",
             OutputDirectory = outputDirectory,
             UseAppHost = false
@@ -275,8 +230,8 @@ public sealed class BuildServiceTests
         {
             Request = request;
             var outputPath = request.AdditionalArguments
-                .Select(argument => argument.StartsWith("-p:OutputPath=", StringComparison.Ordinal) ? argument[14..] : null)
-                .First(argument => argument is not null)!;
+                                 .Select(argument => argument.StartsWith("-p:OutputPath=", StringComparison.Ordinal) ? argument[14..] : null)
+                                 .First(argument => argument is not null)!;
             Directory.CreateDirectory(outputPath);
 
             var assemblyName = ReadAssemblyName(request.ProjectPath);
@@ -310,5 +265,4 @@ public sealed class BuildServiceTests
             return Directory.EnumerateFiles(Path.GetFullPath(Path.Combine(baseDirectory, "../../../../")), "Martin.Runtime.dll", SearchOption.AllDirectories).First();
         }
     }
-
 }

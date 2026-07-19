@@ -21,7 +21,7 @@ public sealed record BuildStateInputs
 
 public sealed record BuildStateWriteResult
 {
-    public string? StatePath { get; init; }
+    public string ? StatePath { get; init; }
     public ImmutableArray<Diagnostic> Diagnostics { get; init; } = [];
     public bool Success => Diagnostics.All(diagnostic => diagnostic.Severity != DiagnosticSeverity.Error);
 }
@@ -30,8 +30,7 @@ public sealed class BuildStateStore
 {
     public const string FileName = ".martin-build-state.json";
 
-    static readonly JsonSerializerOptions JsonOptions = new()
-    {
+    static readonly JsonSerializerOptions JsonOptions = new() {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
@@ -51,35 +50,33 @@ public sealed class BuildStateStore
 
         var outputRoot = Path.GetFullPath(result.OutputDirectory);
         var artifacts = result.Artifacts
-            .OrderBy(artifact => Relative(outputRoot, artifact.Path), StringComparer.Ordinal)
-            .Select(artifact =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return new BuildArtifactState
-                {
-                    Kind = artifact.Kind,
-                    RelativePath = Relative(outputRoot, artifact.Path),
-                    Sha256 = Sha256(artifact.Path, cancellationToken),
-                    Length = new FileInfo(artifact.Path).Length
-                };
-            })
-            .ToImmutableArray();
+                            .OrderBy(artifact => Relative(outputRoot, artifact.Path), StringComparer.Ordinal)
+                            .Select(artifact =>
+                                    {
+                                        cancellationToken.ThrowIfCancellationRequested();
+                                        return new BuildArtifactState {
+                                            Kind = artifact.Kind,
+                                            RelativePath = Relative(outputRoot, artifact.Path),
+                                            Sha256 = Sha256(artifact.Path, cancellationToken),
+                                            Length = new FileInfo(artifact.Path).Length
+                                        };
+                                    })
+                            .ToImmutableArray();
 
         cancellationToken.ThrowIfCancellationRequested();
         var runtimeArtifact = result.Artifacts.FirstOrDefault(artifact => artifact.Kind == BuildArtifactKind.RuntimeLibrary);
         var runtimeSha256 = runtimeArtifact is not null && File.Exists(runtimeArtifact.Path) ? Sha256(runtimeArtifact.Path, cancellationToken) : string.Empty;
 
         var projectRoot = Path.GetFullPath(inputs.ProjectRoot);
-        return new BuildStateDocument
-        {
+        return new BuildStateDocument {
             ProjectRoot = projectRoot,
             ManifestPath = Path.GetFullPath(inputs.ManifestPath),
             ManifestSha256 = Sha256(inputs.ManifestPath, cancellationToken),
             Sources = inputs.SourceFiles
-                .Select(Path.GetFullPath)
-                .Order(StringComparer.Ordinal)
-                .Select(source => Fingerprint(projectRoot, source, cancellationToken))
-                .ToImmutableArray(),
+                          .Select(Path.GetFullPath)
+                          .Order(StringComparer.Ordinal)
+                          .Select(source => Fingerprint(projectRoot, source, cancellationToken))
+                          .ToImmutableArray(),
             CompilerVersion = inputs.CompilerVersion,
             RuntimeVersion = inputs.RuntimeVersion,
             RuntimeSha256 = runtimeSha256,
@@ -120,8 +117,7 @@ public sealed class BuildStateStore
     static BuildInputFingerprint Fingerprint(string projectRoot, string path, CancellationToken cancellationToken)
     {
         var info = new FileInfo(path);
-        return new BuildInputFingerprint
-        {
+        return new BuildInputFingerprint {
             RelativePath = Relative(projectRoot, path),
             Sha256 = Sha256(path, cancellationToken),
             Length = info.Length,
@@ -136,5 +132,15 @@ public sealed class BuildStateStore
         return Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
     }
     static Diagnostic Diag(string code, string message) => new(code, DiagnosticSeverity.Error, message, new TextLocation(SourceText.From(string.Empty), new TextSpan(0, 0)));
-    static void TryDelete(string path) { try { if (File.Exists(path)) File.Delete(path); } catch { } }
+    static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
+        }
+    }
 }

@@ -19,7 +19,7 @@ public sealed class GeneratedDiagnosticTranslator
         {
             var offset = TryGetOffset(sourceText, diagnostic.Line, diagnostic.Column);
             var entry = offset is int position ? FindBestEntry(sourceMap, position) : null;
-            if (entry is { } mapped)
+            if (entry is {} mapped)
             {
                 translated.Add(new Diagnostic(
                     diagnostic.Code,
@@ -30,8 +30,8 @@ public sealed class GeneratedDiagnosticTranslator
             else
             {
                 var location = offset is int positionInGenerated
-                    ? new TextLocation(sourceText, new TextSpan(Math.Clamp(positionInGenerated, 0, sourceText.Length), 0))
-                    : EmptyLocation();
+                                   ? new TextLocation(sourceText, new TextSpan(Math.Clamp(positionInGenerated, 0, sourceText.Length), 0))
+                                   : EmptyLocation();
                 translated.Add(new Diagnostic(
                     "MRT3020",
                     diagnostic.Severity,

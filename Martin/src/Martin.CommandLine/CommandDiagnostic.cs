@@ -11,7 +11,7 @@ public enum CommandDiagnosticSeverity
 
 public sealed record CommandTextLocation
 {
-    public string? FilePath { get; init; }
+    public string ? FilePath { get; init; }
 
     public int StartLine { get; init; }
 
@@ -26,7 +26,7 @@ public sealed record CommandRelatedLocation
 {
     public required CommandTextLocation Location { get; init; }
 
-    public string? Message { get; init; }
+    public string ? Message { get; init; }
 }
 
 public sealed record CommandDiagnostic
@@ -37,9 +37,9 @@ public sealed record CommandDiagnostic
 
     public required string Message { get; init; }
 
-    public CommandTextLocation? Location { get; init; }
+    public CommandTextLocation ? Location { get; init; }
 
-    public string? Path { get; init; }
+    public string ? Path { get; init; }
 
     public ImmutableArray<CommandRelatedLocation> RelatedLocations { get; init; } = [];
 }

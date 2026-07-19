@@ -9,14 +9,14 @@ public sealed record SymbolDescriptor
     public required SymbolId Id { get; init; }
     public required SymbolKind Kind { get; init; }
     public required string Name { get; init; }
-    public SymbolId? ContainingSymbolId { get; init; }
+    public SymbolId ? ContainingSymbolId { get; init; }
     public required string DisplaySignature { get; init; }
     public required DefinitionLocation Definition { get; init; }
     public ImmutableArray<DefinitionLocation> AdditionalDeclarations { get; init; } = [];
     public bool IsBuiltIn { get; init; }
     public bool IsReadOnly { get; init; }
     public bool IsStatic { get; init; }
-    public string? DocumentationMarkdown { get; init; }
+    public string ? DocumentationMarkdown { get; init; }
 }
 
 /// <summary>An immutable declaration lookup for one exact project version.</summary>

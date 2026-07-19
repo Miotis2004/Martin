@@ -37,8 +37,8 @@ public sealed record PatternConstructor
     public string Name { get; }
     public ImmutableArray<TypeSymbol> ArgumentTypes { get; }
     public int Arity => ArgumentTypes.Length;
-    public object? Value { get; }
-    public EnumCaseSymbol? EnumCase { get; }
+    public object         ? Value { get; }
+    public EnumCaseSymbol ? EnumCase { get; }
 
     public static PatternConstructor ForEnumCase(EnumCaseSymbol @case) =>
         new(PatternConstructorKind.EnumCase, "." + @case.Name,
@@ -51,8 +51,8 @@ public sealed record PatternConstructor
         new(PatternConstructorKind.OptionalNone, "nil", []);
 
     public static PatternConstructor Boolean(bool value) => value
-        ? new(PatternConstructorKind.BooleanTrue, "true", [], true)
-        : new(PatternConstructorKind.BooleanFalse, "false", [], false);
+                                                                ? new(PatternConstructorKind.BooleanTrue, "true", [], true)
+                                                                : new(PatternConstructorKind.BooleanFalse, "false", [], false);
 
     public static PatternConstructor Literal(object? value) =>
         new(PatternConstructorKind.Literal, FormatLiteral(value), [], value);
@@ -60,9 +60,9 @@ public sealed record PatternConstructor
     public bool Matches(PatternConstructor other)
     {
         ArgumentNullException.ThrowIfNull(other);
-        if (Kind != other.Kind || Arity != other.Arity) return false;
-        return Kind switch
-        {
+        if (Kind != other.Kind || Arity != other.Arity)
+            return false;
+        return Kind switch {
             PatternConstructorKind.EnumCase => ReferenceEquals(EnumCase, other.EnumCase),
             PatternConstructorKind.Literal => Equals(Value, other.Value),
             _ => true,
@@ -94,16 +94,15 @@ public sealed class PatternDomain
     public static PatternDomain Create(TypeSymbol type)
     {
         ArgumentNullException.ThrowIfNull(type);
-        return type switch
-        {
+        return type switch {
             EnumTypeSymbol enumType => new(type, true,
-                enumType.Cases.Select(PatternConstructor.ForEnumCase).ToImmutableArray()),
-            ConstructedTypeSymbol { GenericDefinition: EnumTypeSymbol } constructed => new(type, true,
-                constructed.Cases.Select(PatternConstructor.ForEnumCase).ToImmutableArray()),
+                                           enumType.Cases.Select(PatternConstructor.ForEnumCase).ToImmutableArray()),
+            ConstructedTypeSymbol { GenericDefinition : EnumTypeSymbol } constructed => new(type, true,
+                                                                                            constructed.Cases.Select(PatternConstructor.ForEnumCase).ToImmutableArray()),
             OptionalTypeSymbol optional => new(type, true,
-                [PatternConstructor.OptionalNone, PatternConstructor.OptionalSome(optional.ElementType)]),
+                                               [PatternConstructor.OptionalNone, PatternConstructor.OptionalSome(optional.ElementType)]),
             _ when type == TypeSymbol.Bool => new(type, true,
-                [PatternConstructor.Boolean(false), PatternConstructor.Boolean(true)]),
+                                                  [PatternConstructor.Boolean(false), PatternConstructor.Boolean(true)]),
             _ => new(type, false, []),
         };
     }
@@ -129,7 +128,8 @@ public sealed record PatternMatrixLimits(int MaximumRows = 4096, int MaximumColu
 }
 
 /// <summary>Indicates that pattern analysis cannot continue within its configured capacity.</summary>
-public sealed class PatternMatrixCapacityException(string message) : InvalidOperationException(message);
+public sealed class PatternMatrixCapacityException(string message) : InvalidOperationException
+(message);
 
 /// <summary>
 /// Immutable pattern-matrix operations shared by usefulness and exhaustiveness analysis.
@@ -159,7 +159,8 @@ public sealed class PatternMatrix
         foreach (var row in Rows)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (row.HasErrors || row.Patterns.IsEmpty) continue;
+            if (row.HasErrors || row.Patterns.IsEmpty)
+                continue;
             var head = row.Patterns[0];
             var tail = row.Patterns.RemoveAt(0);
             if (TryGetConstructor(head, out var actual))
@@ -170,8 +171,8 @@ public sealed class PatternMatrix
             else if (IsWildcard(head))
             {
                 var wildcards = constructor.ArgumentTypes
-                    .Select(type => (BoundPattern)new BoundWildcardPattern(type, head.Location))
-                    .ToImmutableArray();
+                                    .Select(type => (BoundPattern) new BoundWildcardPattern(type, head.Location))
+                                    .ToImmutableArray();
                 rows.Add(new PatternMatrixRow(wildcards.AddRange(tail), row.SourceOrdinal));
             }
         }
@@ -197,7 +198,8 @@ public sealed class PatternMatrix
         {
             builder.Append('[').Append(row.SourceOrdinal).Append("] ");
             builder.AppendJoin(" | ", row.Patterns.Select(BoundPatternPrinter.Print));
-            if (row.HasErrors) builder.Append(" <error-row>");
+            if (row.HasErrors)
+                builder.Append(" <error-row>");
             builder.AppendLine();
         }
         return builder.ToString();
@@ -208,20 +210,18 @@ public sealed class PatternMatrix
 
     private static bool TryGetConstructor(BoundPattern pattern, out PatternConstructor constructor)
     {
-        constructor = pattern switch
-        {
+        constructor = pattern switch {
             BoundEnumCasePattern enumCase => PatternConstructor.ForEnumCase(enumCase.Case),
             BoundOptionalSomePattern some => PatternConstructor.OptionalSome(some.OptionalType.ElementType),
             BoundNilPattern => PatternConstructor.OptionalNone,
-            BoundLiteralPattern { Value: bool value } => PatternConstructor.Boolean(value),
+            BoundLiteralPattern { Value : bool value } => PatternConstructor.Boolean(value),
             BoundLiteralPattern literal => PatternConstructor.Literal(literal.Value),
             _ => null!,
         };
         return constructor is not null;
     }
 
-    private static ImmutableArray<BoundPattern> GetArguments(BoundPattern pattern) => pattern switch
-    {
+    private static ImmutableArray<BoundPattern> GetArguments(BoundPattern pattern) => pattern switch {
         BoundEnumCasePattern enumCase => enumCase.AssociatedPatterns,
         BoundOptionalSomePattern some => [some.ValuePattern],
         _ => [],

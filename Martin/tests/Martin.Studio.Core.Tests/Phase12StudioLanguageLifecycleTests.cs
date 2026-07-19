@@ -22,8 +22,7 @@ public sealed class Phase12StudioLanguageLifecycleTests
         var snapshot = provider.Workspace;
         var languageProject = snapshot.Projects.Single();
         var languageDocument = snapshot.FindDocument(languageDocumentId)!;
-        var payload = JsonSerializer.SerializeToElement(new
-        {
+        var payload = JsonSerializer.SerializeToElement(new {
             documentId = document.Id,
             documentVersion = document.Version.Value,
             modelVersion = document.Version.Value,
@@ -63,7 +62,7 @@ public sealed class Phase12StudioLanguageLifecycleTests
         var changed = oldText.Replace("1", "42", StringComparison.Ordinal);
         var start = oldText.IndexOf('1');
         var result = await provider.ApplyEditorChangesAsync(document.Id, document.Version, document.Version.Next(),
-            [new Martin.LanguageServices.TextChange(new TextSpan(start, 1), "42")]);
+                                                            [new Martin.LanguageServices.TextChange(new TextSpan(start, 1), "42")]);
         Assert.True(result.IsApplied);
         Assert.Equal(changed, provider.Workspace.FindDocument(languageDocument.Id)!.Text);
 
@@ -119,7 +118,7 @@ public sealed class Phase12StudioLanguageLifecycleTests
         await studio.HandleExternalChangesAsync();
 
         Assert.Contains(provider.Workspace.Projects.Single().Documents,
-            document => Path.GetFullPath(document.FilePath) == Path.GetFullPath(added));
+                        document => Path.GetFullPath(document.FilePath) == Path.GetFullPath(added));
     }
 
     [Fact]
@@ -155,6 +154,10 @@ public sealed class Phase12StudioLanguageLifecycleTests
             File.WriteAllText(Main, "func main() { return 1 }");
             File.WriteAllText(Path.Combine(Sources, "helper.martin"), "func helper() { return 2 }");
         }
-        public void Dispose() { if (Directory.Exists(Root)) Directory.Delete(Root, true); }
+        public void Dispose()
+        {
+            if (Directory.Exists(Root))
+                Directory.Delete(Root, true);
+        }
     }
 }

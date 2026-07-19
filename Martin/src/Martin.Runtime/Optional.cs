@@ -9,8 +9,7 @@ public readonly struct Optional<T>
 
     public T Value
     {
-        get
-        {
+        get {
             if (!HasValue)
                 throw new InvalidOperationException("Optional has no value.");
 

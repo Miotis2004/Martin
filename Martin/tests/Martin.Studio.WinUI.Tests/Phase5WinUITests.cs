@@ -5,8 +5,21 @@ namespace Martin_Studio_WinUI_Tests;
 
 public sealed class Phase5WinUITests
 {
-    [Fact] public void Phase5_ui_command_state_can_be_backed_by_workspace_state() { var ws = new WorkspaceService(); Assert.Null(ws.Workspace.Project); Assert.DoesNotContain(ws.Workspace.OpenDocuments, d => d.IsDirty); }
-    [Fact] public void Phase5_editor_messages_support_theme_and_document_payloads() { var theme = EditorMessageProtocol.Deserialize(EditorMessageProtocol.Serialize("setTheme", new { theme = StudioTheme.Dark })); var open = EditorMessageProtocol.Deserialize(EditorMessageProtocol.Serialize("openDocument", new { id = Guid.NewGuid(), text = "func main() {}" })); Assert.Equal("setTheme", theme!.Type); Assert.Equal("openDocument", open!.Type); }
+    [Fact]
+    public void Phase5_ui_command_state_can_be_backed_by_workspace_state()
+    {
+        var ws = new WorkspaceService();
+        Assert.Null(ws.Workspace.Project);
+        Assert.DoesNotContain(ws.Workspace.OpenDocuments, d => d.IsDirty);
+    }
+    [Fact]
+    public void Phase5_editor_messages_support_theme_and_document_payloads()
+    {
+        var theme = EditorMessageProtocol.Deserialize(EditorMessageProtocol.Serialize("setTheme", new { theme = StudioTheme.Dark }));
+        var open = EditorMessageProtocol.Deserialize(EditorMessageProtocol.Serialize("openDocument", new { id = Guid.NewGuid(), text = "func main() {}" }));
+        Assert.Equal("setTheme", theme!.Type);
+        Assert.Equal("openDocument", open!.Type);
+    }
 }
 
 public sealed class Phase11EditorAssetTests
@@ -110,7 +123,6 @@ public sealed class Phase11EditorBridgeAssetTests
         Assert.Contains("restoreViewState", script);
         Assert.Contains("const viewState = payload.viewState || payload.ViewState", script);
     }
-
 
     [Fact]
     public void Phase11_multi_document_ui_binds_tabs_and_editor_model_lifecycle()

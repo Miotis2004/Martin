@@ -8,4 +8,8 @@ using Martin.Compiler.Text;
 
 namespace Martin.CodeGeneration;
 
-public enum OutputKind { ConsoleApplication, Library }
+public enum OutputKind
+{
+    ConsoleApplication,
+    Library
+}

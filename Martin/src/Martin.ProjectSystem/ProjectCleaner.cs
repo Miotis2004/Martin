@@ -64,8 +64,7 @@ public sealed class MartinProjectCleaner
             directories.Add(candidate);
         }
 
-        return new ProjectCleanPlan
-        {
+        return new ProjectCleanPlan {
             Directories = directories.ToImmutable(),
             Diagnostics = diagnostics.ToImmutable()
         };
@@ -83,7 +82,8 @@ public sealed class MartinProjectCleaner
 
         foreach (var directory in plan.Directories.Distinct(StringComparerForPlatform()))
         {
-            if (!Directory.Exists(directory)) continue;
+            if (!Directory.Exists(directory))
+                continue;
             try
             {
                 Directory.Delete(directory, recursive: true);
@@ -104,10 +104,13 @@ public sealed class MartinProjectCleaner
         foreach (var segment in relative.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
         {
             current = Path.Combine(current, segment);
-            if (!Directory.Exists(current) && !File.Exists(current)) continue;
+            if (!Directory.Exists(current) && !File.Exists(current))
+                continue;
             var attributes = File.GetAttributes(current);
-            if ((attributes & FileAttributes.ReparsePoint) != 0) return current;
-            if (string.Equals(current, candidate, comparison)) break;
+            if ((attributes & FileAttributes.ReparsePoint) != 0)
+                return current;
+            if (string.Equals(current, candidate, comparison))
+                break;
         }
 
         return null;

@@ -49,8 +49,7 @@ public sealed class RuntimeCompatibilityTests
         Assert.Equal("MRT3225", diagnostic.Code);
     }
 
-    static RuntimeDescriptor Descriptor(int? major = null, int? minor = null) => new()
-    {
+    static RuntimeDescriptor Descriptor(int? major = null, int? minor = null) => new() {
         AssemblyPath = Path.GetFullPath("Martin.Runtime.dll"),
         AssemblyVersion = new Version(0, 1, 0, 0),
         InformationalVersion = "0.1.0-alpha",

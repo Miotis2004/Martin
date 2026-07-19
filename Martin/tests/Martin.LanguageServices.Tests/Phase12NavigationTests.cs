@@ -15,26 +15,25 @@ public sealed class Phase12NavigationTests
         var position = usage.IndexOf("answer()", StringComparison.Ordinal);
 
         var definitions = await service.GetDefinitionsAsync(workspace,
-            new DefinitionRequest
-            {
-                WorkspaceId = workspace.Id,
-                WorkspaceVersion = workspace.Version,
-                ProjectId = project.Id,
-                ProjectVersion = project.Version,
-                DocumentId = usageDocument.Id,
-                DocumentVersion = usageDocument.Version,
-                Position = position
-            });
+                                                            new DefinitionRequest {
+                                                                WorkspaceId = workspace.Id,
+                                                                WorkspaceVersion = workspace.Version,
+                                                                ProjectId = project.Id,
+                                                                ProjectVersion = project.Version,
+                                                                DocumentId = usageDocument.Id,
+                                                                DocumentVersion = usageDocument.Version,
+                                                                Position = position
+                                                            });
         var references = await service.FindReferencesAsync(workspace,
-            ReferenceRequest(workspace, project, usageDocument, position));
+                                                           ReferenceRequest(workspace, project, usageDocument, position));
 
         var definition = Assert.Single(definitions.Value);
         Assert.Equal(declarationDocument.Id, definition.DocumentId);
         Assert.Equal("answer", declaration[definition.Span.Start..definition.Span.End]);
         Assert.Equal([ReferenceKind.Declaration, ReferenceKind.Call],
-            references.Value.Select(reference => reference.Kind).Order().ToArray());
+                     references.Value.Select(reference => reference.Kind).Order().ToArray());
         Assert.DoesNotContain(references.Value, reference =>
-            reference.DocumentId == usageDocument.Id && reference.Span.Start == usage.LastIndexOf("answer", StringComparison.Ordinal));
+                                                    reference.DocumentId == usageDocument.Id && reference.Span.Start == usage.LastIndexOf("answer", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -57,29 +56,26 @@ public sealed class Phase12NavigationTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            service.FindReferencesAsync(workspace, request, cancellation.Token));
+                                                                    service.FindReferencesAsync(workspace, request, cancellation.Token));
     }
 
     private static ReferencesRequest ReferenceRequest(LanguageWorkspaceSnapshot workspace,
-        LanguageProjectSnapshot project, LanguageDocumentSnapshot document, int position) => new()
-        {
-            WorkspaceId = workspace.Id,
-            WorkspaceVersion = workspace.Version,
-            ProjectId = project.Id,
-            ProjectVersion = project.Version,
-            DocumentId = document.Id,
-            DocumentVersion = document.Version,
-            Position = position
-        };
+                                                      LanguageProjectSnapshot project, LanguageDocumentSnapshot document, int position) => new() {
+        WorkspaceId = workspace.Id,
+        WorkspaceVersion = workspace.Version,
+        ProjectId = project.Id,
+        ProjectVersion = project.Version,
+        DocumentId = document.Id,
+        DocumentVersion = document.Version,
+        Position = position
+    };
 
     private static (LanguageWorkspaceSnapshot, LanguageProjectSnapshot, LanguageDocumentSnapshot, LanguageDocumentSnapshot)
         Workspace(string declaration, string usage)
     {
         var projectId = ProjectId.CreateNew();
-        var first = new LanguageDocumentSnapshot(DocumentId.CreateNew(), Path.GetFullPath("closed.martin"), declaration, new(0))
-        { ProjectId = projectId, IsOpen = false };
-        var second = new LanguageDocumentSnapshot(DocumentId.CreateNew(), Path.GetFullPath("open.martin"), usage, new(0))
-        { ProjectId = projectId, IsOpen = true };
+        var first = new LanguageDocumentSnapshot(DocumentId.CreateNew(), Path.GetFullPath("closed.martin"), declaration, new(0)) { ProjectId = projectId, IsOpen = false };
+        var second = new LanguageDocumentSnapshot(DocumentId.CreateNew(), Path.GetFullPath("open.martin"), usage, new(0)) { ProjectId = projectId, IsOpen = true };
         var project = new LanguageProjectSnapshot(projectId, "Navigation", Environment.CurrentDirectory, new(3), [first, second]);
         return (new(WorkspaceId.CreateNew(), new(4), [project]), project, first, second);
     }

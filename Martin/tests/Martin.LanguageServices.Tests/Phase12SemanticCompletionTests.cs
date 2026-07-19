@@ -44,8 +44,7 @@ public sealed class Phase12SemanticCompletionTests
     public async Task Versioned_completion_rejects_stale_requests_and_honors_limits()
     {
         var (service, workspace, document, project) = Workspace("func first() {} func second() {}");
-        var request = new CompletionRequest
-        {
+        var request = new CompletionRequest {
             WorkspaceId = workspace.Id,
             WorkspaceVersion = workspace.Version,
             ProjectId = project.Id,

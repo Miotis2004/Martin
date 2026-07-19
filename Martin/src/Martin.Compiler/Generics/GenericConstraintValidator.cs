@@ -15,7 +15,7 @@ public sealed class GenericConstraintValidator
     }
 
     public ConstraintValidationResult Validate(TypeParameterSymbol parameter, TypeSymbol argument,
-        CancellationToken cancellationToken = default)
+                                               CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(parameter);
@@ -48,8 +48,7 @@ public sealed class GenericConstraintValidator
             openParameter.Constraints.OfType<ProtocolConstraint>().Any(c => ReferenceEquals(c.Protocol, protocol)))
             return new ProtocolConstraintProof(protocol, null, openParameter);
 
-        var definition = argument switch
-        {
+        var definition = argument switch {
             NamedTypeSymbol named => named,
             ConstructedTypeSymbol constructed => constructed.GenericDefinition,
             _ => null
@@ -58,7 +57,7 @@ public sealed class GenericConstraintValidator
             return null;
 
         var conformance = _conformances.FirstOrDefault(c =>
-            ReferenceEquals(c.Type, definition) && ReferenceEquals(c.Protocol, protocol));
+                                                           ReferenceEquals(c.Type, definition) && ReferenceEquals(c.Protocol, protocol));
         return conformance is null ? null : new ProtocolConstraintProof(protocol, conformance, null);
     }
 }
